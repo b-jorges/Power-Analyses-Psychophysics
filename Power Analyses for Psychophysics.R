@@ -25,7 +25,7 @@ SD_Standard = Condition2*0.1 #SD of the cummulative Gaussian in the standard con
 SD_ResponseFuntion = 0.04 #Standard deviation of the distribution we draw the answers from (normal distribution), or its scale (Cauchy distribution)
 
 ####This function serves to simulate a full dataset of responses, which then can serve to fit psychometric functions
-SimulatePsychometricFunction = function(ID, Condition1, Condition2, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFuntion){
+SimulatePsychometricFunction_Staircase = function(ID, Condition1, Condition2, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFuntion){
   Psychometric = expand.grid(ID=ID, Condition1=Condition1, Condition2=Condition2, reps = reps)
   
   Psychometric = Psychometric %>%
@@ -79,6 +79,8 @@ ggplot(Psychometric,aes(Difference,Answer,color=Condition1)) +
 
 Analyze_Pychometric_Precision = function(Psychometric){
 
+  TimeBeginning = Sys.time()
+  
   ###precision = slope for Difference (the steeper the slope, the more sensitive) ... 
   ###so if there is an interaction between Motion Condition and Difference, that means that it changes the slope
   mod1 = glmer(cbind(Yes, Total - Yes) ~ as.factor(Condition1)*Difference + (Difference  | ID) + (Difference  | Condition2), 
@@ -87,11 +89,19 @@ Analyze_Pychometric_Precision = function(Psychometric){
   mod2 = glmer(cbind(Yes, Total - Yes) ~ as.factor(Condition1) + Difference + (Difference  | ID) + (Difference  | Condition2),
                family = binomial(link = "probit"), 
                data = Psychometric)
-  anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2?
+
+  print(TimeBeginning - Sys.time())
+  
+  p = anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
+  
+  print(p)
+  p
 }
 
 Analyze_Pychometric_Accuracy = function(Psychometric){
 
+  TimeBeginning = Sys.time()
+  
   mod1 = glmer(cbind(Yes, Total - Yes) ~ Condition1 + (Difference  | ID)  + (Difference  | Condition2),
                family = binomial(link = "probit"), 
                data = Psychometric)
@@ -99,13 +109,23 @@ Analyze_Pychometric_Accuracy = function(Psychometric){
   mod2 = glmer(cbind(Yes, Total - Yes) ~ (Difference  | ID) + (Difference  | Condition2),
                family = binomial(link = "probit"), 
                data = Psychometric)
-  anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
+
+  print(TimeBeginning - Sys.time())
+  
+  p = anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
+  
+  print(p)
+  p
+  
 }
 
 
 ######power for very low estimates of effect size: difference of 0.1 m/s in PSEs, and JNDs 1/4 higher when self-motion is simulated
 PowerPerN_Precision = c()
-for (i in c(10,12,14,16,18,20)){
+
+NumbersOfSubjects = c(10,12,14,16,18,20)
+
+for (i in NumbersOfSubjects){
   ID = paste0("s",1:i)
   Power_Precision = c()
   nIterations = 500
@@ -118,7 +138,7 @@ for (i in c(10,12,14,16,18,20)){
 }
 
 PowerPerN_Accuracy = c()
-for (i in c(10,12,14,16,18,20)){
+for (i in NumbersOfSubjects){
   ID = paste0("s",1:i)
   Power_Accuracy = c()
   nIterations = 500
