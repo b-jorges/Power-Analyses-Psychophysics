@@ -1,0 +1,328 @@
+---
+title: "PowerAnalysesPsychophysics"
+author: "Björn Jörges"
+date: "1/31/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+###Pull the whole repository
+require(dplyr)
+require(tidyverse)
+require(lme4)
+require(ggplot2)
+require(cowplot)
+theme_set(theme_cowplot())
+
+Where_Am_I <- function(path=T){
+  if (path == T){
+    dirname(rstudioapi::getSourceEditorContext()$path)
+  }
+  else {
+    rstudioapi::getSourceEditorContext()$path
+  }
+}
+
+binomial_smooth <- function(...) {
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)}
+
+setwd(Where_Am_I())
+
+source("Utilities/parabolic.r")
+source("Utilities/functions.r")
+source("Utilities/colourschemes.r")
+set.seed(912)
+```
+
+First, we choose the necessary parameters:
+
+*ID* is a vector containing one ID for each subject we want to simulate.
+*ConditionOfInterest* is a vector containing IDs for a binary categorical variable related to the main hypothesis of the experiment. For example: Is there a picturial background scene?
+*StandardValues* is a vector containing values for a categorial variable that serves as comparison stimuli. It can contain one value if you want to determine PSEs/JNDs for only one stimulus intensity, but typically you will have several, e. g. when you want to diversify your stimuli to show that a certain effect is not tied to one specific stimulus strength.
+*reps* is a vector containing an ID for each trial, the maximum number being the average number of trials we expect for any given staircase.
+*PSE_Difference* is a value that indicates the percentage to which the PSEs differ between test and standard condition. It can be zero if the condition of interest is not expected to influence PSEs.
+*JND_Difference* is a value that indicates the percentage to which the JNDs differ between test and standard condition. It can be zero if the condition of interest is not expected to influence JNDs.
+*Mean_Standard* is the Mean of the psychometric function expected for the standard condition. In many cases, this is the stimulus strength of the comparison stimulus.
+*Multiplicator_SD_Standard* is a multiplicator that transforms Weber Fractions or JNDs from the literature into standard deviations for each comparison stimulus.
+*SD_Standard* is the Standard Deviation of the psychometric function expected for the standard condition. This standard deviation is proportional to the relevant Weber fraction and JNDs, which are available in the literature. Further below, we explain the simple link between standard deviations of psychometric functions, Weber fractions and JNDs.
+*Type_ResponseFunction* describes the function the stimulus strengths are chosen from by the method. It can take the values "normal", "Cauchy" and "uniform". "Normal" and "Cauchy" are recommended when you are using a staircase procedure, while "uniform" corresponds to methods of constant stimuli. For a comparison between the three options, see further below.
+*SD_ResponseFunction* further describes the describes the function the stimulus strengths are chosen from. For normal distributions, this value corresponds to its standard deviation; for Cauchy distributions, this corresponds to its scale; and for uniform distributions, this corresponds to the range of values tested.
+
+```{r Staircase1, include=FALSE,echo=FALSE}
+ID = paste0("s",1:5)
+ConditionOfInterest = c(0,1)
+StandardValues = c(6.6, 8, 10)
+reps = seq(1,55,1)
+PSE_Difference = 1/8
+JND_Difference = 1/3
+PSE_Standard = StandardValues
+Multiplicator_SD_Standard = 0.108
+SD_Standard = StandardValues*Multiplicator_SD_Standard
+Type_ResponseFunction = "Cauchy"
+SD_ResponseFunction = 0.06
+```
+
+Next, we simulate one whole data set based on the above values. We first create a data frame with one row for each trial, that is a total of length(ID) x length(ConditionOfInterst) x length(StandardValues) x length(reps) rows.
+```{r Staircase3, include=FALSE,echo=FALSE}
+  Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
+```
+  
+Then, we draw multiplicators for PSEs and JNDs per subject, accounting for between-subject differences in biases and precision.
+```{r Staircase4, include=FALSE,echo=FALSE}
+  Psychometric = Psychometric %>%
+    group_by(ID) %>%#
+    mutate(PSE_Factor_ID = rnorm(1,1,0.1), #how much variability is in the means of the psychometric functions between subjects?
+           SD_Factor_ID = rnorm(1,1,0.1)) #how much variability is in the standard deviations of the psychometric functions between subjects?
+```
+ 
+Next, we simulate means and standard deviations of the psychometric functions for each condition and we add between-subject variability. The following lines take the standard PSEs (PSE_Standard) and standard deviations (SD_Standard) as baseline and add the PSE and JND difference in trials assigned to the test condition.
+```{r Staircase5, include=FALSE,echo=FALSE}
+  Psychometric = Psychometric %>%
+    mutate(
+      Mean = (StandardValues + (ConditionOfInterest==1)*StandardValues*PSE_Difference),
+      SD = abs(SD_Standard + (ConditionOfInterest==1)*SD_Standard*JND_Difference))
+```
+
+Now, we multiply in the between-subject variability.
+```{r Staircase6, include=FALSE,echo=FALSE}
+  Psychometric = Psychometric %>%
+    mutate(
+      Mean = Mean*PSE_Factor_ID,
+      SD = SD*SD_Factor_ID)
+```
+
+Next, we draw the stimulus strengths likely to be presented in our experiment. As mentioned above, this varies depending on the way the experiment is controlled. For staircase procedure, the responses are more akin to a normal distribution with relatively low standard deviations or to Cauchy distributions with equally low scales. For the method of constant stimuli, the responses are uniformly distributed across 5 to 9 values around the standard stimulus strength. We then use these multipliers ("staircase_factor") to compute the test stimulus strengths presented in the experiment ("Presented_TestStimulusStrength"). Lastly, we compute the difference between test stimulus and standard stimulus for each trial ("Difference").
+
+```{r Staircase7, include=FALSE,echo=FALSE}
+if (Type_ResponseFunction == "normal"){
+  
+  Psychometric = Psychometric %>%
+  mutate(
+      staircase_factor = pnorm(length(reps),1,SD_ResponseFunction))
+  
+} else if (Type_ResponseFunction == "Cauchy"){
+  
+  Psychometric = Psychometric %>%
+  mutate(
+      staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction))
+  
+#} else if (Type_ResponseFunction == "uniform"){
+#  
+#  Psychometric = Psychometric %>%
+#  mutate(
+#      staircase_factor = seq(SD_ResponseFunction[1],SD_ResponseFunction[2],(SD_ResponseFunction[2]-SD_ResponseFunc#tion[1]/6)))
+      
+} else{
+  
+  print("distribution not valid")
+
+}
+
+Psychometric = Psychometric %>%
+  mutate(
+      staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction), 
+      Presented_TestStimulusStrength = Mean*staircase_factor,
+      Difference = Presented_TestStimulusStrength - StandardValues)
+```
+
+Then, we compute the the probability on each trial to judge the test stimulus intensity higher (e. g. the test stimulus was faster, brighter, longer, ...) by feeding the simulated test stimulus strengths in a cummulative Gaussian with the mean and the standard deviations calculated above. We then use this value ("AnswerProbability") to simulate binary answers ("Answer") by feeding the probabilities into a bernoulli function. 
+
+```{r Staircase8, include=FALSE,echo=FALSE}
+Psychometric = Psychometric %>%
+  mutate(
+      AnswerProbability = pnorm(Presented_TestStimulusStrength,Mean,SD),
+      
+      ##get binary answers ("Test was stronger" yes/no) from probabilities for each trial
+      Answer = as.numeric(rbernoulli(length(AnswerProbability),AnswerProbability))
+    )
+```
+
+As a next step, we bring the data into the format necessary for the glmer() function: We first remove extreme outliers (e. g. by a simple criterion such as excluding trials in which the difference between test and standard stimulus was higher than half the standard stimulus strength). Then, we compute the number of "Test stimulus intensity was higher" responses for each Condition and difference between test and comparison stimulus strength and the number of total observerations for each condition and difference in intensities. 
+
+```{r Staircase9, include=FALSE,echo=FALSE}
+  ###prepare for glmer() - needs sum of YES/Total per stimulus strength and condition
+  Psychometric = Psychometric %>%
+    filter(abs(Difference) < 0.5*abs(Mean)) %>%
+    group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
+    mutate(Yes = sum(Answer==1),
+           Total = length(ConditionOfInterest))
+```
+
+Now, we can inspect these psychometric functions visually to verify whether the values chosen above give rise to the expected psychometric functions in terms of PSE and slopes. As is usual for psychometric functions, we have the difference in stimulus strength between test and comparison on the x axis, the probability to choose the test stimulus as stronger on the y axis. The Condition of Interest is color-coded in blue, while the baseline condition is color-coded in red.The facets correspond to IDs and different standard stimulus strengths, respectively. 
+
+```{r Staircase10, include=FALSE}
+ggplot(Psychometric, aes(Difference, Answer, color = as.factor(ConditionOfInterest))) +
+  binomial_smooth() +
+  facet_grid(SecondaryCondition~ID) +
+  geom_vline(xintercept = 0, color = "grey") +
+  geom_hline(yintercept = 0.5, color = "grey") +
+  xlab("Difference between Comparison and Test") +
+  ylab("Probability to choose Test") +
+  scale_color_manual(name = "Condition",
+                     values = c(Red,BlauUB))
+```
+
+Next, we establish the statistical model we will use to test our hypotheses. Following (Moscatelli 2012), we use generalized linear mixed models for this purpuse. For differences in PSEs in our simulated data set, this model would look like the following:
+
+```{r Staircase11, include=FALSE}
+mod1 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | SecondaryCondition),
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+```
+
+We then establish a comparison model, corresponding in the next simpler model without the variable of interest:
+```{r Staircase12, include=FALSE}
+mod2 = glmer(cbind(Yes, Total - Yes) ~ (Difference  | ID) + (Difference  | SecondaryCondition),
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+```
+
+Finally, we compare both models by means of the anova() function.
+```{r Staircase13, include=FALSE}
+anova(mod1,mod2)$`Pr(>Chisq)`[2]
+summary(mod1)
+```
+
+If the test model is significantly (p < 0.5) better than the comparison model, the test variable has a relevant impact on the responses.
+
+
+For differences in JNDs in our simulated data set, this procedure would look like the following:
+```{r Staircase13, include=FALSE}
+  mod1 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*Difference + (Difference  | ID) + (Difference  | SecondaryCondition), 
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+  mod2 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest) + Difference + (Difference  | ID) + (Difference  | SecondaryCondition),
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+
+anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
+summary(mod1)
+```
+
+To simulate the power with a given set of parameters, we need to execute the above procedure sufficient times (we recommend 500 times, although this might be too time consuming for bigger studies; further below we give some recommendations on how to speed up the relatively slow glmer() model fitting implementation in the R package lme4), and calculate the ratio of simulations in which the test model is significantly better than the test model. To this end, we establish functions containing the above procedure, and replicate them 500 times with the replicate() function from the R core package.
+
+```{r Staircase13, include=FALSE}
+SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, SecondaryCondition, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFuntion){
+  Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, SecondaryCondition=SecondaryCondition, reps = reps)
+  
+  Psychometric = Psychometric %>%
+    group_by(ID) %>%#
+    mutate(PSE_Factor_ID = rnorm(1,1,0.1),
+           SD_Factor_ID = rnorm(1,1,0.1))
+  
+  Psychometric = Psychometric %>%
+    mutate(
+      Mean = (SecondaryCondition + (ConditionOfInterest==1)*SecondaryCondition*PSE_Difference)*PSE_Factor_ID,
+      SD = abs((SD_Standard + (ConditionOfInterest==1)*SD_Standard*JND_Difference)*SD_Factor_ID),
+      staircase_factor = rcauchy(length(reps),1,SD_ResponseFuntion), 
+      Presented_TestStimulusStrength = Mean*staircase_factor,
+      Difference = Presented_TestStimulusStrength - SecondaryCondition,
+      AnswerProbability = pnorm(Presented_TestStimulusStrength,Mean,SD),
+      Answer = as.numeric(rbernoulli(length(AnswerProbability),AnswerProbability))
+    )
+
+  Psychometric = Psychometric %>%
+    filter(abs(Difference) < 0.5*abs(Mean)) %>%
+    group_by(ID,ConditionOfInterest,SecondaryCondition,Difference) %>%
+    mutate(Yes = sum(Answer==1),
+           Total = length(ConditionOfInterest))
+  
+  Psychometric
+}
+
+Analyze_Pychometric_Accuracy = function(Psychometric){
+
+  TimeBeginning = Sys.time()
+  
+  mod1 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | SecondaryCondition),
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+  
+  mod2 = glmer(cbind(Yes, Total - Yes) ~ (Difference  | ID) + (Difference  | SecondaryCondition),
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+
+  print(TimeBeginning - Sys.time())
+  
+  p = anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
+  print(p)
+  
+  p
+}
+
+Analyze_Pychometric_Precision = function(Psychometric){
+
+  TimeBeginning = Sys.time()
+  
+  mod1 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*Difference + (Difference  | ID) + (Difference  | SecondaryCondition), 
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+  mod2 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest) + Difference + (Difference  | ID) + (Difference  | SecondaryCondition),
+               family = binomial(link = "probit"), 
+               data = Psychometric,
+               nAGQ = 0,
+               control = glmerControl(optimizer = "nloptwrap"))
+
+  p = anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
+
+  print(TimeBeginning - Sys.time())  
+  print(p)
+  
+  p
+}
+```
+
+NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
+
+PowerPerN_Precision = c()
+for (i in NumbersOfSubjects){
+  ID = paste0("s",1:i)
+  
+  Power_Precision = c()
+  
+  nIterations = 500 #how many data frames should we simulate per number of subjects? more data frames makes for a more reliable estimate of the power
+  
+  out <- replicate(nIterations, { #this function performs the number of iterations indicated above and stores the result for each in "out"
+    Analyze_Pychometric_Precision(SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, SecondaryCondition, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFuntion))})
+  hist(out) ###Distribution of p values
+  
+  Power_Precision = mean(out < 0.05) ###Power is the times the difference between the two models is significant
+  
+  PowerPerN_Precision = c(PowerPerN_Precision,Power_Precision) ###This is a vector with the power for each n for the JNDs
+  
+  paste0("For ", i, " subjects: ", Power_Precision) #gives an estimate of the power for each n
+}
+
+PowerPerN_Accuracy = c()
+for (i in NumbersOfSubjects){
+  ID = paste0("s",1:i)
+  
+  Power_Accuracy = c()
+  
+  nIterations = 500 #how many data frames should we simulate per number of subjects? more data frames makes for a more reliable estimate of the power
+  
+  out2 <- replicate(nIterations, { #this function performs the number of iterations indicated above and stores the result for each in "out2"
+    Analyze_Pychometric_Accuracy(SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, SecondaryCondition, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFuntion))})
+
+  hist(out2) ###Distribution of p values
+
+  Power_Accuracy = mean(out2 < 0.05) ###Power is the times the difference between the two models is significant
+  
+  PowerPerN_Accuracy = c(PowerPerN_Accuracy,Power_Accuracy) ###This is a vector with the power for each n for the PSEs
+  
+  paste0("For ", i, " subjects: ", Power_Accuracy) #prints estimate of the power for each n
+}
