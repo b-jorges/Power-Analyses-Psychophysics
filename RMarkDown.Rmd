@@ -150,10 +150,10 @@ As a next step, we bring the data into the format necessary for the glmer() func
 
 Now, we can inspect these psychometric functions visually to verify whether the values chosen above give rise to the expected psychometric functions in terms of PSE and slopes. As is usual for psychometric functions, we have the difference in stimulus strength between test and comparison on the x axis, the probability to choose the test stimulus as stronger on the y axis. The Condition of Interest is color-coded in blue, while the baseline condition is color-coded in red.The facets correspond to IDs and different standard stimulus strengths, respectively. 
 
-```{r Staircase10, include=FALSE}
+```{r Staircase10, include=TRUE}
 ggplot(Psychometric, aes(Difference, Answer, color = as.factor(ConditionOfInterest))) +
   binomial_smooth() +
-  facet_grid(SecondaryCondition~ID) +
+  facet_grid(StandardValues~ID) +
   geom_vline(xintercept = 0, color = "grey") +
   geom_hline(yintercept = 0.5, color = "grey") +
   xlab("Difference between Comparison and Test") +
@@ -165,7 +165,7 @@ ggplot(Psychometric, aes(Difference, Answer, color = as.factor(ConditionOfIntere
 Next, we establish the statistical model we will use to test our hypotheses. Following (Moscatelli 2012), we use generalized linear mixed models for this purpuse. For differences in PSEs in our simulated data set, this model would look like the following:
 
 ```{r Staircase11, include=FALSE}
-mod1 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | SecondaryCondition),
+mod1 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | StandardValues),
                family = binomial(link = "probit"), 
                data = Psychometric,
                nAGQ = 0,
@@ -174,7 +174,7 @@ mod1 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID) 
 
 We then establish a comparison model, corresponding in the next simpler model without the variable of interest:
 ```{r Staircase12, include=FALSE}
-mod2 = glmer(cbind(Yes, Total - Yes) ~ (Difference  | ID) + (Difference  | SecondaryCondition),
+mod2 = glmer(cbind(Yes, Total - Yes) ~ (Difference  | ID) + (Difference  | StandardValues),
                family = binomial(link = "probit"), 
                data = Psychometric,
                nAGQ = 0,
@@ -182,22 +182,22 @@ mod2 = glmer(cbind(Yes, Total - Yes) ~ (Difference  | ID) + (Difference  | Secon
 ```
 
 Finally, we compare both models by means of the anova() function.
-```{r Staircase13, include=FALSE}
+```{r Staircase13, include=TRUE}
 anova(mod1,mod2)$`Pr(>Chisq)`[2]
 summary(mod1)
 ```
 
-If the test model is significantly (p < 0.5) better than the comparison model, the test variable has a relevant impact on the responses.
+If the test model is significantly (p < 0.05) better than the comparison model, the test variable has a relevant impact on the responses.
 
 
 For differences in JNDs in our simulated data set, this procedure would look like the following:
-```{r Staircase13, include=FALSE}
-  mod1 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*Difference + (Difference  | ID) + (Difference  | SecondaryCondition), 
+```{r Staircase13.5, include=FALSE}
+  mod1 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*Difference + (Difference  | ID) + (Difference  | StandardValues), 
                family = binomial(link = "probit"), 
                data = Psychometric,
                nAGQ = 0,
                control = glmerControl(optimizer = "nloptwrap"))
-  mod2 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest) + Difference + (Difference  | ID) + (Difference  | SecondaryCondition),
+  mod2 = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest) + Difference + (Difference  | ID) + (Difference  | StandardValues),
                family = binomial(link = "probit"), 
                data = Psychometric,
                nAGQ = 0,
@@ -209,7 +209,7 @@ summary(mod1)
 
 To simulate the power with a given set of parameters, we need to execute the above procedure sufficient times (we recommend 500 times, although this might be too time consuming for bigger studies; further below we give some recommendations on how to speed up the relatively slow glmer() model fitting implementation in the R package lme4), and calculate the ratio of simulations in which the test model is significantly better than the test model. To this end, we establish functions containing the above procedure, and replicate them 500 times with the replicate() function from the R core package.
 
-```{r Staircase13, include=FALSE}
+```{r Staircase14, include=FALSE}
 SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, SecondaryCondition, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFuntion){
   Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, SecondaryCondition=SecondaryCondition, reps = reps)
   
@@ -286,8 +286,13 @@ Analyze_Pychometric_Precision = function(Psychometric){
 }
 ```
 
+Now, we determine for how many subjects we want to simulate the power.
+```{r Staircase15, include=FALSE}
 NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
+```
 
+Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy by using the replicate() function from the R core package.
+```{r Staircase16, include=TRUE}
 PowerPerN_Precision = c()
 for (i in NumbersOfSubjects){
   ID = paste0("s",1:i)
@@ -306,7 +311,9 @@ for (i in NumbersOfSubjects){
   
   paste0("For ", i, " subjects: ", Power_Precision) #gives an estimate of the power for each n
 }
+```
 
+```{r Staircase17, include=FALSE}
 PowerPerN_Accuracy = c()
 for (i in NumbersOfSubjects){
   ID = paste0("s",1:i)
@@ -326,3 +333,4 @@ for (i in NumbersOfSubjects){
   
   paste0("For ", i, " subjects: ", Power_Accuracy) #prints estimate of the power for each n
 }
+```
