@@ -11,9 +11,16 @@ The so-called reproducibility crisis has shaken Psychology to the core. Many eff
 
 Interestingly, Cognitive Psychology, and more specifically Cognitive Psychology that relies on psychophysical methods, has generated less attention in terms of the reproducibility of its results. @Hesse1986 compared different psychophysical methods along criteria such as threshold estimates, efficiency (that is, how many trials it takes to achieve reliable results) and their reproducibility in the auditory domain. The reproducibility in the psychophysical measurement of pain sensations has received some attention (@Rosier, @Nilsson).
 
-Prima facie, the study of perception is a methodological outlier in several aspects: the number of subjects tested in a typical experiment is quite low, starting from two or three in older papers. And even the typical sample size in modern studies is rarely much higher than 10. On the other hand, each subject typically performs large numbers of trials, starting from around 50 per condition up to several hundred. Furthermore, there are different established ways of analyzing results. Classically, pychometric functions (Cummulative Gaussian or Weibull functions) are fitted for each condition and participant to obtain the Points of Subjective Equality (PSEs) and Just Noticeable Differences (JNDs). This yields one data point per subject and condition, over which a t.test or an ANOVA is performed to test for statistical significance between conditions. This approach neglects that each PSE and JND is based on a large number of trials, which leads to a loss of statistical power. @Moscatelli2012 have suggested the use of General Linear Mixed Modelling (GLMM). GLMM allows to fit 
+**Statistical Specifics of Psychophysics**
 
-ANOVA method (two-level method) vs. GLMM
+Prima facie, the study of perception is a methodological outlier in several aspects: the number of subjects tested in a typical experiment is quite low, starting from two or three in older papers. And even the typical sample size in modern studies is rarely much higher than 10. On the other hand, each subject typically performs large numbers of trials, starting from around 50 per condition up to several hundred. Furthermore, psychophysical studies are much more likely to be between-subject designs, which lowers the random variability in responses, thus raising power.
+
+
+**Different Approaches to Null Hypothesis Testing**
+
+Furthermore, there are different established ways of analyzing results. Classically, pychometric functions (Cummulative Gaussian or Weibull functions) are fitted for each condition and participant to obtain the Points of Subjective Equality (PSEs) and Just Noticeable Differences (JNDs). This yields one data point per subject and condition, over which a t.test or an ANOVA is performed to test for statistical significance between conditions. This approach neglects that each PSE and JND is based on a large number of trials and thus fails to account for the added reliability of the measures provided. Depending on the experimental design, this approach sacrifices vast amounts of statistical power. As a solution, @Moscatelli2012 have suggested the use of General Linear Mixed Modelling (GLMM). GLMM allows to fit population parameters across all data, while still taking into account that responses within each condition and participant are correlated more strongly than across conditions and participants. In the following, we will estimate power for both types of analyses, to quantify how much power is lost with the two-level approach.
+
+
 
 Not being reproduced could also mean shoddy design in follow-up, and what about equivalence testing?
 
@@ -41,18 +48,28 @@ set.seed(912)
 This method requires you to provide estimates of all relevant parameters. Some pertain to the stimuli, some can be taken from the literature, and some have to be estimated.
 
 *ID* is a vector containing one ID for each subject we want to simulate.
+
 *ConditionOfInterest* is a vector containing IDs for a binary categorical variable related to the main hypothesis of the experiment. For example: Is there a pictorial background scene?
+
 *StandardValues* is a vector containing values for a categorial variable that serves as comparison stimuli. It can contain one value if you want to determine PSEs/JNDs for only one stimulus intensity, but typically you will have several, e. g. when you want to diversify your stimuli to show that a certain effect is not tied to one specific stimulus strength.
+
 *reps* is a vector containing an ID for each trial, the maximum number being the average number of trials we expect for any given staircase.
+
 *PSE_Difference* is a value that indicates the percentage to which the PSEs differ between test and standard condition. It can be zero if the condition of interest is not expected to influence PSEs.
+
 *JND_Difference* is a value that indicates the percentage to which the JNDs differ between test and standard condition. It can be zero if the condition of interest is not expected to influence JNDs.
+
 *Mean_Standard* is the Mean of the psychometric function expected for the standard condition. In many cases, this is the stimulus strength of the comparison stimulus.
+
 *Multiplicator_SD_Standard* is a multiplicator that transforms Weber Fractions or JNDs from the literature into standard deviations for each comparison stimulus.
+
 *SD_Standard* is the Standard Deviation of the psychometric function expected for the standard condition. This standard deviation is proportional to the relevant Weber fraction and JNDs, which are available in the literature. Further below, we explain the simple link between standard deviations of psychometric functions, Weber fractions and JNDs.
+
 *Type_ResponseFunction* describes the function the stimulus strengths are chosen from by the method. It can take the values "normal", "Cauchy" and "uniform". "Normal" and "Cauchy" are recommended when you are using a staircase procedure, while "uniform" corresponds to methods of constant stimuli. For a comparison between the three options, see further below.
+
 *SD_ResponseFunction* further describes the describes the function the stimulus strengths are chosen from. For normal distributions, this value corresponds to its standard deviation; for Cauchy distributions, this corresponds to its scale; and for uniform distributions, this corresponds to the range of values tested.
 
-```{r Staircase1, include=TRUE,echo=FALSE}
+```{r Staircase1, include=TRUE,echo=TRUE}
 ID = paste0("s",1:5)
 ConditionOfInterest = c(0,1)
 StandardValues = c(6.6, 8, 10)
@@ -67,12 +84,12 @@ SD_ResponseFunction = 0.06
 ```
 
 Next, we simulate one whole data set based on the above values. We first create a data frame with one row for each trial, that is a total of length(ID) x length(ConditionOfInterst) x length(StandardValues) x length(reps) rows.
-```{r Staircase3, include=TRUE,echo=FALSE}
+```{r Staircase3, include=TRUE,echo=TRUE}
   Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
 ```
   
 Then, we draw multiplicators for PSEs and JNDs per subject, accounting for between-subject differences in biases and precision.
-```{r Staircase4, include=TRUE,echo=FALSE}
+```{r Staircase4, include=TRUE,echo=TRUE}
   Psychometric = Psychometric %>%
     group_by(ID) %>%#
     mutate(PSE_Factor_ID = rnorm(1,1,0.1), #how much variability is in the means of the psychometric functions between subjects?
@@ -80,7 +97,7 @@ Then, we draw multiplicators for PSEs and JNDs per subject, accounting for betwe
 ```
  
 Next, we simulate means and standard deviations of the psychometric functions for each condition and we add between-subject variability. The following lines take the standard PSEs (PSE_Standard) and standard deviations (SD_Standard) as baseline and add the PSE and JND difference in trials assigned to the test condition.
-```{r Staircase5, include=TRUE,echo=FALSE}
+```{r Staircase5, include=TRUE,echo=TRUE}
   Psychometric = Psychometric %>%
     mutate(
       Mean = (StandardValues + (ConditionOfInterest==1)*StandardValues*PSE_Difference),
@@ -88,7 +105,7 @@ Next, we simulate means and standard deviations of the psychometric functions fo
 ```
 
 Now, we multiply in the between-subject variability.
-```{r Staircase6, include=TRUE,echo=FALSE}
+```{r Staircase6, include=TRUE,echo=TRUE}
   Psychometric = Psychometric %>%
     mutate(
       Mean = Mean*PSE_Factor_ID,
@@ -97,7 +114,7 @@ Now, we multiply in the between-subject variability.
 
 Next, we draw the stimulus strengths likely to be presented in our experiment. As mentioned above, this varies depending on the way the experiment is controlled. For staircase procedure, the responses are more akin to a normal distribution with relatively low standard deviations or to Cauchy distributions with equally low scales. For the method of constant stimuli, the responses are uniformly distributed across 5 to 9 values around the standard stimulus strength. We then use these multipliers ("staircase_factor") to compute the test stimulus strengths presented in the experiment ("Presented_TestStimulusStrength"). Lastly, we compute the difference between test stimulus and standard stimulus for each trial ("Difference").
 
-```{r Staircase7, include=TRUE,echo=FALSE}
+```{r Staircase7, include=TRUE,echo=TRUE}
 if (Type_ResponseFunction == "normal"){
   
   Psychometric = Psychometric %>%
@@ -131,7 +148,7 @@ Psychometric = Psychometric %>%
 
 Then, we compute the the probability on each trial to judge the test stimulus intensity higher (e. g. the test stimulus was faster, brighter, longer, ...) by feeding the simulated test stimulus strengths in a cummulative Gaussian with the mean and the standard deviations calculated above. We then use this value ("AnswerProbability") to simulate binary answers ("Answer") by feeding the probabilities into a bernoulli function. 
 
-```{r Staircase8, include=TRUE,echo=FALSE}
+```{r Staircase8, include=TRUE,echo=TRUE}
 Psychometric = Psychometric %>%
   mutate(
       AnswerProbability = pnorm(Presented_TestStimulusStrength,Mean,SD),
@@ -143,7 +160,7 @@ Psychometric = Psychometric %>%
 
 As a next step, we bring the data into the format necessary for the glmer() function: We first remove extreme outliers (e. g. by a simple criterion such as excluding trials in which the difference between test and standard stimulus was higher than half the standard stimulus strength). Then, we compute the number of "Test stimulus intensity was higher" responses for each Condition and difference between test and comparison stimulus strength and the number of total observerations for each condition and difference in intensities. 
 
-```{r Staircase9, include=FALSE,echo=FALSE}
+```{r Staircase9, include=FALSE,echo=TRUE}
   ###prepare for glmer() - needs sum of YES/Total per stimulus strength and condition
   Psychometric = Psychometric %>%
     filter(abs(Difference) < 0.5*abs(Mean)) %>%
@@ -262,7 +279,7 @@ Analyze_Pychometric_Accuracy = function(Psychometric){
                nAGQ = 0,
                control = glmerControl(optimizer = "nloptwrap"))
 
-  print(TimeBeginning - Sys.time())
+  print(TimeBeginning - Sys.time()) ###This is two show how long each iteration takes
   
   p = anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
   print(p)
@@ -285,9 +302,10 @@ Analyze_Pychometric_Precision = function(Psychometric){
                nAGQ = 0,
                control = glmerControl(optimizer = "nloptwrap"))
 
+  print(TimeBeginning - Sys.time())  ###This is two show how long each iteration takes
+  
   p = anova(mod1,mod2)$`Pr(>Chisq)`[2] ##Model 1 beats model 2
 
-  print(TimeBeginning - Sys.time())  
   print(p)
   
   p
@@ -296,12 +314,15 @@ Analyze_Pychometric_Precision = function(Psychometric){
 
 Now, we determine for how many subjects we want to simulate the power.
 ```{r Staircase15, include=TRUE}
-NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
+#NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
+NumbersOfSubjects = c(2)
 ```
 
 Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy by using the replicate() function from the R core package.
 ```{r Staircase16, include=TRUE}
 PowerPerN_Precision = c()
+plots_Precision = data.frame()
+
 for (i in NumbersOfSubjects){
   ID = paste0("s",1:i)
   
@@ -311,7 +332,9 @@ for (i in NumbersOfSubjects){
   
   out <- replicate(nIterations, { #this function performs the number of iterations indicated above and stores the result for each in "out"
     Analyze_Pychometric_Precision(SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction))})
-  hist(out) ###Distribution of p values
+
+  outout = data.frame(pvalue = out,N_Subjects = paste(i,"participants"))
+  plots_Precision = rbind(plots_Precision,outout)
   
   Power_Precision = mean(out < 0.05) ###Power is the times the difference between the two models is significant
   
@@ -319,10 +342,19 @@ for (i in NumbersOfSubjects){
   
   paste0("For ", i, " subjects: ", Power_Precision) #gives an estimate of the power for each n
 }
+
+ggplot(plots_Precision,aes(pvalue)) +
+  geom_histogram() +
+  facet_wrap(.~N_Subjects) +
+  xlab("p value") +
+  ylab("Density") +
+  geom_vline(xintercept = 0.05)
 ```
 
 ```{r Staircase17, include=TRUE}
 PowerPerN_Accuracy = c()
+plots_Accuracy = data.frame()
+
 for (i in NumbersOfSubjects){
   ID = paste0("s",1:i)
   
@@ -332,8 +364,9 @@ for (i in NumbersOfSubjects){
   
   out2 <- replicate(nIterations, { #this function performs the number of iterations indicated above and stores the result for each in "out2"
     Analyze_Pychometric_Accuracy(SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction))})
-
-  hist(out2) ###Distribution of p values
+  
+  outout = data.frame(pvalue = out2,N_Subjects = paste(i,"participants"))
+  plots_Accuracy = rbind(plots_Accuracy,outout)
 
   Power_Accuracy = mean(out2 < 0.05) ###Power is the times the difference between the two models is significant
   
@@ -341,4 +374,11 @@ for (i in NumbersOfSubjects){
   
   paste0("For ", i, " subjects: ", Power_Accuracy) #prints estimate of the power for each n
 }
+
+ggplot(plots_Accuracy,aes(pvalue)) +
+  geom_histogram() +
+  facet_wrap(.~N_Subjects) +
+  xlab("p value") +
+  ylab("Density") +
+  geom_vline(xintercept = 0.05)
 ```
