@@ -9,11 +9,18 @@ output: html_document
 
 The so-called reproducibility crisis has shaken Psychology to the core. Many effect that the scientific community had deemed established, could not be reproduced in highly powered replication studies. Among these are, prominently, Ego Depletion (@Hagger2016, but see also @Dang) and Terror Management Theory (@Klein2019). @Klein2016 tested a whole series of effects, some of which were not reproduced at all, and some of which were reproduced in terms of statistical significance, but with smaller effect sizes. Different reasons for the lack of reproducibility have been suggested: wide-spread p-hacking, Hypothesizing After Results are Known ("HARKing"), publication bias, lacking power and lacking theory.
 
-Interestingly, Cognitive Psychology, and more specifically Cognitive Psychology that relies on psychophysical methods, has generated less attention in terms of the reproducibility of its results. @Hesse1986 compared different psychophysical methods along criteria such as threshold estimates, efficiency (that is, how many trials it takes to achieve reliable results) and their reproducibility in the auditory domain. The reproducibility in the psychophysical measurement of pain sensations has received some attention (@Rosier, @Nilsson).
+Interestingly, Cognitive Psychology, and more specifically Cognitive Psychology that relies on psychophysical methods, has generated less attention in terms of the reproducibility of its results. @Hesse1986 compared different psychophysical methods along criteria such as threshold estimates, efficiency (that is, how many trials it takes to achieve reliable results) and their reproducibility in the auditory domain. Furthermore, the reproducibility in the psychophysical measurement of pain sensations has received some attention (@Rosier, @Nilsson).
 
-Prima facie, the study of perception is a methodological outlier in several aspects: the number of subjects tested in a typical experiment is quite low, starting from two or three in older papers. And even the typical sample size in modern studies is rarely much higher than 10. On the other hand, each subject typically performs large numbers of trials, starting from around 50 per condition up to several hundred. Furthermore, there are different established ways of analyzing results. Classically, pychometric functions (Cummulative Gaussian or Weibull functions) are fitted for each condition and participant to obtain the Points of Subjective Equality (PSEs) and Just Noticeable Differences (JNDs). This yields one data point per subject and condition, over which a t.test or an ANOVA is performed to test for statistical significance between conditions. This approach neglects that each PSE and JND is based on a large number of trials, which leads to a loss of statistical power. @Moscatelli2012 have suggested the use of General Linear Mixed Modelling (GLMM). GLMM allows to fit 
+(What do we mean by psychophysics ...)
 
-ANOVA method (two-level method) vs. GLMM
+Prima facie, the study of perception is a methodological outlier in several aspects: the number of subjects tested in a typical experiment is quite low, starting from two or three in older papers. And even the typical sample size in modern studies is rarely much higher than 10. On the other hand, each subject typically performs large numbers of trials, starting from around 50 per condition up to several hundred. Furthermore, there are different established ways of analyzing results. Classically, pychometric functions (Cummulative Gaussian or Weibull functions) are fitted for each condition and participant to obtain the Points of Subjective Equality (PSEs) and Just Noticeable Differences (JNDs). This yields one data point per subject and condition, over which a t-test or an ANOVA are performed to test for statistically significant differences between conditions. 
+
+This approach neglects that each PSE and JND is based on a large number of trials, which leads to a loss of statistical power. @Moscatelli2012 have suggested the use of General Linear Mixed Modelling (GLMM). GLMM allows to obtain population-wide parameters for PSEs and JNDs, while still accounting for inter-subject variability in responses. Mixed Modelling is a more flexible form of linear regression. It allows to fit regression coefficients across the whole population for some parameters, while allowing the coefficients for other parameters to vary within subgroups of the dataset. A classic example is the modelling of the efficacy of a learning intervention on population of students from different classes in one school. Mixed models can account for inherent performance differences between classes, but fit a populationwide coefficient for the efficacy of the intervention. General Linear Mixed Modelling extends this principle by allowing to fit not only linear regression lines, but also other functions – such as cummulative Gaussians, which are commonly used as approximations for psychometric functions. You can find a more thorough explanation and examples in @Moscatelli2012.
+
+One of improvements that have been demanded in the wake of the reproducibility crisis is a more thorough and meticulous study planning. Researchers need to be more aware of underlying theoretical considerations, specify hypotheses before analyzing the data, make precise predictions of how their hypotheses should manifest in their data and formulate statistical models to test these hypotheses. One important step in this process is to make sure that the experiment has sufficient statistical power to detect the postulated effects. We will first show that many experiments using the two-level approach of hypothesis testing described above often lacks power and indicate how much power could be gained for the same experimental designs by using @Moscatelli2002's GLMM approach. In the second part of this paper, we will demonstrate how to plan the sample size in a psychophysical experiment, levering the advantages of the GLMM approach.
+
+
+***A power comparison between Two-Level approach and GLMM approach***
 
 Not being reproduced could also mean shoddy design in follow-up, and what about equivalence testing?
 
@@ -38,7 +45,7 @@ set.seed(912)
 
 **Information Needed**
 
-This method requires you to provide estimates of all relevant parameters. Some pertain to the stimuli, some can be taken from the literature, and some have to be estimated.
+This method requires you to provide estimates of all relevant parameters. Some pertain to the stimuli, some can be taken from the literature, and some have to be guessed (educatedly).
 
 *ID* is a vector containing one ID for each subject we want to simulate.
 *ConditionOfInterest* is a vector containing IDs for a binary categorical variable related to the main hypothesis of the experiment. For example: Is there a pictorial background scene?
@@ -129,7 +136,7 @@ Psychometric = Psychometric %>%
       Difference = Presented_TestStimulusStrength - StandardValues)
 ```
 
-Then, we compute the the probability on each trial to judge the test stimulus intensity higher (e. g. the test stimulus was faster, brighter, longer, ...) by feeding the simulated test stimulus strengths in a cummulative Gaussian with the mean and the standard deviations calculated above. We then use this value ("AnswerProbability") to simulate binary answers ("Answer") by feeding the probabilities into a bernoulli function. 
+Then, we compute  the probability on each trial to judge the test stimulus intensity higher (e. g. the test stimulus was faster, brighter, longer, ...) by feeding the simulated test stimulus strengths in a cummulative Gaussian with the mean and the standard deviations calculated above. We then use this value ("AnswerProbability") to simulate binary answers ("Answer") by feeding the probabilities into a bernoulli function. 
 
 ```{r Staircase8, include=TRUE,echo=FALSE}
 Psychometric = Psychometric %>%
@@ -215,7 +222,7 @@ anova(mod1,mod2)
 summary(mod1)
 ```
 
-To simulate the power with a given set of parameters, we need to execute the above procedure sufficient times (we recommend 500 times, although this might be too time consuming for studies with a high count of subjects and or trials; further below we give some recommendations on how to speed up the relatively slow glmer() model fitting implementation in the R package lme4), and calculate the ratio of simulations in which the test model is significantly better than the test model. To this end, we establish functions containing the above procedure, and replicate them 500 times with the replicate() function from the R core package.
+To simulate the power with a given set of parameters, we need to execute the above procedure sufficient times (we recommend 500 times, although this might be too time consuming for studies with a high count of subjects and or trials; further below we give some recommendations on how to speed up the relatively slow glmer() model fitting implementation in the R package lme4), and calculate the ratio of simulations in which the test model is significantly better than the test model, given a certain false positive rate (typically 0.05). To this end, we establish functions containing the above procedure:
 
 ```{r Staircase14, include=TRUE}
 SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction){
@@ -294,12 +301,12 @@ Analyze_Pychometric_Precision = function(Psychometric){
 }
 ```
 
-Now, we determine for how many subjects we want to simulate the power.
+Now, we determine for how many subjects we want to simulate the power. Fewer than 10 subjects are usually not recommended.
 ```{r Staircase15, include=TRUE}
 NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
 ```
 
-Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy by using the replicate() function from the R core package.
+Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy, using the replicate() function from the R core package.
 ```{r Staircase16, include=TRUE}
 PowerPerN_Precision = c()
 for (i in NumbersOfSubjects){
