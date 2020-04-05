@@ -359,23 +359,24 @@ GetParametersOfPsychometricFunction = function(Psychometric){
 Analyze_Pychometric_Accuracy_2Level = function(Psychometric){
 
   ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
-  Coefficients = summary(ANOVA_Mean)
-  Coefficients
-    
+  Coefficients = summary(ANOVA_Mean)[[1]]
+  Coefficients$`Pr(>F)`[1]
+}
 Analyze_Pychometric_Accuracy_2Level = function(Psychometric){
 
   ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
-  summary(ANOVA_SD)
+  Coefficients = summary(ANOVA_SD)[[1]]
+  Coefficients$`Pr(>F)`[1]
+}
 
 ```
 
 Now, we determine for how many subjects we want to simulate the power. Fewer than 10 subjects are usually not recommended.
 ```{r Staircase15, include=TRUE}
-#NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
-NumbersOfSubjects = c(2)
+NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
 ```
 
-Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy, using the replicate() function from the R core package.
+Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy from the R core package.
 ```{r Staircase16, include=TRUE}
 PowerPerN_Precision = c()
 plots_Precision = data.frame()
@@ -385,13 +386,16 @@ for (i in NumbersOfSubjects){
   ID = paste0("s",1:i)
   
   for (i in 1:nIterations){
+  
     Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction)
     Analyze_Pychometric_Precision_GLMM(Dataframe)
     Analyze_Pychometric_Accuracy_GLMM(Dataframe)
+    Analyze_Pychometric_Precision_2Level(Dataframe)
+    Analyze_Pychometric_Accuracy_2Level(Dataframe)
     
     
   }
-  
+      
   Power_Precision = c()
   nIterations = 1 #how many data frames should we simulate per number of subjects? more data frames makes for a more reliable estimate of the power
   out <- replicate(nIterations, { #this function performs the number of iterations indicated above and stores the result for each in "out"
