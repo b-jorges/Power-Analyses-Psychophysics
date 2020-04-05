@@ -340,7 +340,7 @@ Analyze_Pychometric_Precision_GLMM = function(Psychometric){
   
   p = summary(GLMM_Precision)$coefficients[16]
   
-  #print(TimeBeginning - Sys.time())  ###This is two show how long each iteration takes
+
   #print(p)
   
   p
@@ -356,15 +356,15 @@ GetParametersOfPsychometricFunction = function(Psychometric){
   Parameters2
 }
 
-Analyze_Pychometric_Accuracy_2Level = function(Psychometric){
+Analyze_Pychometric_Accuracy_2Level = function(Parameters){
 
-  ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
+  ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
   Coefficients = summary(ANOVA_Mean)[[1]]
   Coefficients$`Pr(>F)`[1]
 }
-Analyze_Pychometric_Accuracy_2Level = function(Psychometric){
+Analyze_Pychometric_Precision_2Level = function(Parameters){
 
-  ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
+  ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
   Coefficients = summary(ANOVA_SD)[[1]]
   Coefficients$`Pr(>F)`[1]
 }
@@ -378,70 +378,64 @@ NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulatin
 
 Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy from the R core package.
 ```{r Staircase16, include=TRUE}
-PowerPerN_Precision = c()
-plots_Precision = data.frame()
-nIterations = 100
+nIterations = 1000
+pvalue = 0.05
 
+    p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
+      Analyze_Pychometric_Precision_GLMM(Dataframe),
+    Analyze_Pychometric_Accuracy_2Level(Parameters),    
+    Analyze_Pychometric_Precision_2Level(Parameters))
+
+Power = data.frame()
 for (i in NumbersOfSubjects){
+  
   ID = paste0("s",1:i)
+  TimeBeginning = Sys.time()
+  Dataframe_Temp = c()
   
-  for (i in 1:nIterations){
-  
+  for (j in 1:nIterations){
+    
     Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction)
-    Analyze_Pychometric_Precision_GLMM(Dataframe)
-    Analyze_Pychometric_Accuracy_GLMM(Dataframe)
-    Analyze_Pychometric_Precision_2Level(Dataframe)
-    Analyze_Pychometric_Accuracy_2Level(Dataframe)
     
+    Parameters = GetParametersOfPsychometricFunction(Dataframe)
     
+    p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
+      Analyze_Pychometric_Precision_GLMM(Dataframe),
+    Analyze_Pychometric_Accuracy_2Level(Parameters),    
+    Analyze_Pychometric_Precision_2Level(Parameters))
+
+    
+    Dataframe_Temp = rbind(Dataframe_Temp,p)
+    
+    if ((j/25) %in% 1:20){
+      (print(j))
+    }
   }
-      
-  Power_Precision = c()
-  nIterations = 1 #how many data frames should we simulate per number of subjects? more data frames makes for a more reliable estimate of the power
-  out <- replicate(nIterations, { #this function performs the number of iterations indicated above and stores the result for each in "out"
-    Analyze_Pychometric_Precision_GLMM(SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction))})
-  outout = data.frame(pvalue = out,N_Subjects = paste(i,"participants"))
-  Power_Precision = mean(out < 0.05) ###Power is the times the difference between the two models is significant
-  PowerPerN_Precision = c(PowerPerN_Precision,Power_Precision) ###This is a vector with the power for each n for the JNDs
-  paste0("For precision & ", i, " subjects: ", Power_Precision) #outputs an estimate of the power for each n
   
-  
+  Power = rbind(Power,
+                  data.frame(value = c(mean(Dataframe_Temp[,1] < pvalue),
+                                 mean(Dataframe_Temp[,2] < pvalue),
+                                 mean(Dataframe_Temp[,3] < pvalue),
+                                 mean(Dataframe_Temp[,4] < pvalue)),
+                       label = c("Accuracy GLMM",
+                                 "Precision GLMM",
+                                 "Accuracy Two-Level",
+                                 "Precision Two-Level"),
+                       nSubjects = i))
+
+  print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
+  print(paste0("Accuracy GLMM for ", i, " subjects: ", mean(Dataframe_Temp[1] < pvalue))) #outputs an estimate of the power for each n
+  print(paste0("Precision GLMM for ", i, " subjects: ", mean(Dataframe_Temp[2] < pvalue))) #outputs an estimate of the power for each n
+  print(paste0("Accuracy 2Level for ", i, " subjects: ", mean(Dataframe_Temp[3] < pvalue))) #outputs an estimate of the power for each n
+  print(paste0("Precision 2Level for ", i, " subjects: ", mean(Dataframe_Temp[4] < pvalue))) #outputs an estimate of the power for each n
 }
 
-ggplot(plots_Precision,aes(pvalue)) +
-  geom_histogram() +
-  facet_wrap(.~N_Subjects) +
-  xlab("p value") +
-  ylab("Density") +
-  geom_vline(xintercept = 0.05)
-```
 
-```{r Staircase17, include=TRUE}
-PowerPerN_Accuracy = c()
-plots_Accuracy = data.frame()
-
-for (i in NumbersOfSubjects){
-  ID = paste0("s",1:i)
-  
-  Power_Accuracy = c()
-  nIterations = 1 #how many data frames should we simulate per number of subjects? more data frames makes for a more reliable estimate of the power
-  out2 <- replicate(nIterations, { #this function performs the number of iterations indicated above and stores the result for each in "out2"
-    Analyze_Pychometric_Accuracy_GLMM(SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction))})
-  
-  outout = data.frame(pvalue = out2,N_Subjects = paste(i,"participants"))
-  plots_Accuracy = rbind(plots_Accuracy,outout)
-
-  Power_Accuracy = mean(out2 < 0.05) ###Power is the times the difference between the two models is significant
-  
-  PowerPerN_Accuracy = c(PowerPerN_Accuracy,Power_Accuracy) ###This is a vector with the power for each n for the PSEs
-  
-  paste0("For ", i, " subjects: ", Power_Accuracy) #prints estimate of the power for each n
-}
-
-ggplot(plots_Accuracy,aes(pvalue)) +
-  geom_histogram() +
-  facet_wrap(.~N_Subjects) +
-  xlab("p value") +
-  ylab("Density") +
-  geom_vline(xintercept = 0.05)
+ggplot(Power,aes(nSubjects,value, color = label)) +
+  geom_line() +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  scale_color_manual(values = c(BlauUB,Red,BlauUB,LightRed)) +
+  geom_hline(line = 2, yintercept = 0.8) +
+  geom_hline(line = 3, yintercept = 0.95)
 ```
