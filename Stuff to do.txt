@@ -1,0 +1,5 @@
+- Implement Method of Constant Stimuli
+- Power difference between Method of Constant Stimuli and Staircases
+- switch to lmerTest
+- More on replication and open science in Vision Science
+- 
