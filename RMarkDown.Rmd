@@ -9,7 +9,6 @@ output: html_document
 
 The so-called reproducibility crisis has shaken Psychology to the core. Many effect that the scientific community had deemed established, could not be reproduced in highly powered replication studies. Among these are, prominently, Ego Depletion (@Hagger2016, but see also @Dang) and Terror Management Theory (@Klein2019). @Klein2016 tested a whole series of effects, some of which were not reproduced at all, and some of which were reproduced in terms of statistical significance, but with smaller effect sizes. Different reasons for the lack of reproducibility have been suggested: wide-spread p-hacking, Hypothesizing After Results are Known ("HARKing"), publication bias, lacking power and lacking theory.
 
-<<<<<<< HEAD
 Interestingly, Cognitive Psychology, and more specifically Cognitive Psychology that relies on psychophysical methods, has generated less attention in terms of the reproducibility of its results. @Hesse1986 compared different psychophysical methods along criteria such as threshold estimates, efficiency (that is, how many trials it takes to achieve reliable results) and their intra-subject reproducibility in the auditory domain. The reproducibility in the psychophysical measurement of pain sensations has received some attention (@Rosier, @Nilsson).
 
 
@@ -35,8 +34,8 @@ This approach neglects that each PSE and JND is based on a large number of trial
 One of improvements that have been demanded in the wake of the reproducibility crisis is a more thorough and meticulous study planning. Researchers need to be more aware of underlying theoretical considerations, specify hypotheses before analyzing the data, make precise predictions of how their hypotheses should manifest in their data and formulate statistical models to test these hypotheses. One important step in this process is to make sure that the experiment has sufficient statistical power to detect the postulated effects. We will first show that many experiments using the two-level approach of hypothesis testing described above often lacks power and indicate how much power could be gained for the same experimental designs by using @Moscatelli2002's GLMM approach. In the second part of this paper, we will demonstrate how to plan the sample size in a psychophysical experiment, levering the advantages of the GLMM approach.
 
 
-***A power comparison between Two-Level approach and GLMM approach***
-In the following we will provide an example of how to compute the power in a typical psychophysical experiment with the two different methods described above: The Two-Level approach and the GLMM approach. We then compare the power that each approach provides to detect PSE and JND differences.
+***Power analyses for the GLMM approach using simulations in R***
+In the following we will provide an example of how to compute the power for common psychophysical designs, using the GLMM approach for analysis. Further below, we will also compare the power we obtain for the same designs when using the Two-Level approach.
 
 
 ```{r setup, include=FALSE}
@@ -80,9 +79,31 @@ This method requires you to provide estimates of all relevant parameters. Some p
 
 *SD_Standard* is the Standard Deviation of the psychometric function expected for the standard condition. This standard deviation is proportional to the relevant Weber fraction and JNDs, which are available in the literature. Further below, we explain the simple link between standard deviations of psychometric functions, Weber fractions and JNDs.
 
-*Type_ResponseFunction* describes the function the stimulus strengths are chosen from by the method. It can take the values "normal", "Cauchy" and "uniform". "Normal" and "Cauchy" are recommended when you are using a staircase procedure, while "uniform" corresponds to methods of constant stimuli. For a comparison between the three options, see further below.
+*Type_ResponseFunction* describes the function the stimulus strengths are chosen from by the method. It can take the values "normal", "Cauchy" and "uniform". "Normal" and "Cauchy" are recommended when you are using a staircase procedure, while "uniform" corresponds to methods of constant stimuli. For a comparison between the three options, see further below. The following plot visualizes different response distributions:
 
-*SD_ResponseFunction* further describes the describes the function the stimulus strengths are chosen from. For normal distributions, this value corresponds to its standard deviation; for Cauchy distributions, this corresponds to its scale; and for uniform distributions, this corresponds to the range of values tested.
+```{r Staircase1, include=TRUE,echo=TRUE}
+ResponseDistributions = data.frame(
+                       Value=c(rcauchy(55,1,0.1),
+                               rnorm(55,1,0.1),
+                               rep(c(0.7,0.85,1,1.15,1.3),11)),
+                       label = c(rep("Cauchy",55),
+                               rep("Normal",55),
+                               rep("Uniform",55))
+                       )
+
+ggplot(ResponseDistributions, aes(Value,color = label)) +
+  geom_density(size=2) +
+  coord_cartesian(xlim=c(0.5,1.5))
+ggsave("lala.jpg")
+
+```
+A Gaussian distribution with an adequate standard deviation should be accurate enough for most intents and purposes when staircase procedures are used. For the Method of Constant Stimuli, no randomness is involved in how the presented stimulus strengths are chosen. In this case, you can therefore simply set the values you have chosen for your stimulus.
+
+*SD_ResponseFunction* further describes the describes the function the stimulus strengths are chosen from. For normal distributions, this value corresponds to its standard deviation; for Cauchy distributions, this corresponds to its scale; and for uniform distributions, this corresponds to a vector with the values tested.
+
+We assume that there is between-participant variability in the means of the psychometric functions. *Mean_Variability_Between* sets the standard deviation of the normal distribution these PSEs are drawn from. This normal distribution has a mean of 1, that is, the standard deviation needs to be set accordingly.
+
+We assume that there is between-participant variability in the standard deviations of the psychometric functions. *SD_Variability_Between* sets the standard deviation of the normal distribution these standard deviations are drawn from. This normal distribution has a mean of 1, that is, the standard deviation has to be set accordingly.
 
 ```{r Staircase1, include=TRUE,echo=TRUE}
 ID = paste0("s",1:5)
@@ -96,6 +117,8 @@ Multiplicator_SD_Standard = 0.108
 SD_Standard = StandardValues*Multiplicator_SD_Standard
 Type_ResponseFunction = "Cauchy"
 SD_ResponseFunction = 0.06
+Mean_Variability_Between = 0.1
+SD_Variability_Between = 0.1
 ```
 
 Next, we simulate one whole data set based on the above values. We first create a data frame with one row for each trial, that is a total of length(ID) x length(ConditionOfInterst) x length(StandardValues) x length(reps) rows.
@@ -107,8 +130,8 @@ Then, we draw multiplicators for PSEs and JNDs per subject, accounting for betwe
 ```{r Staircase4, include=TRUE,echo=TRUE}
   Psychometric = Psychometric %>%
     group_by(ID) %>%#
-    mutate(PSE_Factor_ID = rnorm(1,1,0.1), #how much variability is in the means of the psychometric functions between subjects?
-           SD_Factor_ID = rnorm(1,1,0.1)) #how much variability is in the standard deviations of the psychometric functions between subjects?
+    mutate(PSE_Factor_ID = rnorm(1,1,Mean_Variability_Between), #how much variability is in the means of the psychometric functions between subjects?
+           SD_Factor_ID = rnorm(1,1,SD_Variability_Between)) #how much variability is in the standard deviations of the psychometric functions between subjects?
 ```
  
 Next, we simulate means and standard deviations of the psychometric functions for each condition and we add between-subject variability. The following lines take the standard PSEs (PSE_Standard) and standard deviations (SD_Standard) as baseline and add the PSE and JND difference in trials assigned to the test condition.
@@ -198,6 +221,7 @@ ggplot(Psychometric, aes(Difference, Answer, color = as.factor(ConditionOfIntere
   ylab("Probability to choose Test") +
   scale_color_manual(name = "Condition",
                      values = c(Red,BlauUB))
+ggsave("blablupp.jpg")
 ```
 
 
@@ -228,7 +252,6 @@ summary(GLMM_Accuracy)$coefficients
 ```
 
 *Precision*
-
 Keep in mind that, in the above model, the coefficient of "Difference" corresponds to the slope of the psychometric function. To capture to what extent a manipulation impacts the slope (as a proxy for precision), one needs to determine how much the slope differs between two conditions. That is, we need to estimate the interaction between "Condition of Interest" and "Difference" in our model. A sample specification is the following:
 ```{r Staircase13, include=TRUE}
 GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*Difference + (Difference  | ID) + (Difference  | StandardValues), 
@@ -246,49 +269,18 @@ summary(GLMM_Precision)$coefficients
 ```
 
 
-**Estimating population parameters of the psychometric functions with the Two-Level approach**
-
-For the Two-Level approach, one would first fit psychometric functions for each condition and participant. Then, one would conduct a t.test or an anova to test whether they are different. While there are different methods to fit psychometric functions that each have their own benefits, we use a direction likelihood maximization method (Prins & Kingdom 2010; Knoblauch & Maloney 2012), implemented in the R package quicksy (Linares 2017). The bootstrap option is used to compute confidence intervals, which allow for statistical comparisons. However, the quickpsy package currently does not include an option to estimate population-wide parameters. We thus deactive the bootstrap option, which speeds up the fitting process significantly.
-
-```{r Staircase14, include=TRUE}
-require(quickpsy)
-
-Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
-```
-
-Then, we extract the parameters and bring the output of quickpsy into the adequate format for ANOVA analysis.
-
-```{r Staircase15, include=TRUE}
-Parameters2 = Parameters %>%
-  filter(parn == "p1") %>%
-  select(ID,ConditionOfInterest,Mean=par, StandardValues)
-Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
-```
-
-Finally, we perform an ANOVA over means and standard deviations of the fitted psychometric functions. We are mainly interest in the main effect of Condition of Interest, so we extract the p value for this main effect for each means and standard deviations of the psychometric function. 
-
-
-```{r Staircase16, include=TRUE}
-ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
-summary(ANOVA_Mean)
-
-ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
-summary(ANOVA_SD)
-```
-
-
-**Computing the Power from Simulations for both approaches**
+**Computing the Power from Simulations**
 
 To simulate the power with a given set of parameters, we need to execute the above procedure sufficient times (we recommend 1000 times, although this might be too time consuming for studies with a high count of subjects and or trials; further below we give some recommendations on how to speed up the relatively slow glmer() model fitting implementation in the R package lme4), and calculate the ratio of simulations in which the test model is significantly better than the test model, given a certain false positive rate (typically 0.05). To this end, we establish functions containing the above procedure:
 
 ```{r Staircase14, include=TRUE}
-SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction,Mean_Variability_Between = 0.1, SD_Variability = 0.1){
+SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction,Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1){
   Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
   
   Psychometric = Psychometric %>%
     group_by(ID) %>%#
     mutate(PSE_Factor_ID = rnorm(1,1,Mean_Variability_Between),
-           SD_Factor_ID = rnorm(1,1,SD_Variability))
+           SD_Factor_ID = rnorm(1,1,SD_Variability_Between))
   
   Psychometric = Psychometric %>%
     mutate(
@@ -345,6 +337,107 @@ Analyze_Pychometric_Precision_GLMM = function(Psychometric){
   
   p
 }
+```
+
+Now, we determine for how many subjects we want to simulate the power. Fewer than 10 subjects are usually not recommended.
+```{r Staircase15, include=TRUE}
+NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
+```
+
+Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy from the R core package.
+```{r Staircase16, include=TRUE}
+nIterations = 1000
+pvalue = 0.05
+
+Power = data.frame()
+for (i in NumbersOfSubjects){
+  
+  ID = paste0("s",1:i)
+  TimeBeginning = Sys.time()
+  Dataframe_Temp = c()
+  
+  for (j in 1:nIterations){
+    
+    Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between)
+    
+    Parameters = GetParametersOfPsychometricFunction(Dataframe)
+    
+    p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
+      Analyze_Pychometric_Precision_GLMM(Dataframe))
+    
+    Dataframe_Temp = rbind(Dataframe_Temp,p)
+    
+    if ((j/50) %in% 1:(nIterations/50)){ #print the number of the current iteration every 50 trials
+      (print(j))
+    }
+  }
+  
+  Power = rbind(Power,
+                  data.frame(value = c(mean(Dataframe_Temp[,1] < pvalue),
+                                 mean(Dataframe_Temp[,2] < pvalue)),
+                       label = c("Accuracy GLMM",
+                                 "Precision GLMM"),
+                       nSubjects = i))
+
+  print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
+  print(paste0("Accuracy GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,1] < pvalue))) #outputs an estimate of the power for each n
+  print(paste0("Precision GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,2] < pvalue))) #outputs an estimate of the power for each n
+}
+
+```
+Once the simulation process is finished, we plot the data  for each number of subjects:
+```{r Staircase16, include=TRUE}
+ggplot(Power,aes(nSubjects,value, color = label)) +
+  geom_line(size = 2) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  scale_color_manual(values = c(BlauUB,Red)) +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,12,14,16,18,20))
+```
+
+
+
+***Comparing the power for the GLMM and the Two-Level approach***
+Moscatelli & Lacquaniti (2012) argue that power is lost when using the Two-Level approach. While this is an intuitive notion, it has, to our knowledge, not been confirmed analytically nor synethetically. We thus use the above power simulations to quantify just how much power is lost when using the Two-Level approach in comparison to the GLMM approach. We will use the above procedure to simulate power for the GLMM approach.
+
+**Estimating population parameters of the psychometric functions with the Two-Level approach**
+
+For the Two-Level approach, one would first fit psychometric functions for each condition and participant. Then, one would conduct a t.test or an anova to test whether they are different. While there are different methods to fit psychometric functions that each have their own benefits, we use a direction likelihood maximization method (Prins & Kingdom 2010; Knoblauch & Maloney 2012), implemented in the R package quicksy (Linares 2017). The bootstrap option is used to compute confidence intervals, which allow for statistical comparisons. However, the quickpsy package currently does not include an option to estimate population-wide parameters. We thus deactive the bootstrap option, which speeds up the fitting process significantly.
+
+```{r Staircase14, include=TRUE}
+require(quickpsy)
+
+Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
+```
+
+Then, we extract the parameters and bring the output of quickpsy into the adequate format for ANOVA analysis.
+
+```{r Staircase15, include=TRUE}
+Parameters2 = Parameters %>%
+  filter(parn == "p1") %>%
+  select(ID,ConditionOfInterest,Mean=par, StandardValues)
+Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
+```
+
+Finally, we perform an ANOVA over means and standard deviations of the fitted psychometric functions. We are mainly interest in the main effect of Condition of Interest, so we extract the p value for this main effect for each means and standard deviations of the psychometric function. 
+
+
+```{r Staircase16, include=TRUE}
+ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues*ID,Parameters2)
+summary(ANOVA_Mean)
+
+ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
+summary(ANOVA_SD)
+```
+
+**Comparing the statistical power of each approach**
+We pack these computations into functions and follow the same approach as above to compute the power for PSE and JND differences with the GLMM approach and the Two-Level approach. We use the same values we chose above.
+
+```{r Staircase16, include=TRUE}
+nIterations = 1000
+pvalue = 0.05
 
 GetParametersOfPsychometricFunction = function(Psychometric){
   Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
@@ -368,23 +461,6 @@ Analyze_Pychometric_Precision_2Level = function(Parameters){
   Coefficients = summary(ANOVA_SD)[[1]]
   Coefficients$`Pr(>F)`[1]
 }
-
-```
-
-Now, we determine for how many subjects we want to simulate the power. Fewer than 10 subjects are usually not recommended.
-```{r Staircase15, include=TRUE}
-NumbersOfSubjects = c(10,12,14,16,18,20) #for how many subjects are we simulating the power?
-```
-
-Then, we execute the above method "nIterations" times for each number of subjects specified above, both for precision and accuracy from the R core package.
-```{r Staircase16, include=TRUE}
-nIterations = 1000
-pvalue = 0.05
-
-    p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
-      Analyze_Pychometric_Precision_GLMM(Dataframe),
-    Analyze_Pychometric_Accuracy_2Level(Parameters),    
-    Analyze_Pychometric_Precision_2Level(Parameters))
 
 Power = data.frame()
 for (i in NumbersOfSubjects){
@@ -429,13 +505,16 @@ for (i in NumbersOfSubjects){
   print(paste0("Accuracy 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,3] < pvalue))) #outputs an estimate of the power for each n
   print(paste0("Precision 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,4] < pvalue))) #outputs an estimate of the power for each n
 }
+```
 
-
+Here, we visualize the simulated power for each approach (GLMM/Two-Level) and measure (PSE/JND):
+```{r Staircase16, include=TRUE}
 ggplot(Power,aes(nSubjects,value, color = label)) +
-  geom_line() +
+  geom_line(size = 2) +
   xlab("N° of Subjects") +
   ylab("Power") +
-  scale_color_manual(values = c(BlauUB,Red,BlauUB,LightRed)) +
-  geom_hline(line = 2, yintercept = 0.8) +
-  geom_hline(line = 3, yintercept = 0.95)
+  scale_color_manual(values = c(BlauUB,Red,LightBlauUB,LightRed)) +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,12,14,16,18,20))
 ```
