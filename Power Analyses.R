@@ -270,9 +270,6 @@ summary(ANOVA_Mean)
 ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
 summary(ANOVA_SD)
 
-nIterations = 1000
-pvalue = 0.05
-
 GetParametersOfPsychometricFunction = function(Psychometric){
   Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
   
@@ -297,6 +294,10 @@ Analyze_Pychometric_Precision_2Level = function(Parameters){
 }
 
 Power = data.frame()
+nIterations = 1000
+pvalue = 0.05
+NumbersOfSubjects = c(10,12,14,16,18,20)
+
 for (i in NumbersOfSubjects){
   
   ID = paste0("s",1:i)
