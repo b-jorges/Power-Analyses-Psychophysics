@@ -298,48 +298,66 @@ nIterations = 1000
 pvalue = 0.05
 NumbersOfSubjects = c(10,12,14,16,18,20)
 
-for (i in NumbersOfSubjects){
-  
-  ID = paste0("s",1:i)
-  TimeBeginning = Sys.time()
-  Dataframe_Temp = c()
-  
-  for (j in 1:nIterations){
+Mean_Variability_Between = 0.1
+SD_Variability_Between = 0.1
+
+ComparePowers = function(ID,ConditionOfInterest,StandardValues,reps,PSE_Difference,JND_Difference,
+                         Mean_Standard,SD_Standard,SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between
+                         NumbersOfSubjects){
+  for (i in NumbersOfSubjects){
     
-    Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction)
+    ID = paste0("s",1:i)
+    TimeBeginning = Sys.time()
+    Dataframe_Temp = c()
     
-    Parameters = GetParametersOfPsychometricFunction(Dataframe)
-    
-    p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
-          Analyze_Pychometric_Precision_GLMM(Dataframe),
-          Analyze_Pychometric_Accuracy_2Level(Parameters),    
-          Analyze_Pychometric_Precision_2Level(Parameters))
-    
-    
-    Dataframe_Temp = rbind(Dataframe_Temp,p)
-    
-    if ((j/25) %in% 1:40){
-      (print(j))
+    for (j in 1:nIterations){
+      
+      Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction)
+      
+      Parameters = GetParametersOfPsychometricFunction(Dataframe)
+      
+      p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
+            Analyze_Pychometric_Precision_GLMM(Dataframe),
+            Analyze_Pychometric_Accuracy_2Level(Parameters),    
+            Analyze_Pychometric_Precision_2Level(Parameters))
+      
+      
+      Dataframe_Temp = rbind(Dataframe_Temp,p)
+      
+      if ((j/25) %in% 1:40){
+        (print(j))
+      }
     }
+    
+    Power = rbind(Power,
+                  data.frame(value = c(mean(Dataframe_Temp[,1] < pvalue),
+                                       mean(Dataframe_Temp[,2] < pvalue),
+                                       mean(Dataframe_Temp[,3] < pvalue),
+                                       mean(Dataframe_Temp[,4] < pvalue)),
+                             label = c("Accuracy GLMM",
+                                       "Precision GLMM",
+                                       "Accuracy Two-Level",
+                                       "Precision Two-Level"),
+                             nSubjects = i))
+    
+    print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
+    print(paste0("Accuracy GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,1] < pvalue))) #outputs an estimate of the power for each n
+    print(paste0("Precision GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,2] < pvalue))) #outputs an estimate of the power for each n
+    print(paste0("Accuracy 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,3] < pvalue))) #outputs an estimate of the power for each n
+    print(paste0("Precision 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,4] < pvalue))) #outputs an estimate of the power for each n
   }
-  
-  Power = rbind(Power,
-                data.frame(value = c(mean(Dataframe_Temp[,1] < pvalue),
-                                     mean(Dataframe_Temp[,2] < pvalue),
-                                     mean(Dataframe_Temp[,3] < pvalue),
-                                     mean(Dataframe_Temp[,4] < pvalue)),
-                           label = c("Accuracy GLMM",
-                                     "Precision GLMM",
-                                     "Accuracy Two-Level",
-                                     "Precision Two-Level"),
-                           nSubjects = i))
-  
-  print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
-  print(paste0("Accuracy GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,1] < pvalue))) #outputs an estimate of the power for each n
-  print(paste0("Precision GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,2] < pvalue))) #outputs an estimate of the power for each n
-  print(paste0("Accuracy 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,3] < pvalue))) #outputs an estimate of the power for each n
-  print(paste0("Precision 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,4] < pvalue))) #outputs an estimate of the power for each n
+
+Power
 }
+
+Powers1 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
+                        Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+Powers2 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps = 25, PSE_Difference, JND_Difference, 
+                        Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+Powers3 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference = -0.1, JND_Difference = 0.25, 
+                        Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+Powers4 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference = 0.5, JND_Difference = -0.2, 
+                        Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
 
 ggplot(Power,aes(nSubjects,value, color = label)) +
   geom_line(size = 2) +
