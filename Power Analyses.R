@@ -5,28 +5,28 @@ require(lme4)
 require(ggplot2)
 require(cowplot)
 theme_set(theme_cowplot())
+require(quickpsy)
+
+
+Where_Am_I <- function(path=T){
+  if (path == T){
+    dirname(rstudioapi::getSourceEditorContext()$path)
+  }
+  else {
+    rstudioapi::getSourceEditorContext()$path
+  }
+}
 
 binomial_smooth <- function(...) {
   geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)}
 
+setwd(Where_Am_I())
+
 source("Utilities/parabolic.r")
 source("Utilities/functions.r")
 source("Utilities/colourschemes.r")
-set.seed(912)
+set.seed(9121)
 
-ResponseDistributions = data.frame(
-  Value=c(rcauchy(55,1,0.1),
-          rnorm(55,1,0.1),
-          rep(c(0.7,0.85,1,1.15,1.3),11)),
-  label = c(rep("Cauchy",55),
-            rep("Normal",55),
-            rep("Uniform",55))
-)
-
-ggplot(ResponseDistributions, aes(Value,color = label)) +
-  geom_density(size=2) +
-  coord_cartesian(xlim=c(0.5,1.5))
-ggsave("lala.jpg")
 
 ID = paste0("s",1:5)
 ConditionOfInterest = c(0,1)
@@ -59,6 +59,24 @@ Psychometric = Psychometric %>%
     Mean = Mean*PSE_Factor_ID,
     SD = SD*SD_Factor_ID)
 
+ResponseDistributions = data.frame(
+  Value=c(rcauchy(55,1,0.05),
+          rnorm(55,1,0.1),
+          rep(c(0.7,0.85,1,1.15,1.3),11)),
+  label = c(rep("Cauchy",55),
+            rep("Normal",55),
+            rep("Uniform",55))
+)
+
+ggplot(ResponseDistributions %>% filter(label %in% c("Cauchy","Normal")), aes(Value,color = label)) +
+  geom_density(size=2) +
+  coord_cartesian(xlim=c(0.5,1.5)) +
+  xlab("Stimulus Intensity") +
+  ylab("Density") +
+  scale_color_manual(name = "Distribution\nType",
+                     values = c(Red,BlauUB),
+                     labels = c("Cauchy","Gaussian")) +
+ggsave("Figure1 Distributions.jpg", w = 6, h = 4)
 
 if (Type_ResponseFunction == "normal"){
   
@@ -105,17 +123,17 @@ Psychometric = Psychometric %>%
   mutate(Yes = sum(Answer==1),
          Total = length(ConditionOfInterest))
 
+PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
 
-ggplot(Psychometric, aes(Difference, Answer, color = as.factor(ConditionOfInterest))) +
-  binomial_smooth() +
-  facet_grid(StandardValues~ID) +
-  geom_vline(xintercept = 0, color = "grey") +
-  geom_hline(yintercept = 0.5, color = "grey") +
+plot(PsychometricFunctions) +
+  scale_color_manual(name = "",
+                     values = c(Red,BlauUB),
+                     labels = c("Control","Experimental")) +
   xlab("Difference between Comparison and Test") +
   ylab("Probability to choose Test") +
-  scale_color_manual(name = "Condition",
-                     values = c(Red,BlauUB))
-ggsave("Figure 2.jpg")
+  geom_vline(linetype = 2, xintercept = 0, color = "grey") +
+  geom_hline(linetype = 2, yintercept = 0.5, color = "grey")
+ggsave("Figure02.jpg", w = 10,h = 5)
 
 
 GLMM_Accuracy = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | StandardValues),
@@ -133,7 +151,6 @@ GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*
                        data = Psychometric,
                        nAGQ = 0,
                        control = glmerControl(optimizer = "nloptwrap"))
-
 
 require(lmerTest)
 summary(GLMM_Precision)$coefficients
@@ -255,8 +272,6 @@ ggplot(Power,aes(nSubjects,value, color = label)) +
 ####################################################################################
 ##################Comparing Two-Level approach and GLMMs############################
 ####################################################################################
-require(quickpsy)
-
 Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
 
 Parameters2 = Parameters %>%
@@ -302,7 +317,7 @@ Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
 
 ComparePowers = function(ID,ConditionOfInterest,StandardValues,reps,PSE_Difference,JND_Difference,
-                         Mean_Standard,SD_Standard,SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between
+                         Mean_Standard,SD_Standard,SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between,
                          NumbersOfSubjects){
   for (i in NumbersOfSubjects){
     
