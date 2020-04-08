@@ -294,15 +294,16 @@ Analyze_Pychometric_Precision_2Level = function(Parameters){
 }
 
 Power = data.frame()
-nIterations = 1000
+nIterations = 100
 pvalue = 0.05
-NumbersOfSubjects = c(10,12,14,16,18,20)
+#NumbersOfSubjects = c(10,12,14,16,18,20)
+NumbersOfSubjects = c(2,3,4,5,6)
 
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
 
 ComparePowers = function(ID,ConditionOfInterest,StandardValues,reps,PSE_Difference,JND_Difference,
-                         Mean_Standard,SD_Standard,SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between
+                         Mean_Standard,SD_Standard,SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between,
                          NumbersOfSubjects){
   for (i in NumbersOfSubjects){
     
@@ -312,7 +313,8 @@ ComparePowers = function(ID,ConditionOfInterest,StandardValues,reps,PSE_Differen
     
     for (j in 1:nIterations){
       
-      Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, SD_Standard, SD_ResponseFunction)
+      Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Mean_Standard, 
+                                                         SD_Standard, SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between)
       
       Parameters = GetParametersOfPsychometricFunction(Dataframe)
       
@@ -352,12 +354,19 @@ Power
 
 Powers1 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
                         Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
-Powers2 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps = 25, PSE_Difference, JND_Difference, 
+write.csv(Powers1,"Powers1.csv")
+
+Powers2 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference, JND_Difference, 
                         Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+write.csv(Powers2,"Powers2.csv")
+
 Powers3 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference = -0.1, JND_Difference = 0.25, 
                         Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+write.csv(Powers3,"Powers3.csv")
+
 Powers4 = ComparePowers(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference = 0.5, JND_Difference = -0.2, 
                         Mean_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+write.csv(Powers4,"Powers4.csv")
 
 ggplot(Power,aes(nSubjects,value, color = label)) +
   geom_line(size = 2) +
