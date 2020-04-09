@@ -385,7 +385,7 @@ Powers2 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Di
                         NumbersOfSubjects)
 write.csv(Powers2,"Powers2.csv")
 
-Powers3 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps, PSE_Difference = -0.1, JND_Difference = 0.1, 
+Powers3 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps, PSE_Difference = 0, JND_Difference = 0.3, 
                         PSE_Standard = 0.1, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
 write.csv(Powers3,"Powers3.csv")
 
