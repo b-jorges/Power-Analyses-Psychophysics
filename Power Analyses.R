@@ -30,13 +30,12 @@ set.seed(9121)
 
 ID = paste0("s",1:5)
 ConditionOfInterest = c(0,1)
-StandardValues = c(6.6, 8, 10)
+StandardValues = c(2,4)
 reps = seq(1,55,1)
-PSE_Difference = -0.3
-JND_Difference = -0.2
-PSE_Standard = 0
+PSE_Difference = 0.05
+JND_Difference = 0.05
+Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.108
-SD_Standard = StandardValues*Multiplicator_SD_Standard
 Type_ResponseFunction = "Normal"
 SD_ResponseFunction = 0.04
 Mean_Variability_Between = 0.1
@@ -51,7 +50,8 @@ Psychometric = Psychometric %>%
 
 Psychometric = Psychometric %>%
   mutate(
-    Mean_Standard = StandardValues+StandardValues*PSE_Standard,
+    Mean_Standard = StandardValues+StandardValues*Multiplicator_PSE_Standard,
+    SD_Standard = StandardValues*Multiplicator_SD_Standard,
     Mean = (Mean_Standard + (ConditionOfInterest==1)*Mean_Standard*PSE_Difference),
     SD = abs(SD_Standard + (ConditionOfInterest==1)*SD_Standard*JND_Difference))
 
@@ -158,7 +158,7 @@ summary(GLMM_Precision)$coefficients
 
 
 SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
-                                                  PSE_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1){
+                                                  Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1){
   Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
   
   Psychometric = Psychometric %>%
@@ -168,7 +168,8 @@ SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, Stand
   
   Psychometric = Psychometric %>%
     mutate(
-      Mean_Standard = StandardValues+StandardValues*PSE_Standard,
+      Mean_Standard = StandardValues+StandardValues*Multiplicator_PSE_Standard,
+      SD_Standard = StandardValues*Multiplicator_SD_Standard,
       Mean = (Mean_Standard + (ConditionOfInterest==1)*StandardValues*PSE_Difference)*PSE_Factor_ID,
       SD = abs((SD_Standard + (ConditionOfInterest==1)*SD_Standard*JND_Difference)*SD_Factor_ID),
       staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction), 
@@ -209,7 +210,7 @@ Analyze_Pychometric_Precision_GLMM = function(Psychometric){
   
   TimeBeginning = Sys.time()
   
-  GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*Difference + (Difference  | ID) + (Difference  | StandardValues), 
+  GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference  | ID) + (Difference  | StandardValues), 
                          family = binomial(link = "probit"), 
                          data = Psychometric,
                          nAGQ = 0,
@@ -242,7 +243,7 @@ for (i in NumbersOfSubjects){
   
   for (j in 1:nIterations){
     
-    Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, PSE_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between)
+    Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between)
     
     Parameters = GetParametersOfPsychometricFunction(Dataframe)
     
@@ -281,16 +282,17 @@ ggplot(Power,aes(nSubjects,value, color = label)) +
 ##################Comparing Two-Level approach and GLMMs############################
 ####################################################################################
 Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
-
+plot(quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none"))
 Parameters2 = Parameters %>%
   filter(parn == "p1") %>%
   select(ID,ConditionOfInterest,Mean=par, StandardValues)
 Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
+Parameters = Parameters2
 
-ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters2)
+ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
 summary(ANOVA_Mean)
 
-ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues*ID,Parameters2)
+ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
 summary(ANOVA_SD)
 
 GetParametersOfPsychometricFunction = function(Psychometric){
@@ -326,7 +328,7 @@ Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
 
 ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
-                         PSE_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1,
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1,
                          NumbersOfSubjects){
   for (i in NumbersOfSubjects){
     
@@ -337,7 +339,7 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
     for (j in 1:nIterations){
       
       Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
-                                                         PSE_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1)
+                                                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1)
       
       Parameters = GetParametersOfPsychometricFunction(Dataframe)
       
@@ -363,6 +365,9 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
                                        "Precision GLMM",
                                        "Accuracy Two-Level",
                                        "Precision Two-Level"),
+                             reps = reps[length(reps)],
+                             PSE_Difference = PSE_Difference,
+                             JND_Difference = JND_Difference,
                              nSubjects = i))
     
     print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
@@ -375,22 +380,28 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
 Power
 }
 
-Powers1 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference=0.1, JND_Difference=0.1, 
-                        PSE_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
+Powers1 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference=-0.05, JND_Difference=-0.05, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
+                        Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
                         NumbersOfSubjects)
 write.csv(Powers1,"Powers1.csv")
 
 Powers2 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.1, JND_Difference = 0.2, 
-                        PSE_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
+                        Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
                         NumbersOfSubjects)
 write.csv(Powers2,"Powers2.csv")
 
-Powers3 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps, PSE_Difference = 0, JND_Difference = 0.3, 
-                        PSE_Standard = 0.1, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+Powers3 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps = 1:55, PSE_Difference = -0.1, JND_Difference = 0.3, 
+                        Multiplicator_PSE_Standard = 0.1, Multiplicator_SD_Standard, SD_ResponseFunction, 
+                        Mean_Variability_Between, SD_Variability_Between, 
+                        NumbersOfSubjects)
 write.csv(Powers3,"Powers3.csv")
 
-Powers4 = ComparePowers(ConditionOfInterest, StandardValues, reps, PSE_Difference = 0.5, JND_Difference = 0.5, 
-                        PSE_Standard, SD_Standard, SD_ResponseFunction, Mean_Variability_Between, SD_Variability_Between, NumbersOfSubjects)
+Powers4 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps = 1:25, PSE_Difference = 0.02, JND_Difference = 0.3, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
+                        Mean_Variability_Between, SD_Variability_Between, 
+                        NumbersOfSubjects)
 write.csv(Powers4,"Powers4.csv")
 
 ggplot(Power,aes(nSubjects,value, color = label)) +
