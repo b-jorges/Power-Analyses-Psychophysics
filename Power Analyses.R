@@ -390,7 +390,7 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
                              JND_Difference = JND_Difference,
                              StandardValues = paste0(StandardValues[1],StandardValues[length(StandardValues)]),
                              nStandardValues = length(StandardValues),
-                             TrialsPerSubject = length(StandardValues)*length(reps)*
+                             TrialsPerSubject = length(StandardValues)*length(reps)*length(ConditionOfInterest),
                              SD_ResponseFunction = SD_ResponseFunction,
                              nSubjects = i))
     
