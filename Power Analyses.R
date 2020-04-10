@@ -32,12 +32,12 @@ ID = paste0("s",1:5)
 ConditionOfInterest = c(0,1)
 StandardValues = c(2,4)
 reps = seq(1,55,1)
-PSE_Difference = 0.05
-JND_Difference = 0.05
+PSE_Difference = 0.0
+JND_Difference = 0.3
 Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.108
 Type_ResponseFunction = "Normal"
-SD_ResponseFunction = 0.04
+SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
 
@@ -119,7 +119,7 @@ Psychometric = Psychometric %>%
 
 ###prepare for glmer() - needs sum of YES/Total per stimulus strength and condition
 Psychometric = Psychometric %>%
-  filter(abs(staircase_factor-1) < 0.5) %>%
+  filter(abs(staircase_factor-1) < 0.75) %>%
   group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
   mutate(Yes = sum(Answer==1),
          Total = length(ConditionOfInterest))
@@ -134,7 +134,7 @@ plot(PsychometricFunctions) +
   ylab("Probability to choose Test") +
   geom_vline(linetype = 2, xintercept = 0, color = "grey") +
   geom_hline(linetype = 2, yintercept = 0.5, color = "grey")
-ggsave("Figure02.jpg", w = 10,h = 5)
+ggsave("Figure02.jpg", w = 10, h = 5)
 
 
 GLMM_Accuracy = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | StandardValues),
@@ -147,7 +147,7 @@ require(lmerTest)
 summary(GLMM_Accuracy)$coefficients
 
 
-GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ as.factor(ConditionOfInterest)*Difference + (Difference  | ID) + (Difference  | StandardValues), 
+GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID) + (1| StandardValues), 
                        family = binomial(link = "probit"), 
                        data = Psychometric,
                        nAGQ = 0,
@@ -180,7 +180,7 @@ SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, Stand
     )
   
   Psychometric = Psychometric %>%
-    filter(abs(staircase_factor-1) < 0.5) %>%
+    filter(abs(staircase_factor-1) < 0.75) %>%
     group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
     mutate(Yes = sum(Answer==1),
            Total = length(ConditionOfInterest))
@@ -318,6 +318,20 @@ Analyze_Pychometric_Precision_2Level = function(Parameters){
   Coefficients$`Pr(>F)`[1]
 }
 
+Analyze_Pychometric_Accuracy_2Level_LMM = function(Parameters){
+  
+  mod = lmer(Mean ~ ConditionOfInterest + (1  | ID) + (1  | StandardValues), 
+        data = Parameters)
+  summary(mod)$coefficients[10]
+}
+
+Analyze_Pychometric_Precision_2Level_LMM = function(Parameters){
+  
+  mod = lmer(SD ~ ConditionOfInterest + (1  | ID) + (1  | StandardValues), 
+             data = Parameters)
+  summary(mod)$coefficients[10]
+}
+
 Power = data.frame()
 nIterations = 200
 pvalue = 0.05
@@ -346,7 +360,9 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
       p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
             Analyze_Pychometric_Precision_GLMM(Dataframe),
             Analyze_Pychometric_Accuracy_2Level(Parameters),    
-            Analyze_Pychometric_Precision_2Level(Parameters))
+            Analyze_Pychometric_Precision_2Level(Parameters),
+            Analyze_Pychometric_Accuracy_2Level_LMM(Parameters),
+            Analyze_Pychometric_Precision_2Level_LMM(Parameters))
       
       
       Dataframe_Temp = rbind(Dataframe_Temp,p)
@@ -360,14 +376,22 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
                   data.frame(value = c(mean(Dataframe_Temp[,1] < pvalue),
                                        mean(Dataframe_Temp[,2] < pvalue),
                                        mean(Dataframe_Temp[,3] < pvalue),
-                                       mean(Dataframe_Temp[,4] < pvalue)),
+                                       mean(Dataframe_Temp[,4] < pvalue),
+                                       mean(Dataframe_Temp[,5] < pvalue),
+                                       mean(Dataframe_Temp[,6] < pvalue)),
                              label = c("Accuracy GLMM",
                                        "Precision GLMM",
                                        "Accuracy Two-Level",
-                                       "Precision Two-Level"),
+                                       "Precision Two-Level",
+                                       "Accuracy Two-Level LMM",
+                                       "Precision Two-Level LMM"),
                              reps = reps[length(reps)],
                              PSE_Difference = PSE_Difference,
                              JND_Difference = JND_Difference,
+                             StandardValues = paste0(StandardValues[1],StandardValues[length(StandardValues)]),
+                             nStandardValues = length(StandardValues),
+                             TrialsPerSubject = length(StandardValues)*length(reps)*
+                             SD_ResponseFunction = SD_ResponseFunction,
                              nSubjects = i))
     
     print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
@@ -375,6 +399,8 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
     print(paste0("Precision GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,2] < pvalue))) #outputs an estimate of the power for each n
     print(paste0("Accuracy 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,3] < pvalue))) #outputs an estimate of the power for each n
     print(paste0("Precision 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,4] < pvalue))) #outputs an estimate of the power for each n
+    print(paste0("Accuracy 2Level LMM for ", i, " subjects: ", mean(Dataframe_Temp[,5] < pvalue))) #outputs an estimate of the power for each n
+    print(paste0("Precision 2Level LMM for ", i, " subjects: ", mean(Dataframe_Temp[,6] < pvalue))) #outputs an estimate of the power for each n
   }
 
 Power
@@ -384,25 +410,49 @@ Powers1 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Di
                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
                         Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
                         NumbersOfSubjects)
-write.csv(Powers1,"Powers1.csv")
+write.csv(Powers1,"Powers1.csv") #small negative differences
 
 Powers2 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.1, JND_Difference = 0.2, 
                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
                         Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
                         NumbersOfSubjects)
-write.csv(Powers2,"Powers2.csv")
+write.csv(Powers2,"Powers2.csv") #not super big differences, fewer trials
 
-Powers3 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps = 1:55, PSE_Difference = -0.1, JND_Difference = 0.3, 
+Powers3 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps = 1:55, PSE_Difference = 0.1, JND_Difference = 0.3, 
                         Multiplicator_PSE_Standard = 0.1, Multiplicator_SD_Standard, SD_ResponseFunction, 
                         Mean_Variability_Between, SD_Variability_Between, 
                         NumbersOfSubjects)
-write.csv(Powers3,"Powers3.csv")
+write.csv(Powers3,"Powers3.csv") #only two standard variables
 
-Powers4 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps = 1:25, PSE_Difference = 0.02, JND_Difference = 0.3, 
-                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
+Powers4 = ComparePowers(ConditionOfInterest, StandardValues = c(2,4), reps = 1:25, PSE_Difference = 0.2, JND_Difference = 0.3, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
                         Mean_Variability_Between, SD_Variability_Between, 
                         NumbersOfSubjects)
-write.csv(Powers4,"Powers4.csv")
+write.csv(Powers4,"Powers4.csv") #only two standard and fewer trials
+
+Powers5 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference=0, JND_Difference=0.5, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
+                        Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
+                        NumbersOfSubjects)
+write.csv(Powers5,"Powers5.csv") #huge difference in JND, no difference in PSE
+
+Powers6 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.2, JND_Difference = 2, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
+                        Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
+                        NumbersOfSubjects)
+write.csv(Powers6,"Powers6.csv") #huge ratio between PSE and JND
+
+Powers7 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference = 0.1, JND_Difference = 0.3, 
+                        Multiplicator_PSE_Standard = 0.1, Multiplicator_SD_Standard, SD_ResponseFunction = 0.2, 
+                        Mean_Variability_Between, SD_Variability_Between, 
+                        NumbersOfSubjects)
+write.csv(Powers3,"Powers7.csv") #broader response function
+
+Powers8 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.1, JND_Difference = 0.3, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.2, 
+                        Mean_Variability_Between, SD_Variability_Between, 
+                        NumbersOfSubjects)
+write.csv(Powers4,"Powers8.csv") #broader response function, fewer trials
 
 ggplot(Power,aes(nSubjects,value, color = label)) +
   geom_line(size = 2) +

@@ -1,0 +1,37 @@
+"","value","label","reps","PSE_Difference","JND_Difference","nSubjects"
+"1",1,"Accuracy GLMM",25,0.1,0.2,10
+"2",0.285,"Precision GLMM",25,0.1,0.2,10
+"3",0.915,"Accuracy Two-Level",25,0.1,0.2,10
+"4",0.17,"Precision Two-Level",25,0.1,0.2,10
+"5",0.99,"Accuracy Two-Level LMM",25,0.1,0.2,10
+"6",0.19,"Precision Two-Level LMM",25,0.1,0.2,10
+"7",1,"Accuracy GLMM",25,0.1,0.2,12
+"8",0.33,"Precision GLMM",25,0.1,0.2,12
+"9",0.9,"Accuracy Two-Level",25,0.1,0.2,12
+"10",0.17,"Precision Two-Level",25,0.1,0.2,12
+"11",0.985,"Accuracy Two-Level LMM",25,0.1,0.2,12
+"12",0.18,"Precision Two-Level LMM",25,0.1,0.2,12
+"13",1,"Accuracy GLMM",25,0.1,0.2,14
+"14",0.42,"Precision GLMM",25,0.1,0.2,14
+"15",0.98,"Accuracy Two-Level",25,0.1,0.2,14
+"16",0.24,"Precision Two-Level",25,0.1,0.2,14
+"17",1,"Accuracy Two-Level LMM",25,0.1,0.2,14
+"18",0.265,"Precision Two-Level LMM",25,0.1,0.2,14
+"19",1,"Accuracy GLMM",25,0.1,0.2,16
+"20",0.385,"Precision GLMM",25,0.1,0.2,16
+"21",1,"Accuracy Two-Level",25,0.1,0.2,16
+"22",0.27,"Precision Two-Level",25,0.1,0.2,16
+"23",1,"Accuracy Two-Level LMM",25,0.1,0.2,16
+"24",0.27,"Precision Two-Level LMM",25,0.1,0.2,16
+"25",1,"Accuracy GLMM",25,0.1,0.2,18
+"26",0.525,"Precision GLMM",25,0.1,0.2,18
+"27",0.99,"Accuracy Two-Level",25,0.1,0.2,18
+"28",0.225,"Precision Two-Level",25,0.1,0.2,18
+"29",0.99,"Accuracy Two-Level LMM",25,0.1,0.2,18
+"30",0.275,"Precision Two-Level LMM",25,0.1,0.2,18
+"31",1,"Accuracy GLMM",25,0.1,0.2,20
+"32",0.425,"Precision GLMM",25,0.1,0.2,20
+"33",1,"Accuracy Two-Level",25,0.1,0.2,20
+"34",0.26,"Precision Two-Level",25,0.1,0.2,20
+"35",1,"Accuracy Two-Level LMM",25,0.1,0.2,20
+"36",0.28,"Precision Two-Level LMM",25,0.1,0.2,20
