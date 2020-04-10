@@ -225,6 +225,43 @@ Analyze_Pychometric_Precision_GLMM = function(Psychometric){
 }
 
 
+Analyze_Pychometric_Accuracy_OnlyRndIntercepts = function(Psychometric){
+  
+  TimeBeginning = Sys.time()
+  
+  GLMM_Accuracy = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (1  | ID)  + (1  | StandardValues),
+                        family = binomial(link = "probit"), 
+                        data = Psychometric,
+                        nAGQ = 0,
+                        control = glmerControl(optimizer = "nloptwrap"))
+  
+  p = summary(GLMM_Accuracy)$coefficients[8]
+  
+  #print(TimeBeginning - Sys.time()) ###This is two show how long each iteration takes
+  #print(p)
+  
+  p
+}
+
+Analyze_Pychometric_Precision_OnlyRndIntercepts = function(Psychometric){
+  
+  TimeBeginning = Sys.time()
+  
+  GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1  | ID) + (1  | StandardValues), 
+                         family = binomial(link = "probit"), 
+                         data = Psychometric,
+                         nAGQ = 0,
+                         control = glmerControl(optimizer = "nloptwrap"))
+  
+  p = summary(GLMM_Precision)$coefficients[16]
+  
+  
+  #print(p)
+  
+  p
+}
+
+
 ####################################################################################
 ##################Getting power for a couple for GLMMs##############################
 ####################################################################################
@@ -362,7 +399,9 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
             Analyze_Pychometric_Accuracy_2Level(Parameters),    
             Analyze_Pychometric_Precision_2Level(Parameters),
             Analyze_Pychometric_Accuracy_2Level_LMM(Parameters),
-            Analyze_Pychometric_Precision_2Level_LMM(Parameters))
+            Analyze_Pychometric_Precision_2Level_LMM(Parameters),
+            Analyze_Pychometric_Accuracy_OnlyRndIntercepts(Dataframe),
+            Analyze_Pychometric_Precision_OnlyRndIntercepts(Dataframe))
       
       
       Dataframe_Temp = rbind(Dataframe_Temp,p)
@@ -378,13 +417,17 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
                                        mean(Dataframe_Temp[,3] < pvalue),
                                        mean(Dataframe_Temp[,4] < pvalue),
                                        mean(Dataframe_Temp[,5] < pvalue),
-                                       mean(Dataframe_Temp[,6] < pvalue)),
+                                       mean(Dataframe_Temp[,6] < pvalue),
+                                       mean(Dataframe_Temp[,7] < pvalue),
+                                       mean(Dataframe_Temp[,8] < pvalue)),
                              label = c("Accuracy GLMM",
                                        "Precision GLMM",
                                        "Accuracy Two-Level",
                                        "Precision Two-Level",
                                        "Accuracy Two-Level LMM",
-                                       "Precision Two-Level LMM"),
+                                       "Precision Two-Level LMM",
+                                       "Accuracy GLMM Only Intercepts",
+                                       "Precision GLMM Only Intercepts"),
                              reps = reps[length(reps)],
                              PSE_Difference = PSE_Difference,
                              JND_Difference = JND_Difference,
@@ -392,6 +435,8 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
                              nStandardValues = length(StandardValues),
                              TrialsPerSubject = length(StandardValues)*length(reps)*length(ConditionOfInterest),
                              SD_ResponseFunction = SD_ResponseFunction,
+                             Mean_Variability_Between = Mean_Variability_Between,
+                             SD_Variability_Between = SD_Variability_Between,
                              nSubjects = i))
     
     print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
@@ -401,6 +446,8 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
     print(paste0("Precision 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,4] < pvalue))) #outputs an estimate of the power for each n
     print(paste0("Accuracy 2Level LMM for ", i, " subjects: ", mean(Dataframe_Temp[,5] < pvalue))) #outputs an estimate of the power for each n
     print(paste0("Precision 2Level LMM for ", i, " subjects: ", mean(Dataframe_Temp[,6] < pvalue))) #outputs an estimate of the power for each n
+    print(paste0("Accuracy GLMM No Intercepts for ", i, " subjects: ", mean(Dataframe_Temp[,7] < pvalue))) #outputs an estimate of the power for each n
+    print(paste0("Precision GLMM No Intercepts for ", i, " subjects: ", mean(Dataframe_Temp[,8] < pvalue))) #outputs an estimate of the power for each n
   }
 
 Power
@@ -446,13 +493,25 @@ Powers7 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Di
                         Multiplicator_PSE_Standard = 0.1, Multiplicator_SD_Standard, SD_ResponseFunction = 0.2, 
                         Mean_Variability_Between, SD_Variability_Between, 
                         NumbersOfSubjects)
-write.csv(Powers3,"Powers7.csv") #broader response function
+write.csv(Powers7,"Powers7.csv") #broader response function
 
 Powers8 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.1, JND_Difference = 0.3, 
                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.2, 
                         Mean_Variability_Between, SD_Variability_Between, 
                         NumbersOfSubjects)
-write.csv(Powers4,"Powers8.csv") #broader response function, fewer trials
+write.csv(Powers8,"Powers8.csv") #broader response function, fewer trials
+
+Powers9 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference = 0, JND_Difference = 0.3, 
+                        Multiplicator_PSE_Standard = 0.1, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                        Mean_Variability_Between = 0.2, SD_Variability_Between = 0.2, 
+                        NumbersOfSubjects)
+write.csv(Powers9,"Powers9.csv") #broader response function
+
+Powers10 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.15, JND_Difference = 0.3, 
+                        Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.2, 
+                        Mean_Variability_Between = 0.2, SD_Variability_Between = 0.2, 
+                        NumbersOfSubjects)
+write.csv(Powers10,"Powers10.csv") #broader response function, fewer trials
 
 ggplot(Power,aes(nSubjects,value, color = label)) +
   geom_line(size = 2) +
