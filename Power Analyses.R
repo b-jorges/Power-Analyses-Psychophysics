@@ -25,6 +25,7 @@ setwd(Where_Am_I())
 source("Utilities/parabolic.r")
 source("Utilities/functions.r")
 source("Utilities/colourschemes.r")
+source("Utilities/PowerFunctions.r")
 set.seed(9121)
 
 
@@ -32,7 +33,7 @@ ID = paste0("s",1:5)
 ConditionOfInterest = c(0,1)
 StandardValues = c(2,4)
 reps = seq(1,55,1)
-PSE_Difference = 0.0
+PSE_Difference = 0.2
 JND_Difference = 0.3
 Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.108
@@ -157,111 +158,6 @@ require(lmerTest)
 summary(GLMM_Precision)$coefficients
 
 
-SimulatePsychometricFunction_Staircase = function(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
-                                                  Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1){
-  Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
-  
-  Psychometric = Psychometric %>%
-    group_by(ID) %>%#
-    mutate(PSE_Factor_ID = rnorm(1,1,Mean_Variability_Between),
-           SD_Factor_ID = rnorm(1,1,SD_Variability_Between))
-  
-  Psychometric = Psychometric %>%
-    mutate(
-      Mean_Standard = StandardValues+StandardValues*Multiplicator_PSE_Standard,
-      SD_Standard = StandardValues*Multiplicator_SD_Standard,
-      Mean = (Mean_Standard + (ConditionOfInterest==1)*StandardValues*PSE_Difference)*PSE_Factor_ID,
-      SD = abs((SD_Standard + (ConditionOfInterest==1)*SD_Standard*JND_Difference)*SD_Factor_ID),
-      staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction), 
-      Presented_TestStimulusStrength = Mean*staircase_factor,
-      Difference = Presented_TestStimulusStrength - StandardValues,
-      AnswerProbability = pnorm(Presented_TestStimulusStrength,Mean,SD),
-      Answer = as.numeric(rbernoulli(length(AnswerProbability),AnswerProbability))
-    )
-  
-  Psychometric = Psychometric %>%
-    filter(abs(staircase_factor-1) < 0.75) %>%
-    group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
-    mutate(Yes = sum(Answer==1),
-           Total = length(ConditionOfInterest))
-  
-  Psychometric
-}
-
-Analyze_Pychometric_Accuracy_GLMM = function(Psychometric){
-  
-  TimeBeginning = Sys.time()
-  
-  GLMM_Accuracy = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | StandardValues),
-                        family = binomial(link = "probit"), 
-                        data = Psychometric,
-                        nAGQ = 0,
-                        control = glmerControl(optimizer = "nloptwrap"))
-  
-  p = summary(GLMM_Accuracy)$coefficients[8]
-  
-  #print(TimeBeginning - Sys.time()) ###This is two show how long each iteration takes
-  #print(p)
-  
-  p
-}
-
-Analyze_Pychometric_Precision_GLMM = function(Psychometric){
-  
-  TimeBeginning = Sys.time()
-  
-  GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference  | ID) + (Difference  | StandardValues), 
-                         family = binomial(link = "probit"), 
-                         data = Psychometric,
-                         nAGQ = 0,
-                         control = glmerControl(optimizer = "nloptwrap"))
-  
-  p = summary(GLMM_Precision)$coefficients[16]
-  
-  
-  #print(p)
-  
-  p
-}
-
-
-Analyze_Pychometric_Accuracy_OnlyRndIntercepts = function(Psychometric){
-  
-  TimeBeginning = Sys.time()
-  
-  GLMM_Accuracy = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (1  | ID)  + (1  | StandardValues),
-                        family = binomial(link = "probit"), 
-                        data = Psychometric,
-                        nAGQ = 0,
-                        control = glmerControl(optimizer = "nloptwrap"))
-  
-  p = summary(GLMM_Accuracy)$coefficients[8]
-  
-  #print(TimeBeginning - Sys.time()) ###This is two show how long each iteration takes
-  #print(p)
-  
-  p
-}
-
-Analyze_Pychometric_Precision_OnlyRndIntercepts = function(Psychometric){
-  
-  TimeBeginning = Sys.time()
-  
-  GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1  | ID) + (1  | StandardValues), 
-                         family = binomial(link = "probit"), 
-                         data = Psychometric,
-                         nAGQ = 0,
-                         control = glmerControl(optimizer = "nloptwrap"))
-  
-  p = summary(GLMM_Precision)$coefficients[16]
-  
-  
-  #print(p)
-  
-  p
-}
-
-
 ####################################################################################
 ##################Getting power for a couple for GLMMs##############################
 ####################################################################################
@@ -332,42 +228,7 @@ summary(ANOVA_Mean)
 ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
 summary(ANOVA_SD)
 
-GetParametersOfPsychometricFunction = function(Psychometric){
-  Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
-  
-  Parameters2 = Parameters %>%
-    filter(parn == "p1") %>%
-    select(ID,ConditionOfInterest,Mean=par, StandardValues)
-  Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
-  Parameters2
-}
 
-Analyze_Pychometric_Accuracy_2Level = function(Parameters){
-  
-  ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
-  Coefficients = summary(ANOVA_Mean)[[1]]
-  Coefficients$`Pr(>F)`[1]
-}
-Analyze_Pychometric_Precision_2Level = function(Parameters){
-  
-  ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
-  Coefficients = summary(ANOVA_SD)[[1]]
-  Coefficients$`Pr(>F)`[1]
-}
-
-Analyze_Pychometric_Accuracy_2Level_LMM = function(Parameters){
-  
-  mod = lmer(Mean ~ ConditionOfInterest + (1  | ID) + (1  | StandardValues), 
-        data = Parameters)
-  summary(mod)$coefficients[10]
-}
-
-Analyze_Pychometric_Precision_2Level_LMM = function(Parameters){
-  
-  mod = lmer(SD ~ ConditionOfInterest + (1  | ID) + (1  | StandardValues), 
-             data = Parameters)
-  summary(mod)$coefficients[10]
-}
 
 Power = data.frame()
 nIterations = 200
@@ -378,80 +239,7 @@ NumbersOfSubjects = c(10,12,14,16,18,20)
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
 
-ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
-                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1,
-                         NumbersOfSubjects){
-  for (i in NumbersOfSubjects){
-    
-    ID = paste0("s",1:i)
-    TimeBeginning = Sys.time()
-    Dataframe_Temp = c()
-    
-    for (j in 1:nIterations){
-      
-      Dataframe = SimulatePsychometricFunction_Staircase(ID, ConditionOfInterest, StandardValues, reps, PSE_Difference, JND_Difference, 
-                                                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1)
-      
-      Parameters = GetParametersOfPsychometricFunction(Dataframe)
-      
-      p = c(Analyze_Pychometric_Accuracy_GLMM(Dataframe),
-            Analyze_Pychometric_Precision_GLMM(Dataframe),
-            Analyze_Pychometric_Accuracy_2Level(Parameters),    
-            Analyze_Pychometric_Precision_2Level(Parameters),
-            Analyze_Pychometric_Accuracy_2Level_LMM(Parameters),
-            Analyze_Pychometric_Precision_2Level_LMM(Parameters),
-            Analyze_Pychometric_Accuracy_OnlyRndIntercepts(Dataframe),
-            Analyze_Pychometric_Precision_OnlyRndIntercepts(Dataframe))
-      
-      
-      Dataframe_Temp = rbind(Dataframe_Temp,p)
-      
-      if ((j/25) %in% 1:40){
-        (print(j))
-      }
-    }
-    
-    Power = rbind(Power,
-                  data.frame(value = c(mean(Dataframe_Temp[,1] < pvalue),
-                                       mean(Dataframe_Temp[,2] < pvalue),
-                                       mean(Dataframe_Temp[,3] < pvalue),
-                                       mean(Dataframe_Temp[,4] < pvalue),
-                                       mean(Dataframe_Temp[,5] < pvalue),
-                                       mean(Dataframe_Temp[,6] < pvalue),
-                                       mean(Dataframe_Temp[,7] < pvalue),
-                                       mean(Dataframe_Temp[,8] < pvalue)),
-                             label = c("Accuracy GLMM",
-                                       "Precision GLMM",
-                                       "Accuracy Two-Level",
-                                       "Precision Two-Level",
-                                       "Accuracy Two-Level LMM",
-                                       "Precision Two-Level LMM",
-                                       "Accuracy GLMM Only Intercepts",
-                                       "Precision GLMM Only Intercepts"),
-                             reps = reps[length(reps)],
-                             PSE_Difference = PSE_Difference,
-                             JND_Difference = JND_Difference,
-                             StandardValues = paste0(StandardValues[1],StandardValues[length(StandardValues)]),
-                             nStandardValues = length(StandardValues),
-                             TrialsPerSubject = length(StandardValues)*length(reps)*length(ConditionOfInterest),
-                             SD_ResponseFunction = SD_ResponseFunction,
-                             Mean_Variability_Between = Mean_Variability_Between,
-                             SD_Variability_Between = SD_Variability_Between,
-                             nSubjects = i))
-    
-    print(paste0("This iteration has taken ", Sys.time() - TimeBeginning))  ###This is two show how long each iteration takes
-    print(paste0("Accuracy GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,1] < pvalue))) #outputs an estimate of the power for each n
-    print(paste0("Precision GLMM for ", i, " subjects: ", mean(Dataframe_Temp[,2] < pvalue))) #outputs an estimate of the power for each n
-    print(paste0("Accuracy 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,3] < pvalue))) #outputs an estimate of the power for each n
-    print(paste0("Precision 2Level for ", i, " subjects: ", mean(Dataframe_Temp[,4] < pvalue))) #outputs an estimate of the power for each n
-    print(paste0("Accuracy 2Level LMM for ", i, " subjects: ", mean(Dataframe_Temp[,5] < pvalue))) #outputs an estimate of the power for each n
-    print(paste0("Precision 2Level LMM for ", i, " subjects: ", mean(Dataframe_Temp[,6] < pvalue))) #outputs an estimate of the power for each n
-    print(paste0("Accuracy GLMM No Intercepts for ", i, " subjects: ", mean(Dataframe_Temp[,7] < pvalue))) #outputs an estimate of the power for each n
-    print(paste0("Precision GLMM No Intercepts for ", i, " subjects: ", mean(Dataframe_Temp[,8] < pvalue))) #outputs an estimate of the power for each n
-  }
 
-Power
-}
 
 Powers1 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference=-0.05, JND_Difference=-0.05, 
                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction, 
@@ -585,3 +373,6 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 3, yintercept = 0.95) +
   scale_x_continuous(breaks=c(10,12,14,16,18,20))
+
+
+modglm(GLMM_Precision, c(StandardValues,ConditionOfInterest), Psychometric)
