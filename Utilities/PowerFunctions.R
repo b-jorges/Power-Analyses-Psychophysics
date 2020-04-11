@@ -75,14 +75,17 @@ Analyze_Pychometric_Precision_GLMM = function(Psychometric){
 }
 
 
-
+Parameters$ConditionOfInterest
 
 GetParametersOfPsychometricFunction = function(Psychometric){
+  
   Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
   
-  Parameters2 = Parameters %>%
-    filter(parn == "p1") %>%
-    select(ID,ConditionOfInterest,Mean=par, StandardValues)
+  Parameters2 = data.frame(ID = Parameters$ID[Parameters$parn == "p1"],
+                           ConditionOfInterest = Parameters$ConditionOfInterest[Parameters$parn == "p1"],
+                           Mean = Parameters$par[Parameters$parn == "p1"],
+                           StandardValues = Parameters$StandardValues[Parameters$parn == "p1"])
+  
   Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
   Parameters2
 }

@@ -350,6 +350,54 @@ Powers18 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_D
 write.csv(Powers18,"Powers18.csv") #broader response function, fewer trials
 
 
+Powers19 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference = 0.1, JND_Difference = 0.05, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between, SD_Variability_Between, 
+                         NumbersOfSubjects)
+write.csv(Powers19,"Powers19.csv") #broader response function
+
+Powers20 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.1, JND_Difference = 0.05, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between, SD_Variability_Between, 
+                         NumbersOfSubjects)
+write.csv(Powers20,"Powers20.csv") #broader response function, fewer trials
+
+Powers21 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference = 0.1, JND_Difference = 0.2, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between = 0.2, SD_Variability_Between = 0.2, 
+                         NumbersOfSubjects)
+write.csv(Powers21,"Powers21.csv") #broader response function
+
+Powers22 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.1, JND_Difference = 0.2, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
+                         NumbersOfSubjects)
+write.csv(Powers22,"Powers22.csv") #broader response function, fewer trials
+
+Powers23 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.05, JND_Difference = 0.05, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between=0.1, SD_Variability_Between = 0.1, 
+                         NumbersOfSubjects)
+write.csv(Powers23,"Powers23.csv") #broader response function
+
+Powers24 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = 0.05, JND_Difference = 0.05, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between=0.1, SD_Variability_Between=0.1, 
+                         NumbersOfSubjects)
+write.csv(Powers24,"Powers24.csv") #broader response function, fewer trials
+
+Powers25 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = -0.1, JND_Difference = 0.1, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
+                         NumbersOfSubjects)
+write.csv(Powers25,"Powers25.csv") #broader response function
+
+Powers26 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:25, PSE_Difference = -0.1, JND_Difference = 0.1, 
+                         Multiplicator_PSE_Standard, Multiplicator_SD_Standard, SD_ResponseFunction = 0.1, 
+                         Mean_Variability_Between = 0.1, SD_Variability_Between = 0.1, 
+                         NumbersOfSubjects)
+write.csv(Powers26,"Powers26.csv") #broader response function, fewer trials
+
 PowerFrame <- rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers1.csv")),
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers2.csv")),
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers3.csv")),
@@ -359,7 +407,18 @@ PowerFrame <- rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Power
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers7.csv")),
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers8.csv")),
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers9.csv")),
-                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers10.csv")))
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers10.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers11.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers12.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers13.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers14.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers15.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers16.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers17.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers19.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers20.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers21.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers22.csv")))
 
 
 ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-Level LMM", 
