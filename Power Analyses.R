@@ -31,10 +31,10 @@ set.seed(9121)
 
 ID = paste0("s",1:5)
 ConditionOfInterest = c(0,1)
-StandardValues = c(2,4)
+StandardValues = c(6,8)
 reps = seq(1,55,1)
-PSE_Difference = 0.2
-JND_Difference = 0.3
+PSE_Difference = 0
+JND_Difference = 2
 Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.108
 Type_ResponseFunction = "Normal"
@@ -418,7 +418,11 @@ PowerFrame <- rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Power
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers19.csv")),
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers20.csv")),
                     read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers21.csv")),
-                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers22.csv")))
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers22.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers23.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers24.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers25.csv")),
+                    read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers26.csv")))
 
 
 ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-Level LMM", 
