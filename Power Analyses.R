@@ -29,12 +29,12 @@ source("Utilities/PowerFunctions.r")
 set.seed(9121)
 
 
-ID = paste0("s",1:5)
+ID = paste0("s",1:1)
 ConditionOfInterest = c(0,1)
-StandardValues = c(6,8)
+StandardValues = c(8)
 reps = seq(1,55,1)
-PSE_Difference = 0
-JND_Difference = 2
+PSE_Difference = 0.2
+JND_Difference = 0.5
 Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.108
 Type_ResponseFunction = "Normal"
