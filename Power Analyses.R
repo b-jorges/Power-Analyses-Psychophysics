@@ -439,3 +439,14 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 
 
 modglm(GLMM_Precision, c(StandardValues,ConditionOfInterest), Psychometric)
+
+devtools::install_github("mikabr/jglmm")
+options(JULIA_HOME = "C:/Users/bjoer/AppData/Local/Programs/Julia/Julia-1.4.0/bin")
+require(jglmm)
+
+jglmm_setup()
+lm1 <- jglmm(Answer ~ Difference*ConditionOfInterest + (Difference | ID), Psychometric,family = "binomial")
+
+cbpp <- dplyr::mutate(lme4::cbpp, prop = incidence / size)
+gm <- jglmm(prop ~ period + (1 | herd), data = cbpp, family = "binomial",
+            weights = cbpp$size)

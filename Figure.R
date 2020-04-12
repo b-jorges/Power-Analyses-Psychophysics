@@ -138,7 +138,7 @@ plot(PsychometricFunctions) +
   ylab("Probability to choose Test") +
   geom_vline(linetype = 2, xintercept = 0, color = "grey") +
   geom_hline(linetype = 2, yintercept = 0.5, color = "grey")
-ggsave("Figure02.jpg", w = 10, h = 5)
+ggsave("Figure3 Psychometric Functions.jpg", w = 10, h = 5)
 ##################################################################
 #################################FIGURE 1 END#####################
 ##################################################################
