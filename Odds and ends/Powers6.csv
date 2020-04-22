@@ -1,0 +1,49 @@
+"","value","label","reps","PSE_Difference","JND_Difference","StandardValues","nStandardValues","TrialsPerSubject","SD_ResponseFunction","Mean_Variability_Between","SD_Variability_Between","nSubjects"
+"1",1,"Accuracy GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"2",1,"Precision GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"3",0.72,"Accuracy Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"4",0.71,"Precision Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"5",0.735,"Accuracy Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"6",0.705,"Precision Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"7",0.055,"Accuracy GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"8",1,"Precision GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,10
+"9",1,"Accuracy GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"10",1,"Precision GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"11",0.78,"Accuracy Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"12",0.77,"Precision Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"13",0.785,"Accuracy Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"14",0.77,"Precision Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"15",0.04,"Accuracy GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"16",1,"Precision GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,12
+"17",1,"Accuracy GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"18",1,"Precision GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"19",0.675,"Accuracy Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"20",0.685,"Precision Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"21",0.68,"Accuracy Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"22",0.685,"Precision Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"23",0.045,"Accuracy GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"24",1,"Precision GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,14
+"25",1,"Accuracy GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"26",1,"Precision GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"27",0.66,"Accuracy Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"28",0.67,"Precision Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"29",0.67,"Accuracy Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"30",0.67,"Precision Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"31",0.035,"Accuracy GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"32",1,"Precision GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,16
+"33",1,"Accuracy GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"34",1,"Precision GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"35",0.59,"Accuracy Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"36",0.6,"Precision Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"37",0.595,"Accuracy Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"38",0.605,"Precision Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"39",0.035,"Accuracy GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"40",1,"Precision GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,18
+"41",1,"Accuracy GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,20
+"42",1,"Precision GLMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,20
+"43",0.635,"Accuracy Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,20
+"44",0.615,"Precision Two-Level",25,0.2,2,"24",2,100,0.1,0.1,0.1,20
+"45",0.64,"Accuracy Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,20
+"46",0.615,"Precision Two-Level LMM",25,0.2,2,"24",2,100,0.1,0.1,0.1,20
+"47",0.06,"Accuracy GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,20
+"48",1,"Precision GLMM Only Intercepts",25,0.2,2,"24",2,100,0.1,0.1,0.1,20

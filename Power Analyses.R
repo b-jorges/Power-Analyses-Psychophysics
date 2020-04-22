@@ -29,18 +29,20 @@ source("Utilities/PowerFunctions.r")
 set.seed(9121)
 
 
-ID = paste0("s",1:1)
+ID = paste0("s",1:15)
 ConditionOfInterest = c(0,1)
-StandardValues = c(8)
-reps = seq(1,55,1)
-PSE_Difference = 0.2
-JND_Difference = 0.5
+StandardValues = c(8,10)
+reps = 1:100
+PSE_Difference = 0
+JND_Difference = 0.3
 Multiplicator_PSE_Standard = 0
-Multiplicator_SD_Standard = 0.108
+Multiplicator_SD_Standard = 0.15
 Type_ResponseFunction = "Normal"
 SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
+
+pnorm(10.73,10,10*0.108)
 
 Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
 
@@ -84,13 +86,13 @@ if (Type_ResponseFunction == "normal"){
   
   Psychometric = Psychometric %>%
     mutate(
-      staircase_factor = pnorm(length(reps),1,SD_ResponseFunction))
+      staircase_factor = pnorm(length(reps),1,SD_ResponseFunction*(1+ConditionOfInterest*JND_Difference)))
   
 } else if (Type_ResponseFunction == "Cauchy"){
   
   Psychometric = Psychometric %>%
     mutate(
-      staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction))
+      staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction*(1+ConditionOfInterest*JND_Difference)))
   
   #} else if (Type_ResponseFunction == "uniform"){
   #  
@@ -148,7 +150,7 @@ require(lmerTest)
 summary(GLMM_Accuracy)$coefficients
 
 
-GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID) + (1| StandardValues), 
+GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues), 
                        family = binomial(link = "probit"), 
                        data = Psychometric,
                        nAGQ = 0,
@@ -438,15 +440,35 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
   scale_x_continuous(breaks=c(10,12,14,16,18,20))
 
 
-modglm(GLMM_Precision, c(StandardValues,ConditionOfInterest), Psychometric)
 
-devtools::install_github("mikabr/jglmm")
-options(JULIA_HOME = "C:/Users/bjoer/AppData/Local/Programs/Julia/Julia-1.4.0/bin")
-require(jglmm)
+BayesianAnalysis = brm(bf(Yes ~ ConditionOfInterest*Difference + (Difference | ID) + (Difference | StandardValues)),
+                        data = Psychometric, 
+                        family = bernoulli())
 
-jglmm_setup()
-lm1 <- jglmm(Answer ~ Difference*ConditionOfInterest + (Difference | ID), Psychometric,family = "binomial")
+BayesianAnalysis2 = brm(bf(Yes ~ ConditionOfInterest*Difference + (1 | ID) + (1 | StandardValues)),
+                      data = Psychometric, 
+                      family = bernoulli())
 
-cbpp <- dplyr::mutate(lme4::cbpp, prop = incidence / size)
-gm <- jglmm(prop ~ period + (1 | herd), data = cbpp, family = "binomial",
-            weights = cbpp$size)
+
+
+
+
+
+########################################################################
+##############compare power for GLMM and Two-Level approach#############
+########################################################################
+Dataframe_Powers = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/GLMM_Powers_1.csv")),
+                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/GLMM_Powers_2.csv"))) %>%
+                  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference)
+
+ggplot(Dataframe_Powers) +
+  geom_line(aes(n,power_Accuracy),size = 2, color = BlauUB) +
+  geom_line(aes(n,power_Precision),size = 2, color = Red) +
+  geom_line(aes(n,power_Accuracy),size = 2, color = BlauUB) +
+  geom_line(aes(n,power_Precision),size = 2, color = Red) +
+  facet_grid(JND_Difference~PSE_Difference) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,12,14,16,18,20))
