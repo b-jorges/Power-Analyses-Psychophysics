@@ -8,6 +8,7 @@ theme_set(theme_cowplot())
 require(quickpsy)
 require(brms)
 require(rstan)
+require(lmerTest)
 
 Where_Am_I <- function(path=T){
   if (path == T){
@@ -34,21 +35,21 @@ rstan_options(auto_write = TRUE)
 Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7')
 
 
-set.seed(9121)
+#set.seed(9121)
 
 
 ID = paste0("s",1:15)
 ConditionOfInterest = c(0,1)
-StandardValues = c(8,10)
+StandardValues = c(5,8)
 reps = 1:100
-PSE_Difference = 0.1
-JND_Difference = 0.3
+PSE_Difference = -0.1
+JND_Difference = 0.25
 Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.15
 Type_ResponseFunction = "Normal"
 SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
-SD_Variability_Between = 0.1
+SD_Variability_Between = 0.000001
 
 pnorm(10.73,10,10*0.108)
 
@@ -70,25 +71,6 @@ Psychometric = Psychometric %>%
   mutate(
     Mean = Mean*PSE_Factor_ID,
     SD = SD*SD_Factor_ID)
-
-ResponseDistributions = data.frame(
-  Value=c(rcauchy(1650,1,0.05),
-          rnorm(1650,1,0.1),
-          rep(c(0.7,0.85,1,1.15,1.3),1650/5)),
-  label = c(rep("Cauchy",1650),
-            rep("Normal",1650),
-            rep("Uniform",1650))
-) %>% filter(abs(Value-1) < 0.5)
-
-ggplot(ResponseDistributions %>% filter(label %in% c("Cauchy","Normal")), aes(Value,color = label)) +
-  geom_density(size=2) +
-#  coord_cartesian(xlim=c(0.5,1.5)) +
-  xlab("Stimulus Intensity") +
-  ylab("Density") +
-  scale_color_manual(name = "Distribution\nType",
-                     values = c(Red,BlauUB),
-                     labels = c("Cauchy","Gaussian"))
-ggsave("Figure1 Distributions.jpg", w = 6, h = 4)
 
 if (Type_ResponseFunction == "normal"){
   
@@ -135,8 +117,33 @@ Psychometric = Psychometric %>%
   mutate(Yes = sum(Answer==1),
          Total = length(ConditionOfInterest))
 
-PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
 
+GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
+                       family = binomial(link = "probit"), 
+                       data = Psychometric,
+                       nAGQ = 0,
+                       control = glmerControl(optimizer = "nloptwrap"))
+
+GLMM2 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues), 
+             family = binomial(link = "probit"), 
+             data = Psychometric,
+             nAGQ = 0,
+             control = glmerControl(optimizer = "nloptwrap"))
+
+
+summary(GLMM2)
+summary(GLMM)
+
+summary(GLMM)$coefficients[16]
+
+Psychometric %>% 
+  group_by(ConditionOfInterest, StandardValues) %>% 
+  slice(1)
+
+
+
+
+PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
 plot(PsychometricFunctions) +
   scale_color_manual(name = "",
                      values = c(Red,BlauUB),
@@ -147,15 +154,24 @@ plot(PsychometricFunctions) +
   geom_hline(linetype = 2, yintercept = 0.5, color = "grey")
 ggsave("Figure02.jpg", w = 10, h = 5)
 
+ResponseDistributions = data.frame(
+  Value=c(rcauchy(1650,1,0.05),
+          rnorm(1650,1,0.1),
+          rep(c(0.7,0.85,1,1.15,1.3),1650/5)),
+  label = c(rep("Cauchy",1650),
+            rep("Normal",1650),
+            rep("Uniform",1650))
+) %>% filter(abs(Value-1) < 0.5)
 
-GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues), 
-                       family = binomial(link = "probit"), 
-                       data = Psychometric,
-                       nAGQ = 0,
-                       control = glmerControl(optimizer = "nloptwrap"))
-
-require(lmerTest)
-summary(GLMM)$coefficients
+ggplot(ResponseDistributions %>% filter(label %in% c("Cauchy","Normal")), aes(Value,color = label)) +
+  geom_density(size=2) +
+  #  coord_cartesian(xlim=c(0.5,1.5)) +
+  xlab("Stimulus Intensity") +
+  ylab("Density") +
+  scale_color_manual(name = "Distribution\nType",
+                     values = c(Red,BlauUB),
+                     labels = c("Cauchy","Gaussian"))
+ggsave("Figure1 Distributions.jpg", w = 6, h = 4)
 
 
 ####################################################################################
@@ -439,13 +455,17 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 
 
 
-BayesianAnalysis = brm(bf(Yes ~ ConditionOfInterest*Difference + (Difference | ID) + (Difference | StandardValues)),
+BayesianAnalysis = brm(bf(Yes ~ ConditionOfInterest*Difference + (Difference + ConditionOfInterest | ID) + (Difference + ConditionOfInterest | StandardValues)),
                         data = Psychometric, 
                         family = bernoulli())
 
-BayesianAnalysis2 = brm(bf(Yes ~ ConditionOfInterest*Difference + (1 | ID) + (1 | StandardValues)),
+BayesianAnalysis2 = brm(bf(Yes ~ ConditionOfInterest*Difference + (Difference | ID) + (Difference | StandardValues)),
                       data = Psychometric, 
                       family = bernoulli())
+
+BayesianAnalysis3 = brm(bf(Yes ~ ConditionOfInterest*Difference + (1 | ID) + (1 | StandardValues)),
+                       data = Psychometric, 
+                       family = bernoulli())
 
 summary(GLMM)
 coef(GLMM)
@@ -459,18 +479,33 @@ coef(BayesianAnalysis)
 ########################################################################
 ##############compare power for GLMM and Two-Level approach#############
 ########################################################################
-Dataframe_Powers = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/GLMM_Powers_1.csv")),
-                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/GLMM_Powers_2.csv"))) %>%
-                  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference)
+Dataframe_wide = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers1_40_reps.csv")),
+                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers2_40_reps.csv")),
+                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers1_60_reps.csv")),
+                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers2_60_reps.csv"))) %>%
+                  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
+Dataframe_Powers = data.frame(PSE_Difference = rep(Dataframe_wide$PSE_Difference,4),
+                              JND_Difference = rep(Dataframe_wide$JND_Difference,4),
+                              n = rep(Dataframe_wide$n,4),
+                              reps = rep(Dataframe_wide$reps,4),
+                              power = c(Dataframe_wide$power_Accuracy,
+                                        Dataframe_wide$power_Precision,
+                                        Dataframe_wide$power_Accuracy_Twolevel,
+                                        Dataframe_wide$power_Precision_Twolevel),
+                              label = c(rep("Accuracy_GLMM",length(Dataframe_wide$reps)),
+                                        rep("Precision_GLMM",length(Dataframe_wide$reps)),
+                                        rep("Accuracy_Twolevel",length(Dataframe_wide$reps)),
+                                        rep("Precision_Twolevel",length(Dataframe_wide$reps))))
 
-ggplot(Dataframe_Powers) +
-  geom_line(aes(n,power_Accuracy),size = 2, color = BlauUB) +
-  geom_line(aes(n,power_Precision),size = 2, color = Red) +
-  geom_line(aes(n,power_Accuracy),size = 2, color = BlauUB) +
-  geom_line(aes(n,power_Precision),size = 2, color = Red) +
+
+ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
+  geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
   xlab("N° of Subjects") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 1, yintercept = 0.05) +
   geom_hline(linetype = 3, yintercept = 0.95) +
-  scale_x_continuous(breaks=c(10,12,14,16,18,20))
+  scale_x_continuous(breaks=c(10,12,14,16,18,20)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+                     name = "")
