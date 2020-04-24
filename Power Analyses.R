@@ -6,7 +6,8 @@ require(ggplot2)
 require(cowplot)
 theme_set(theme_cowplot())
 require(quickpsy)
-
+require(brms)
+require(rstan)
 
 Where_Am_I <- function(path=T){
   if (path == T){
@@ -26,6 +27,13 @@ source("Utilities/parabolic.r")
 source("Utilities/functions.r")
 source("Utilities/colourschemes.r")
 source("Utilities/PowerFunctions.r")
+
+#optimize for fitting of Bayesian Linear Mixed Models (packages "rstan", "bmrs")
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7')
+
+
 set.seed(9121)
 
 
@@ -140,24 +148,14 @@ plot(PsychometricFunctions) +
 ggsave("Figure02.jpg", w = 10, h = 5)
 
 
-GLMM_Accuracy = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | StandardValues),
-                      family = binomial(link = "probit"), 
-                      data = Psychometric,
-                      nAGQ = 0,
-                      control = glmerControl(optimizer = "nloptwrap"))
-
-require(lmerTest)
-summary(GLMM_Accuracy)$coefficients
-
-
-GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues), 
+GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues), 
                        family = binomial(link = "probit"), 
                        data = Psychometric,
                        nAGQ = 0,
                        control = glmerControl(optimizer = "nloptwrap"))
 
 require(lmerTest)
-summary(GLMM_Precision)$coefficients
+summary(GLMM)$coefficients
 
 
 ####################################################################################
@@ -449,8 +447,9 @@ BayesianAnalysis2 = brm(bf(Yes ~ ConditionOfInterest*Difference + (1 | ID) + (1 
                       data = Psychometric, 
                       family = bernoulli())
 
-
-
+summary(GLMM)
+BayesianAnalysis
+BayesianAnalysis2
 
 
 
