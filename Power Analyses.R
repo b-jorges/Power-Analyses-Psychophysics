@@ -41,7 +41,7 @@ ID = paste0("s",1:15)
 ConditionOfInterest = c(0,1)
 StandardValues = c(8,10)
 reps = 1:100
-PSE_Difference = 0
+PSE_Difference = 0.1
 JND_Difference = 0.3
 Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.15
@@ -448,8 +448,11 @@ BayesianAnalysis2 = brm(bf(Yes ~ ConditionOfInterest*Difference + (1 | ID) + (1 
                       family = bernoulli())
 
 summary(GLMM)
-BayesianAnalysis
-BayesianAnalysis2
+coef(GLMM)
+
+summary(BayesianAnalysis)
+coef(BayesianAnalysis)
+
 
 
 
