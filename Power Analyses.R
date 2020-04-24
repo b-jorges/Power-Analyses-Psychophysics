@@ -467,6 +467,7 @@ BayesianAnalysis3 = brm(bf(Yes ~ ConditionOfInterest*Difference + (1 | ID) + (1 
                        data = Psychometric, 
                        family = bernoulli())
 
+GLMM_SaveThisOne = GLMM2
 summary(GLMM)
 coef(GLMM)
 
