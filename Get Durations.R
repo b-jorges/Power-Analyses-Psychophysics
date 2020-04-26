@@ -8,8 +8,9 @@ Multiplicator_SD_Standard = 0.108
 SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
-nIterations = 1
+nIterations = 10
 Range_Participants = c(10,12,14,16,18,20)
+
 
 TotalNumber = length(Range_reps)*length(Range_PSE_Difference)*length(Range_JND_Difference)*length(Range_Participants)
 CurrentRunthrough = 0

@@ -134,6 +134,8 @@ GLMM2 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Differ
 summary(GLMM2)
 summary(GLMM)
 
+hallo = anova(GLMM,GLMM2)
+hallo
 
 
 Psychometric %>% 
@@ -462,8 +464,6 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 ##############compare power for GLMM and Two-Level approach#############
 ########################################################################
 Dataframe_wide = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers1_40_reps.csv")),
-                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers2_40_reps.csv")),
-                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers1_60_reps.csv")),
                   read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers2_60_reps.csv"))) %>%
                   select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
 Dataframe_Powers = data.frame(PSE_Difference = rep(Dataframe_wide$PSE_Difference,4),
