@@ -1,3 +1,35 @@
+###Pull the whole repository
+require(dplyr)
+require(tidyverse)
+require(lme4)
+require(ggplot2)
+require(cowplot)
+theme_set(theme_cowplot())
+require(quickpsy)
+require(brms)
+require(rstan)
+require(lmerTest)
+
+Where_Am_I <- function(path=T){
+  if (path == T){
+    dirname(rstudioapi::getSourceEditorContext()$path)
+  }
+  else {
+    rstudioapi::getSourceEditorContext()$path
+  }
+}
+
+binomial_smooth <- function(...) {
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)}
+
+setwd(Where_Am_I())
+
+source("Utilities/parabolic.r")
+source("Utilities/functions.r")
+source("Utilities/colourschemes.r")
+source("Utilities/PowerFunctions.r")
+
+
 ConditionOfInterest = c(0,1)
 StandardValues = c(5,8)
 Range_reps = c(30,40,50,60)
@@ -8,7 +40,7 @@ Multiplicator_SD_Standard = 0.108
 SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
-nIterations = 1
+nIterations = 10
 Range_Participants = c(10,12,14,16,18,20)
 
 TotalNumber = length(Range_reps)*length(Range_PSE_Difference)*length(Range_JND_Difference)*length(Range_Participants)
@@ -43,8 +75,7 @@ for (reps in (Range_reps)){
       GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
                    family = binomial(link = "probit"), 
                    data = Psychometric,
-                   nAGQ = 0,
-                   control = glmerControl(optimizer = "nloptwrap"))
+                   nAGQ = 0)
       
       Pvalues = summary(GLMM)$coefficients[c(14,16)]
       
@@ -60,4 +91,5 @@ for (reps in (Range_reps)){
   }
 }
 
-
+colnames(TimelyPowerfulDataframe) = c("powerAccuracy", "powerPrecision", "reps", "n", "nIterations", "Duration")
+write.csv(TimelyPowerfulDataframe,"DurationsR.csv")
