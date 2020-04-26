@@ -43,6 +43,7 @@ SD_Variability_Between = 0.1
 nIterations = 10
 Range_Participants = c(10,12,14,16,18,20)
 
+
 TotalNumber = length(Range_reps)*length(Range_PSE_Difference)*length(Range_JND_Difference)*length(Range_Participants)
 CurrentRunthrough = 0
 n = c()
