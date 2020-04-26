@@ -49,7 +49,7 @@ Multiplicator_SD_Standard = 0.15
 Type_ResponseFunction = "Normal"
 SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
-SD_Variability_Between = 0.000001
+SD_Variability_Between = 0.1
 
 pnorm(10.73,10,10*0.108)
 
@@ -134,7 +134,7 @@ GLMM2 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Differ
 summary(GLMM2)
 summary(GLMM)
 
-summary(GLMM)$coefficients[16]
+
 
 Psychometric %>% 
   group_by(ConditionOfInterest, StandardValues) %>% 
@@ -455,25 +455,6 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 
 
 
-BayesianAnalysis = brm(bf(Yes ~ ConditionOfInterest*Difference + (Difference + ConditionOfInterest | ID) + (Difference + ConditionOfInterest | StandardValues)),
-                        data = Psychometric, 
-                        family = bernoulli())
-
-BayesianAnalysis2 = brm(bf(Yes ~ ConditionOfInterest*Difference + (Difference | ID) + (Difference | StandardValues)),
-                      data = Psychometric, 
-                      family = bernoulli())
-
-BayesianAnalysis3 = brm(bf(Yes ~ ConditionOfInterest*Difference + (1 | ID) + (1 | StandardValues)),
-                       data = Psychometric, 
-                       family = bernoulli())
-
-GLMM_SaveThisOne = GLMM2
-summary(GLMM)
-coef(GLMM)
-
-summary(BayesianAnalysis)
-coef(BayesianAnalysis)
-
 
 
 
@@ -510,3 +491,6 @@ ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
   scale_x_continuous(breaks=c(10,12,14,16,18,20)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
                      name = "")
+########################################################################
+########################################################################
+########################################################################

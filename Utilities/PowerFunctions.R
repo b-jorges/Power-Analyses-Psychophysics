@@ -38,44 +38,26 @@ SimulatePsychometricFunction_Staircase = function(ID,
   Psychometric
 }
 
-Analyze_Pychometric_Accuracy_GLMM = function(Psychometric){
-  
-  TimeBeginning = Sys.time()
-  
-  GLMM_Accuracy = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + (Difference  | ID)  + (Difference  | StandardValues),
-                        family = binomial(link = "probit"), 
-                        data = Psychometric,
-                        nAGQ = 0,
-                        control = glmerControl(optimizer = "nloptwrap"))
-  
-  p = summary(GLMM_Accuracy)$coefficients[8]
-  
-  #print(TimeBeginning - Sys.time()) ###This is two show how long each iteration takes
-  #print(p)
-  
-  p
-}
 
-Analyze_Pychometric_Precision_GLMM = function(Psychometric){
+Analyze_Pychometric_GLMM = function(Psychometric){
   
   TimeBeginning = Sys.time()
   
-  GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference  | ID) + (Difference  | StandardValues), 
-                         family = binomial(link = "probit"), 
+  GLMM_Precision = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
+                                    (Difference + ConditionOfInterest | ID) + 
+                                    (Difference + ConditionOfInterest | StandardValues), 
+                         family = binomial(link = "probit"),
                          data = Psychometric,
                          nAGQ = 0,
                          control = glmerControl(optimizer = "nloptwrap"))
   
-  p = summary(GLMM_Precision)$coefficients[16]
+  p = summary(GLMM_Precision)$coefficients[c(15,16)]
   
   
   #print(p)
   
   p
 }
-
-
-Parameters$ConditionOfInterest
 
 GetParametersOfPsychometricFunction = function(Psychometric){
   
@@ -89,6 +71,7 @@ GetParametersOfPsychometricFunction = function(Psychometric){
   Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
   Parameters2
 }
+
 
 Analyze_Pychometric_Accuracy_2Level = function(Parameters){
   
@@ -163,3 +146,7 @@ ComparePowers = function(ConditionOfInterest, StandardValues, reps, PSE_Differen
   
   Power
 }
+
+
+
+
