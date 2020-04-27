@@ -43,12 +43,14 @@ for (reps in (Range_reps)){
       GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
                    family = binomial(link = "probit"), 
                    data = Psychometric,
-                   nAGQ = 0)
+                   nAGQ = 0,
+                   control = glmerControl(optimizer = "nloptwrap"))
       
       GLMM1 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
                     family = binomial(link = "probit"), 
                     data = Psychometric,
-                    nAGQ = 0)
+                    nAGQ = 0,
+                    control = glmerControl(optimizer = "nloptwrap"))
       
       p = anova(GLMM,GLMM1)$`Pr(>Chisq)`[2]
       p2 = summary(GLMM)$coefficients[16]
@@ -74,4 +76,4 @@ TimelyPowerfulDataframe_LTRvsSatherwaite3
 TimelyPowerfulDataframe_LTRvsSatherwaite2
 
 halo = summary(GLMM)
-
+?glmerControl
