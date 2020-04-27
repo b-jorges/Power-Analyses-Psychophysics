@@ -40,7 +40,7 @@ Multiplicator_SD_Standard = 0.108
 SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
-nIterations = 10
+nIterations = 25
 Range_Participants = c(10,12,14,16,18,20)
 
 
@@ -107,6 +107,7 @@ for (reps in (Range_reps)){
       AIC_Bobyqa_nAGQ1 = AIC(GLMM)
       
       TimelyPowerfulDataframe = rbind(TimelyDataframe,rbind(reps,n, j,
+                                                            
       Duration_NelderMead_nAGQ0, Pvalues_NelderMead_nAGQ0,AIC_NelderMead_nAGQ0,
       Duration_NelderMead_nAGQ1,Pvalues_NelderMead_nAGQ1,AIC_NelderMead_nAGQ1,
       Duration_Bobyqa_nAGQ0,Pvalues_Bobyqa_nAGQ0,AIC_Bobyqa_nAGQ0,
@@ -120,5 +121,18 @@ colnames(TimelyPowerfulDataframe) = c("reps", "n", "iteration",
                                       "Duration_NelderMead_nAGQ1", "Pvalues_NelderMead_nAGQ1", "AIC_NelderMead_nAGQ1",
                                       "Duration_Bobyqa_nAGQ0", "Pvalues_Bobyqa_nAGQ0", "AIC_Bobyqa_nAGQ0",
                                       "Duration_Bobyqa_nAGQ1", "Pvalues_Bobyqa_nAGQ1", "AIC_Bobyqa_nAGQ1")
+
+cbind(TimelyPowerfulDataframe,
+      data.frame(Range_PSE_Difference = 0.1,
+      StandardValues = paste0(c(5," ", 8)),
+      Range_JND_Difference = 0.2,
+      Multiplicator_PSE_Standard = 0,
+      Multiplicator_SD_Standard = 0.108,
+      SD_ResponseFunction = 0.1,
+      Mean_Variability_Between = 0.1,
+      SD_Variability_Between = 0.1,
+      nIterations = 25))
+                                      
+datafra                           
 write.csv(TimelyPowerfulDataframe,"DurationsR.csv")
 
