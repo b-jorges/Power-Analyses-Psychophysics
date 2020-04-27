@@ -52,8 +52,16 @@ TimelyPowerfulDataframe = c()
 for (reps in (Range_reps)){
   for (n in (Range_Participants)){
 
+    if (CurrentRunthrough > 1){
+      print(paste0("This runthrough took ", round(Sys.time()-TimeStartRunthrough,2), " s"))
+    }
+    
     CurrentRunthrough = CurrentRunthrough + 1
-    print(paste0("This is runthrough N° ", CurrentRunthrough, " out of ", TotalNumber))
+    print(paste0("Starting runthrough N° ", CurrentRunthrough, " out of ", TotalNumber))
+    
+
+    TimeStartRunthrough = Sys.time()
+
     
     for (j in 1:nIterations){
       Psychometric = SimulatePsychometricFunction_Staircase(ID = paste0("s",1:n), 
@@ -106,25 +114,48 @@ for (reps in (Range_reps)){
       Pvalues_Bobyqa_nAGQ1 = summary(GLMM)$coefficients[c(14,16)]
       AIC_Bobyqa_nAGQ1 = AIC(GLMM)
       
-      TimelyPowerfulDataframe = rbind(TimelyDataframe,rbind(reps,n, j,
-                                                            
-      Duration_NelderMead_nAGQ0, Pvalues_NelderMead_nAGQ0,AIC_NelderMead_nAGQ0,
-      Duration_NelderMead_nAGQ1,Pvalues_NelderMead_nAGQ1,AIC_NelderMead_nAGQ1,
-      Duration_Bobyqa_nAGQ0,Pvalues_Bobyqa_nAGQ0,AIC_Bobyqa_nAGQ0,
-      Duration_Bobyqa_nAGQ1,Pvalues_Bobyqa_nAGQ1,AIC_Bobyqa_nAGQ1))
+      TimeStartTrial = Sys.time() #get time at beginning of trial
+      GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
+                   family = binomial(link = "logit"), 
+                   data = Psychometric,
+                   nAGQ = 0,
+                   glmerControl(optimizer = "nloptwrap"))
+      Duration_nloptwrap_nAGQ0 = Sys.time() - TimeStartTrial #get duration of fitting
+      Pvalues_nloptwrap_nAGQ0 = summary(GLMM)$coefficients[c(14,16)]      
+      AIC_nloptwrap_nAGQ0 = AIC(GLMM)
+      
+      TimeStartTrial = Sys.time() #get time at beginning of trial
+      GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
+                   family = binomial(link = "logit"), 
+                   data = Psychometric,
+                   nAGQ = 1,
+                   glmerControl(optimizer = "nloptwrap"))
+      Duration_nloptwrap_nAGQ1 = Sys.time() - TimeStartTrial #get duration of fitting
+      Pvalues_nloptwrap_nAGQ1 = summary(GLMM)$coefficients[c(14,16)]
+      AIC_nloptwrap_nAGQ1 = AIC(GLMM)
+      
+      TimelyPowerfulDataframe = rbind(TimelyPowerfulDataframe,rbind(c(reps,n, j,
+                                      Duration_NelderMead_nAGQ0, Pvalues_NelderMead_nAGQ0,AIC_NelderMead_nAGQ0,
+                                      Duration_NelderMead_nAGQ1,Pvalues_NelderMead_nAGQ1,AIC_NelderMead_nAGQ1,
+                                      Duration_Bobyqa_nAGQ0,Pvalues_Bobyqa_nAGQ0,AIC_Bobyqa_nAGQ0,
+                                      Duration_Bobyqa_nAGQ1,Pvalues_Bobyqa_nAGQ1,AIC_Bobyqa_nAGQ1,
+                                      Duration_nloptwrap_nAGQ0,Pvalues_nloptwrap_nAGQ0,AIC_nloptwrap_nAGQ0,
+                                      Duration_nloptwrap_nAGQ1,Pvalues_nloptwrap_nAGQ1,AIC_nloptwrap_nAGQ1)))
     }
   }
 }
 
 colnames(TimelyPowerfulDataframe) = c("reps", "n", "iteration", 
-                                      "Duration_NelderMead_nAGQ0", "Pvalues_NelderMead_nAGQ0", "AIC_NelderMead_nAGQ0",
-                                      "Duration_NelderMead_nAGQ1", "Pvalues_NelderMead_nAGQ1", "AIC_NelderMead_nAGQ1",
-                                      "Duration_Bobyqa_nAGQ0", "Pvalues_Bobyqa_nAGQ0", "AIC_Bobyqa_nAGQ0",
-                                      "Duration_Bobyqa_nAGQ1", "Pvalues_Bobyqa_nAGQ1", "AIC_Bobyqa_nAGQ1")
+                                      "Duration_NelderMead_nAGQ0", "Pvalues_NelderMead_nAGQ0_Accuracy", "Pvalues_NelderMead_nAGQ0_Precision", "AIC_NelderMead_nAGQ0",
+                                      "Duration_NelderMead_nAGQ1", "Pvalues_NelderMead_nAGQ1_Accuracy","Pvalues_NelderMead_nAGQ1_Precision", "AIC_NelderMead_nAGQ1",
+                                      "Duration_Bobyqa_nAGQ0", "Pvalues_Bobyqa_nAGQ0_Accuracy", "Pvalues_Bobyqa_nAGQ0_Precision", "AIC_Bobyqa_nAGQ0",
+                                      "Duration_Bobyqa_nAGQ1", "Pvalues_Bobyqa_nAGQ1_Accuracy", "Pvalues_Bobyqa_nAGQ1_Precision", "AIC_Bobyqa_nAGQ1",
+                                      "Duration_nloptwrap_nAGQ0", "Pvalues_nloptwrap_nAGQ0_Accuracy", "Pvalues_nloptwrap_nAGQ0_Precision", "AIC_nloptwrap_nAGQ0",
+                                      "Duration_nloptwrap_nAGQ1", "Pvalues_nloptwrap_nAGQ1_Accuracy", "Pvalues_nloptwrap_nAGQ1_Precision", "AIC_nloptwrap_nAGQ1")
 
-cbind(TimelyPowerfulDataframe,
+TimelyPowerfulDataframe = cbind(TimelyPowerfulDataframe,
       data.frame(Range_PSE_Difference = 0.1,
-      StandardValues = paste0(c(5," ", 8)),
+      StandardValues = paste0(5," ", 8),
       Range_JND_Difference = 0.2,
       Multiplicator_PSE_Standard = 0,
       Multiplicator_SD_Standard = 0.108,
@@ -132,7 +163,7 @@ cbind(TimelyPowerfulDataframe,
       Mean_Variability_Between = 0.1,
       SD_Variability_Between = 0.1,
       nIterations = 25))
-                                      
-datafra                           
+
+
 write.csv(TimelyPowerfulDataframe,"DurationsR.csv")
 
