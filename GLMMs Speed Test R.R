@@ -166,4 +166,3 @@ TimelyPowerfulDataframe = cbind(TimelyPowerfulDataframe,
 
 
 write.csv(TimelyPowerfulDataframe,"DurationsR.csv")
-
