@@ -494,3 +494,30 @@ ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
 ########################################################################
 ########################################################################
 ########################################################################
+
+
+
+########################################################################
+##############compare Speed for R and Julia#############
+########################################################################
+Dataframe_Julia = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_Julia.csv"))
+Dataframe_R = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_R.csv"))
+Dataframe_Julia = gather(Dataframe_Julia,analysis,duration,
+                         c(DurationGLMM_NeldMeader_AGP0,DurationGLMM_bobyqa_AGP0),factor_key = TRUE)
+Dataframe_Julia$duration = Dataframe_Julia$duration/1000
+
+
+Dataframe_R = gather(Dataframe_R,analysis,duration,
+                     c(Duration_NelderMead_nAGQ0,Duration_NelderMead_nAGQ1,Duration_Bobyqa_nAGQ0,
+                       Duration_Bobyqa_nAGQ1,Duration_nloptwrap_nAGQ0,Duration_nloptwrap_nAGQ1),factor_key = TRUE)
+Dataframe1 = Dataframe_Julia %>% select(nIteration,n,reps,analysis,duration)
+colnames(Dataframe1) = c("iteration","n","reps","analysis","duration")
+Dataframe1$Program = "Julia"
+
+Dataframe2 = Dataframe_R %>% select(iteration, n, reps, analysis, duration)
+colnames(Dataframe2) = c("iteration","n","reps","analysis","duration")
+Dataframe2$Program = "R"
+
+Dataframe = rbind(Dataframe1,Dataframe2)
+
+ggplot(Dataframe,aes(n,duration))
