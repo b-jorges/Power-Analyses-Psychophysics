@@ -500,24 +500,48 @@ ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
 ########################################################################
 ##############compare Speed for R and Julia#############
 ########################################################################
-Dataframe_Julia = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_Julia.csv"))
-Dataframe_R = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_R.csv"))
-Dataframe_Julia = gather(Dataframe_Julia,analysis,duration,
+Dataframe = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_Julia.csv"))
+Dataframe_Julia = gather(Dataframe,analysis,duration,
                          c(DurationGLMM_NeldMeader_AGP0,DurationGLMM_bobyqa_AGP0),factor_key = TRUE)
+Julia_AIC = gather(Dataframe,analysis2,AIC,
+                         c(AIC_NeldMeader_AGP0,AIC_bobyqa_AGP0),factor_key = TRUE)$AIC
+Dataframe_Julia$AIC = Julia_AIC
 Dataframe_Julia$duration = Dataframe_Julia$duration/1000
 
+Dataframe_Julia2 = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_Julia2.csv"))
+Dataframe_Julia2$analysis = "Julia: bobyqa & AGQ0"
+Dataframe_Julia2$duration = Dataframe_Julia2$DurationGLMM_bobyqa_AGP0/1000
+Dataframe_Julia2$AIC = Dataframe_Julia2$AIC_bobyqa_AGP0
 
-Dataframe_R = gather(Dataframe_R,analysis,duration,
+Dataframe_Julia = rbind(Dataframe_Julia %>% select(nIteration,n,reps,analysis,duration,AIC),
+                   Dataframe_Julia2 %>% select(nIteration,n,reps,analysis,duration,AIC))
+colnames(Dataframe_Julia) = c("iteration","n","reps","analysis","duration", "AIC")
+Dataframe_Julia$Program = "Julia"
+
+Dataframe_R = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_R.csv"))
+Dataframe_R1 = gather(Dataframe_R,analysis,duration,
                      c(Duration_NelderMead_nAGQ0,Duration_NelderMead_nAGQ1,Duration_Bobyqa_nAGQ0,
                        Duration_Bobyqa_nAGQ1,Duration_nloptwrap_nAGQ0,Duration_nloptwrap_nAGQ1),factor_key = TRUE)
-Dataframe1 = Dataframe_Julia %>% select(nIteration,n,reps,analysis,duration)
-colnames(Dataframe1) = c("iteration","n","reps","analysis","duration")
-Dataframe1$Program = "Julia"
+AIC_R2 = gather(Dataframe_R,analysis2,AIC,
+                     c(AIC_NelderMead_nAGQ0,AIC_NelderMead_nAGQ1,AIC_Bobyqa_nAGQ0,
+                       AIC_Bobyqa_nAGQ1,AIC_nloptwrap_nAGQ0,AIC_nloptwrap_nAGQ1),factor_key = TRUE)$AIC
+Dataframe_R1$AIC = AIC_R2
+Dataframe_R = Dataframe_R1 %>% select(iteration, n, reps, analysis, duration,AIC)
+colnames(Dataframe_R) = c("iteration","n","reps","analysis", "duration","AIC")
+Dataframe_R$Program = "R"
 
-Dataframe2 = Dataframe_R %>% select(iteration, n, reps, analysis, duration)
-colnames(Dataframe2) = c("iteration","n","reps","analysis","duration")
-Dataframe2$Program = "R"
+Dataframe = rbind(Dataframe_Julia,Dataframe_R) %>%
+  group_by(n,reps,Program,analysis) %>%
+  mutate(MeanDuration = mean(duration),
+         MeanAIC = mean(AIC))
 
-Dataframe = rbind(Dataframe1,Dataframe2)
 
-ggplot(Dataframe,aes(n,duration))
+ggplot(Dataframe,aes(n,MeanDuration, color = analysis)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~reps)
+
+ggplot(Dataframe,aes(n,MeanAIC, color = analysis)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~reps)
