@@ -507,14 +507,7 @@ Julia_AIC = gather(Dataframe,analysis2,AIC,
                          c(AIC_NeldMeader_AGP0,AIC_bobyqa_AGP0),factor_key = TRUE)$AIC
 Dataframe_Julia$AIC = Julia_AIC
 Dataframe_Julia$duration = Dataframe_Julia$duration/1000
-
-Dataframe_Julia2 = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_Julia2.csv"))
-Dataframe_Julia2$analysis = "Julia: bobyqa & AGQ0"
-Dataframe_Julia2$duration = Dataframe_Julia2$DurationGLMM_bobyqa_AGP0/1000
-Dataframe_Julia2$AIC = Dataframe_Julia2$AIC_bobyqa_AGP0
-
-Dataframe_Julia = rbind(Dataframe_Julia %>% select(nIteration,n,reps,analysis,duration,AIC),
-                   Dataframe_Julia2 %>% select(nIteration,n,reps,analysis,duration,AIC))
+Dataframe_Julia = rbind(Dataframe_Julia %>% select(nIteration,n,reps,analysis,duration,AIC))
 colnames(Dataframe_Julia) = c("iteration","n","reps","analysis","duration", "AIC")
 Dataframe_Julia$Program = "Julia"
 
@@ -522,7 +515,7 @@ Dataframe_R = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_R
 Dataframe_R1 = gather(Dataframe_R,analysis,duration,
                      c(Duration_NelderMead_nAGQ0,Duration_NelderMead_nAGQ1,Duration_Bobyqa_nAGQ0,
                        Duration_Bobyqa_nAGQ1,Duration_nloptwrap_nAGQ0,Duration_nloptwrap_nAGQ1),factor_key = TRUE)
-AIC_R2 = gather(Dataframe_R,analysis2,AIC,
+AIC_R2 = gather(Dataframe_R,analysis,AIC,
                      c(AIC_NelderMead_nAGQ0,AIC_NelderMead_nAGQ1,AIC_Bobyqa_nAGQ0,
                        AIC_Bobyqa_nAGQ1,AIC_nloptwrap_nAGQ0,AIC_nloptwrap_nAGQ1),factor_key = TRUE)$AIC
 Dataframe_R1$AIC = AIC_R2
@@ -532,16 +525,38 @@ Dataframe_R$Program = "R"
 
 Dataframe = rbind(Dataframe_Julia,Dataframe_R) %>%
   group_by(n,reps,Program,analysis) %>%
-  mutate(MeanDuration = mean(duration),
-         MeanAIC = mean(AIC))
+  mutate(MeanDuration = median(duration),
+         MeanAIC = median(AIC))
 
+Dataframe = Dataframe %>%
+  group_by(n,reps,Program) %>%
+  mutate(MedianAIC_n_reps = median(AIC)) %>%
+  ungroup() %>%
+  mutate(AICDifferences = MeanAIC-MedianAIC_n_reps,
+         Optimizer = case_when(
+           analysis == "DurationGLMM_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, nAGQ 0",
+           analysis == "DurationGLMM_bobyqa_AGP0" ~ "Julia: bobyqa, nAGQ 0",
+           analysis == "Duration_NelderMead_nAGQ0" ~ "R: Nelder-Mead, nAGQ 0",
+           analysis == "Duration_NelderMead_nAGQ1" ~ "R: Nelder-Mead, nAGQ 1",
+           analysis == "Duration_Bobyqa_nAGQ0" ~ "R: bobyqa, nAGQ 0",
+           analysis == "Duration_Bobyqa_nAGQ1" ~ "R: bobyqa, nAGQ 1",
+           analysis == "Duration_nloptwrap_nAGQ0" ~ "R: nloptwrap, nAGQ 0",
+           analysis == "Duration_nloptwrap_nAGQ1" ~ "R: nloptwrap, nAGQ 1"
+          )
+         )
 
-ggplot(Dataframe,aes(n,MeanDuration, color = analysis)) +
+ggplot(Dataframe,aes(n, MeanDuration, color = analysis)) +
   geom_point() +
   geom_line() +
-  facet_grid(.~reps)
+  facet_grid(.~reps) +
+  coord_cartesian(ylim = c(0,10)) +
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8))
 
-ggplot(Dataframe,aes(n,MeanAIC, color = analysis)) +
+ggplot(Dataframe,aes(n, AICDifferences, color = Optimizer)) +
   geom_point() +
   geom_line() +
-  facet_grid(.~reps)
+  facet_grid(.~reps) +
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8)) +
+  coord_cartesian(ylim = c(-0.5,0.5))
+
+                  

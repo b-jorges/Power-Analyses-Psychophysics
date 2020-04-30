@@ -144,7 +144,7 @@ for (reps in (Range_reps)){
     }
   }
 }
-
+?glmerControl
 colnames(TimelyPowerfulDataframe) = c("reps", "n", "iteration", 
                                       "Duration_NelderMead_nAGQ0", "Pvalues_NelderMead_nAGQ0_Accuracy", "Pvalues_NelderMead_nAGQ0_Precision", "AIC_NelderMead_nAGQ0",
                                       "Duration_NelderMead_nAGQ1", "Pvalues_NelderMead_nAGQ1_Accuracy","Pvalues_NelderMead_nAGQ1_Precision", "AIC_NelderMead_nAGQ1",
