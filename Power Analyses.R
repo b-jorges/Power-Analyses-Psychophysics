@@ -559,4 +559,50 @@ ggplot(Dataframe,aes(n, AICDifferences, color = Optimizer)) +
   scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8)) +
   coord_cartesian(ylim = c(-0.5,0.5))
 
-                  
+
+########################################################################
+##############compare AICs for different algorithms#####################
+########################################################################
+Dataframe_AICs = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/AICs.csv"))
+
+Dataframe_AICs = Dataframe_AICs %>%
+  mutate(Optimizer = case_when(
+    label == "JuliaAIC_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, nAGQ 0",
+    label == "JuliaAIC_bobyqa_AGP0" ~ "Julia: bobyqa, nAGQ 0",
+    label == "NelderMead_nAGQ0" ~ "R: Nelder-Mead, nAGQ 0",
+    label == "NelderMead_nAGQ1" ~ "R: Nelder-Mead, nAGQ 1",
+    label == "Bobyqa_nAGQ0" ~ "R: bobyqa, nAGQ 0",
+    label == "Bobyqa_nAGQ1" ~ "R: bobyqa, nAGQ 1",
+    label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, nAGQ 0",
+    label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, nAGQ 1")
+    )%>%
+  group_by(n,reps) %>%
+  mutate(MedianAIC_n_reps = median(AIC),
+         Median_pvalue_Accuracy_n_reps = median(Pvalues_Accuracy),
+         Median_pvalue_Interaction_n_reps = median(Pvalues_Interaction)) %>%
+  group_by(n,reps,label) %>%
+  mutate(MedianDuration = median(Duration),
+         SE_Duration_n_reps_label = SE(Duration),
+         MedianAIC_Difference = median(AIC)-MedianAIC_n_reps,
+         Median_Pvalue_Accuracy_Difference = median(Pvalues_Accuracy) - Median_pvalue_Accuracy_n_reps,
+         Median_Pvalue_Interaction_Difference = median(Pvalues_Interaction) - Median_pvalue_Interaction_n_reps)
+
+
+ggplot(Dataframe_AICs,aes(n, MedianDuration, color = Optimizer)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = MedianDuration-SE_Duration_n_reps_label, 
+                    ymax = MedianDuration+SE_Duration_n_reps_label), width = 0.7) +
+  facet_grid(.~reps) +
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8))
+
+ggplot(Dataframe_AICs,aes(n, MedianAIC_Difference, color = Optimizer)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(label~reps) +
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8))
+
+
+########################################################################
+###########################compare p values#############################
+########################################################################
