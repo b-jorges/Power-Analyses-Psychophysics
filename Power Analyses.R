@@ -594,13 +594,20 @@ ggplot(Dataframe_AICs,aes(n, MedianDuration, color = Optimizer)) +
   geom_errorbar(aes(ymin = MedianDuration-SE_Duration_n_reps_label, 
                     ymax = MedianDuration+SE_Duration_n_reps_label), width = 0.7) +
   facet_grid(.~reps) +
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8))
+  ylab("Median Duration (s)") +
+  scale_x_continuous(breaks =  c(10,12,14,16,18,20), name = "N° Participants") +
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow))(8), name = "") +
+  theme(legend.position = c(0.05,0.8))
+ggsave("Figures/Duration for each Optimizer.jpg", w = 10, h = 5)
 
 ggplot(Dataframe_AICs,aes(n, MedianAIC_Difference, color = Optimizer)) +
-  geom_point() +
+  geom_point(size=2) +
   geom_line() +
-  facet_grid(label~reps) +
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8))
+  facet_grid(.~reps) +
+  ylab("Median AIC difference from median across optimizers") +
+  scale_x_continuous(breaks =  c(10,12,14,16,18,20), name = "N° Participants") +
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow))(8))
+ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
 
 
 ########################################################################
