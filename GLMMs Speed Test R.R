@@ -166,3 +166,7 @@ TimelyPowerfulDataframe = cbind(TimelyPowerfulDataframe,
 
 
 write.csv(TimelyPowerfulDataframe,"DurationsR.csv")
+
+anova(GLMM,GLMM2,test="LRT")
+anova(GLMM,GLMM2,test="sdfs")
+anova(GLMM,GLMM2,test ="Chisq")
