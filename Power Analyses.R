@@ -667,15 +667,10 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   group_by(Bin_Interaction,Optimizer) %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
-ggplot(Dataframe_pvalues,aes(Bin_Accuracy,Optimizer, fill = BinCountAccuracy)) +
-  geom_tile()
+ggplot(Dataframe_pvalues %>% filter(Program == "R"),aes(Bin_Accuracy,Optimizer, fill = BinCountAccuracy)) +
+  geom_tile() +
+  xlab("")
 
-
-
-
-
-Hu = cut(Dataframe_pvalues$Pvalues_Interaction, 
-    breaks=breaks, 
-    include.lowest=TRUE, 
-    right=FALSE)
-summary(Hu)[1]
+ggplot(Dataframe_pvalues,aes(Bin_Interaction,Optimizer, fill = BinCountInteraction)) +
+  geom_tile() +
+  xlab("")
