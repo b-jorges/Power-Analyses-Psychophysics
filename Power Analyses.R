@@ -8,7 +8,7 @@ theme_set(theme_cowplot())
 require(quickpsy)
 require(brms)
 require(rstan)
-require(lmerTest)
+#require(lmerTest)
 
 Where_Am_I <- function(path=T){
   if (path == T){
@@ -613,3 +613,69 @@ ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
 ########################################################################
 ###########################compare p values#############################
 ########################################################################
+Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/pvalues_Julia.csv"))
+
+Dataframe_pvalues = Dataframe_AICs %>%
+  mutate(Optimizer = case_when(
+    label == "JuliaAIC_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, nAGQ 0",
+    label == "JuliaAIC_bobyqa_AGP0" ~ "Julia: bobyqa, nAGQ 0",
+    label == "NelderMead_nAGQ0" ~ "R: Nelder-Mead, nAGQ 0",
+    label == "NelderMead_nAGQ1" ~ "R: Nelder-Mead, nAGQ 1",
+    label == "Bobyqa_nAGQ0" ~ "R: bobyqa, nAGQ 0",
+    label == "Bobyqa_nAGQ1" ~ "R: bobyqa, nAGQ 1",
+    label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, nAGQ 0",
+    label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, nAGQ 1")
+  )%>%
+  group_by(n,reps) %>%
+  mutate(MedianAIC_n_reps = median(AIC),
+         Median_pvalue_Accuracy_n_reps = median(Pvalues_Accuracy),
+         Median_pvalue_Interaction_n_reps = median(Pvalues_Interaction)) %>%
+  group_by(n,reps,label) %>%
+  mutate(MedianDuration = median(Duration),
+         SE_Duration_n_reps_label = SE(Duration),
+         MedianAIC_Difference = median(AIC)-MedianAIC_n_reps,
+         Median_Pvalue_Accuracy_Difference = median(Pvalues_Accuracy) - Median_pvalue_Accuracy_n_reps,
+         Median_Pvalue_Interaction_Difference = median(Pvalues_Interaction) - Median_pvalue_Interaction_n_reps)
+
+
+ggplot(Dataframe_pvalues,aes(Pvalues_Accuracy, color = Optimizer)) +
+  geom_density(size = 2) +
+  coord_cartesian(ylim = c(0,5))
+  facet_grid(n~reps) +
+ggsave("Figures/Duration for each Optimizer.jpg", w = 10, h = 5)
+
+
+ggplot(Dataframe_pvalues,aes(round(Pvalues_Interaction,2), color = Optimizer, fill = Optimizer)) +
+  geom_histogram(bins = 20) +
+  facet_grid(.~Optimizer)
+
+
+Dataframe_pvalues$Bin_Accuracy = 0
+Dataframe_pvalues$Bin_Interaction = 0
+for (i in (1:length(Dataframe_pvalues$iteration))){
+  
+  Bins = seq(0.025,0.975,0.05)
+  Dataframe_pvalues$Bin_Accuracy[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Accuracy[i]))]+0.025
+  Dataframe_pvalues$Bin_Interaction[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Interaction[i]))]+0.025
+  print(i)
+    
+}
+
+Dataframe_pvalues = Dataframe_pvalues %>%
+  group_by(Bin_Accuracy,Optimizer) %>%
+  mutate(BinCountAccuracy = length(Bin_Accuracy))%>%
+  group_by(Bin_Interaction,Optimizer) %>%
+  mutate(BinCountInteraction = length(Bin_Interaction))
+
+ggplot(Dataframe_pvalues,aes(Bin_Accuracy,Optimizer, fill = BinCountAccuracy)) +
+  geom_tile()
+
+
+
+
+
+Hu = cut(Dataframe_pvalues$Pvalues_Interaction, 
+    breaks=breaks, 
+    include.lowest=TRUE, 
+    right=FALSE)
+summary(Hu)[1]
