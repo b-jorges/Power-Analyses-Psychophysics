@@ -615,7 +615,7 @@ ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
 ########################################################################
 Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia.csv"))
 
-Dataframe_pvalues = Dataframe_AICs %>%
+Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(Optimizer = case_when(
     label == "JuliaAIC_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, nAGQ 0",
     label == "JuliaAIC_bobyqa_AGP0" ~ "Julia: bobyqa, nAGQ 0",
