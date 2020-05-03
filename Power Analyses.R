@@ -613,7 +613,7 @@ ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
 ########################################################################
 ###########################compare p values#############################
 ########################################################################
-Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/pvalues_Julia.csv"))
+Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia.csv"))
 
 Dataframe_pvalues = Dataframe_AICs %>%
   mutate(Optimizer = case_when(
@@ -640,8 +640,8 @@ Dataframe_pvalues = Dataframe_AICs %>%
 
 ggplot(Dataframe_pvalues,aes(Pvalues_Accuracy, color = Optimizer)) +
   geom_density(size = 2) +
-  coord_cartesian(ylim = c(0,5))
-  facet_grid(n~reps) +
+  coord_cartesian(ylim = c(0,5)) +
+  facet_grid(n~reps)
 ggsave("Figures/Duration for each Optimizer.jpg", w = 10, h = 5)
 
 
@@ -667,7 +667,7 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   group_by(Bin_Interaction,Optimizer) %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
-ggplot(Dataframe_pvalues %>% filter(Program == "R"),aes(Bin_Accuracy,Optimizer, fill = BinCountAccuracy)) +
+ggplot(Dataframe_pvalues,aes(Bin_Accuracy,Optimizer, fill = BinCountAccuracy)) +
   geom_tile() +
   xlab("")
 
