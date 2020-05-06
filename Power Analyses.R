@@ -614,17 +614,19 @@ ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
 ###########################compare p values#############################
 ########################################################################
 Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia.csv"))
-
+Dataframe_pvalues$label
 Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(Optimizer = case_when(
-    label == "JuliaAIC_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, nAGQ 0",
-    label == "JuliaAIC_bobyqa_AGP0" ~ "Julia: bobyqa, nAGQ 0",
-    label == "NelderMead_nAGQ0" ~ "R: Nelder-Mead, nAGQ 0",
-    label == "NelderMead_nAGQ1" ~ "R: Nelder-Mead, nAGQ 1",
-    label == "Bobyqa_nAGQ0" ~ "R: bobyqa, nAGQ 0",
-    label == "Bobyqa_nAGQ1" ~ "R: bobyqa, nAGQ 1",
-    label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, nAGQ 0",
-    label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, nAGQ 1")
+    label == "JuliaAIC_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, fast",
+    label == "JuliaAIC_bobyqa_AGP0" ~ "Julia: bobyqa, fast",
+    label == "JuliaAIC_NeldMeader_AGP1" ~ "Julia: Nelder-Mead, slow",
+    label == "JuliaAIC_bobyqa_AGP1" ~ "Julia: bobyqa, slow",
+    label == "NelderMead_nAGQ0" ~ "R: Nelder-Mead, fast",
+    label == "NelderMead_nAGQ1" ~ "R: Nelder-Mead, slow",
+    label == "Bobyqa_nAGQ0" ~ "R: bobyqa, fast",
+    label == "Bobyqa_nAGQ1" ~ "R: bobyqa, slow",
+    label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, fast",
+    label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, slow")
   )%>%
   group_by(n,reps) %>%
   mutate(MedianAIC_n_reps = median(AIC),
@@ -642,12 +644,20 @@ ggplot(Dataframe_pvalues,aes(Pvalues_Accuracy, color = Optimizer)) +
   geom_density(size = 2) +
   coord_cartesian(ylim = c(0,5)) +
   facet_grid(n~reps)
-ggsave("Figures/Duration for each Optimizer.jpg", w = 10, h = 5)
 
 
 ggplot(Dataframe_pvalues,aes(round(Pvalues_Interaction,2), color = Optimizer, fill = Optimizer)) +
   geom_histogram(bins = 20) +
   facet_grid(.~Optimizer)
+
+ggplot(Dataframe_pvalues,aes(n,MedianDuration, color = Optimizer, fill = Optimizer)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~reps) +
+  coord_cartesian(ylim = c(0,5)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow,
+                                Turquoise,LightTurquoise,Lila,"grey"))
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow, Red, "grey"))(10))
 
 
 Dataframe_pvalues$Bin_Accuracy = 0
@@ -667,10 +677,16 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   group_by(Bin_Interaction,Optimizer) %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
-ggplot(Dataframe_pvalues,aes(Bin_Accuracy,Optimizer, fill = BinCountAccuracy)) +
+ggplot(Dataframe_pvalues,aes(Bin_Accuracy,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
-  xlab("")
+  xlab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(42))
 
-ggplot(Dataframe_pvalues,aes(Bin_Interaction,Optimizer, fill = BinCountInteraction)) +
+length(Dataframe_pvalues$Pvalues_Interaction)/(10*20)
+ggplot(Dataframe_pvalues,aes(Bin_Interaction,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
-  xlab("")
+  xlab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(42))
+
+
+GLMM
