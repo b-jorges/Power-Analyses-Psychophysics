@@ -613,7 +613,7 @@ ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
 ########################################################################
 ###########################compare p values#############################
 ########################################################################
-Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia.csv"))
+Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia1000.csv"))
 Dataframe_pvalues$label
 Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(Optimizer = case_when(
@@ -626,7 +626,8 @@ Dataframe_pvalues = Dataframe_pvalues %>%
     label == "Bobyqa_nAGQ0" ~ "R: bobyqa, fast",
     label == "Bobyqa_nAGQ1" ~ "R: bobyqa, slow",
     label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, fast",
-    label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, slow")
+    label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, slow",
+    label == "JuliaLRT" ~ "Julia: boyqa, fast, LRT")
   )%>%
   group_by(n,reps) %>%
   mutate(MedianAIC_n_reps = median(AIC),
@@ -640,24 +641,14 @@ Dataframe_pvalues = Dataframe_pvalues %>%
          Median_Pvalue_Interaction_Difference = median(Pvalues_Interaction) - Median_pvalue_Interaction_n_reps)
 
 
-ggplot(Dataframe_pvalues,aes(Pvalues_Accuracy, color = Optimizer)) +
-  geom_density(size = 2) +
-  coord_cartesian(ylim = c(0,5)) +
-  facet_grid(n~reps)
-
-
-ggplot(Dataframe_pvalues,aes(round(Pvalues_Interaction,2), color = Optimizer, fill = Optimizer)) +
-  geom_histogram(bins = 20) +
-  facet_grid(.~Optimizer)
-
-ggplot(Dataframe_pvalues,aes(n,MedianDuration, color = Optimizer, fill = Optimizer)) +
+#######Timing
+ggplot(Dataframe_pvalues %>% filter(Optimizer != "Julia: boyqa, fast, LRT"),aes(n,log(MedianDuration), color = Optimizer, fill = Optimizer)) +
   geom_point() +
   geom_line() +
   facet_grid(.~reps) +
-  coord_cartesian(ylim = c(0,5)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow,
-                                Turquoise,LightTurquoise,Lila,"grey"))
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow, Red, "grey"))(10))
+                                Turquoise,LightTurquoise,Lila,"grey","black"))
+  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow, Red, "grey"))(11))
 
 
 Dataframe_pvalues$Bin_Accuracy = 0
