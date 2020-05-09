@@ -491,6 +491,7 @@ ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
   scale_x_continuous(breaks=c(10,12,14,16,18,20)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
                      name = "")
+ggsave("Figures/Powers.jpg", w = 10, h = 8)
 ########################################################################
 ########################################################################
 ########################################################################
@@ -613,8 +614,10 @@ ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
 ########################################################################
 ###########################compare p values#############################
 ########################################################################
-Dataframe_pvalues = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia1000.csv"))
-Dataframe_pvalues$label
+Dataframe_pvalues = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia1.csv")),
+                          read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia2.csv")))
+
+
 Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(Optimizer = case_when(
     label == "JuliaAIC_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, fast",
@@ -627,29 +630,32 @@ Dataframe_pvalues = Dataframe_pvalues %>%
     label == "Bobyqa_nAGQ1" ~ "R: bobyqa, slow",
     label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, fast",
     label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, slow",
-    label == "JuliaLRT" ~ "Julia: boyqa, fast, LRT")
+    label == "JuliaLRT" ~ "Julia: bobyqa, fast, LRT")
   )%>%
-  group_by(n,reps) %>%
-  mutate(MedianAIC_n_reps = median(AIC),
-         Median_pvalue_Accuracy_n_reps = median(Pvalues_Accuracy),
-         Median_pvalue_Interaction_n_reps = median(Pvalues_Interaction)) %>%
-  group_by(n,reps,label) %>%
+  group_by(n,reps,label,PSE_Difference,JND_Difference) %>%
   mutate(MedianDuration = median(Duration),
+         SEDuration = SE(Duration),
          SE_Duration_n_reps_label = SE(Duration),
-         MedianAIC_Difference = median(AIC)-MedianAIC_n_reps,
-         Median_Pvalue_Accuracy_Difference = median(Pvalues_Accuracy) - Median_pvalue_Accuracy_n_reps,
-         Median_Pvalue_Interaction_Difference = median(Pvalues_Interaction) - Median_pvalue_Interaction_n_reps)
+         nTrials = case_when(
+           reps == 30 ~ "30 repetitions",
+           reps == 40 ~ "40 repetitions",
+           reps == 50 ~ "50 repetitions",
+           reps == 60 ~ "60 repetitions",
+         ))
 
 
 #######Timing
-ggplot(Dataframe_pvalues %>% filter(Optimizer != "Julia: boyqa, fast, LRT"),aes(n,log(MedianDuration), color = Optimizer, fill = Optimizer)) +
-  geom_point() +
-  geom_line() +
-  facet_grid(.~reps) +
-  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow,
-                                Turquoise,LightTurquoise,Lila,"grey","black"))
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow, Red, "grey"))(11))
-
+ggplot(Dataframe_pvalues %>% 
+         filter(Optimizer != "Julia: bobyqa, fast, LRT" &
+                  PSE_Difference == 0),
+       aes(n,log(MedianDuration), color = Optimizer)) +
+  geom_point(size=2) +
+  geom_line(size=1) +
+  facet_grid(~nTrials) +
+  ylab("Log Median Duration (s)") +
+  scale_color_manual(values = rainbow(10), name = "Method") +
+  scale_x_continuous(breaks = c(10,12,14,16,18,20))
+ggsave("Figures/Different Durations.jpg",w=8,h=5)
 
 Dataframe_pvalues$Bin_Accuracy = 0
 Dataframe_pvalues$Bin_Interaction = 0
@@ -663,21 +669,52 @@ for (i in (1:length(Dataframe_pvalues$iteration))){
 }
 
 Dataframe_pvalues = Dataframe_pvalues %>%
-  group_by(Bin_Accuracy,Optimizer) %>%
+  group_by(Bin_Accuracy,Optimizer,PSE_Difference) %>%
   mutate(BinCountAccuracy = length(Bin_Accuracy))%>%
-  group_by(Bin_Interaction,Optimizer) %>%
+  group_by(Bin_Interaction,Optimizer,PSE_Difference) %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
-ggplot(Dataframe_pvalues,aes(Bin_Accuracy,Optimizer, fill = as.factor(BinCountAccuracy))) +
+PlotAccuracy = ggplot(Dataframe_pvalues %>% 
+         filter(PSE_Difference == 0 &
+                Optimizer != "Julia: bobyqa, fast, LRT"),
+       aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(42))
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(43)) +
+  theme(legend.position = "") +
+  ylab("") +
+  ggtitle("A. Accuracy, No Effect")
 
-length(Dataframe_pvalues$Pvalues_Interaction)/(10*20)
-ggplot(Dataframe_pvalues,aes(Bin_Interaction,Optimizer, fill = as.factor(BinCountInteraction))) +
+PlotInteraction = ggplot(Dataframe_pvalues %>% 
+         filter(PSE_Difference == 0),
+                aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(42))
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(38)) +
+  theme(legend.position = "") +
+  ylab("") +
+  ggtitle("B. Interaction, No Effect")
 
+PlotAccuracy2 = ggplot(Dataframe_pvalues %>% 
+                        filter(PSE_Difference != 0 &
+                                 Optimizer != "Julia: bobyqa, fast, LRT"),
+                      aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
+  geom_tile() +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(43)) +
+  theme(legend.position = "") +
+  ggtitle("C. Accuracy, Small Effect")
 
-GLMM
+PlotInteraction2 = ggplot(Dataframe_pvalues %>% 
+                           filter(PSE_Difference != 0),
+                         aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+  geom_tile() +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(38)) +
+  theme(legend.position = "") +
+  ggtitle("D. Interaction, Small Effect")
+
+plot_grid(PlotAccuracy,PlotInteraction,PlotAccuracy2,PlotInteraction2, nrow = 2)
+ggsave("Figures/False Positives.jpg",w=12,h=8)
