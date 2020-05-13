@@ -130,7 +130,8 @@ GLMM2 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Differ
              nAGQ = 0,
              control = glmerControl(optimizer = "nloptwrap"))
 
-
+haha = anova(GLMM,GLMM2)
+haha$`Pr(>Chisq)`[2]
 summary(GLMM2)
 summary(GLMM)
 
@@ -742,8 +743,7 @@ ggplot(Dataframe_pvalues %>%
   ylab("AIC DIfference") +
   scale_color_manual(values = rainbow(10), name = "Method") +
   scale_x_continuous(breaks = c(10,12,14,16,18,20))
-ggsave("Figures/AIC differences.jpg",w=12,h=8)
+ggsave("Figures/AIC differences.jpg",w=12,h=6)
 
 
-?glmerControl
-?optCtrl
+?glmer
