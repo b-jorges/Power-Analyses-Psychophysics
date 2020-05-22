@@ -35,14 +35,14 @@ set.seed(9121)
 Psychometric = SimulatePsychometricFunction_Staircase(ID = paste("s",1), 
                                        ConditionOfInterest = c(0,1), 
                                        StandardValues = c(8), 
-                                       reps = 1:55, 
+                                       reps = 1:1000, 
                                        PSE_Difference = 0, 
                                        JND_Difference = 0, 
                                        Multiplicator_PSE_Standard = 0, 
-                                       Multiplicator_SD_Standard = 0.108, 
+                                       Multiplicator_SD_Standard = 0.05, 
                                        SD_ResponseFunction = 0.1, 
-                                       Mean_Variability_Between = 0.1, 
-                                       SD_Variability_Between = 0.1)
+                                       Mean_Variability_Between = 0, 
+                                       SD_Variability_Between = 0)
 
 PsychometricFunctions = quickpsy(Psychometric,Difference,Answer, bootstrap = "none")
 
