@@ -507,6 +507,20 @@ Powers2 = ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = la
                      name = "") +
   ggtitle("A. 60 Repetitions")
 
+Powers3 = ggplot(Dataframe_Powers %>% filter(reps == 100), aes(n,power,color = label)) +
+  geom_line(size = 2) +
+  facet_grid(JND_Difference~PSE_Difference) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 1, yintercept = 0.05) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,15,20)) +
+  scale_y_continuous(breaks=c(0.25,0.75)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+                     name = "") +
+  ggtitle("A. 100 Repetitions")
+
 plot_shared_legend(Powers1,Powers2)
 ggsave("Figures/Powers.jpg", w = 12, h = 8)
 ########################################################################
