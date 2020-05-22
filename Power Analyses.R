@@ -51,7 +51,6 @@ SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.1
 SD_Variability_Between = 0.1
 
-pnorm(10.73,10,10*0.108)
 
 Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
 
@@ -464,8 +463,7 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 ########################################################################
 ##############compare power for GLMM and Two-Level approach#############
 ########################################################################
-Dataframe_wide = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers1_40_reps.csv")),
-                  read.csv(header = T, file = paste0(Where_Am_I(),"/Data/SamplePowers2_60_reps.csv"))) %>%
+Dataframe_wide = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Final Sample Powers.csv"))) %>%
                   select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
 Dataframe_Powers = data.frame(PSE_Difference = rep(Dataframe_wide$PSE_Difference,4),
                               JND_Difference = rep(Dataframe_wide$JND_Difference,4),
@@ -481,7 +479,7 @@ Dataframe_Powers = data.frame(PSE_Difference = rep(Dataframe_wide$PSE_Difference
                                         rep("Precision_Twolevel",length(Dataframe_wide$reps))))
 
 
-ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
+Powers1 = ggplot(Dataframe_Powers %>% filter(reps == 40), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
   xlab("N° of Subjects") +
@@ -489,134 +487,40 @@ ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 1, yintercept = 0.05) +
   geom_hline(linetype = 3, yintercept = 0.95) +
-  scale_x_continuous(breaks=c(10,12,14,16,18,20)) +
+  scale_x_continuous(breaks=c(10,15,20)) +
+  scale_y_continuous(breaks=c(0.25,0.75)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
-                     name = "")
-ggsave("Figures/Powers.jpg", w = 10, h = 8)
+                     name = "") +
+  ggtitle("A. 40 Repetitions")
+
+Powers2 = ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
+  geom_line(size = 2) +
+  facet_grid(JND_Difference~PSE_Difference) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 1, yintercept = 0.05) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,15,20)) +
+  scale_y_continuous(breaks=c(0.25,0.75)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+                     name = "") +
+  ggtitle("A. 60 Repetitions")
+
+plot_shared_legend(Powers1,Powers2)
+ggsave("Figures/Powers.jpg", w = 12, h = 8)
 ########################################################################
 ########################################################################
 ########################################################################
 
 
 
-########################################################################
-##############compare Speed for R and Julia#############
-########################################################################
-Dataframe = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_Julia.csv"))
-Dataframe_Julia = gather(Dataframe,analysis,duration,
-                         c(DurationGLMM_NeldMeader_AGP0,DurationGLMM_bobyqa_AGP0),factor_key = TRUE)
-Julia_AIC = gather(Dataframe,analysis2,AIC,
-                         c(AIC_NeldMeader_AGP0,AIC_bobyqa_AGP0),factor_key = TRUE)$AIC
-Dataframe_Julia$AIC = Julia_AIC
-Dataframe_Julia$duration = Dataframe_Julia$duration/1000
-Dataframe_Julia = rbind(Dataframe_Julia %>% select(nIteration,n,reps,analysis,duration,AIC))
-colnames(Dataframe_Julia) = c("iteration","n","reps","analysis","duration", "AIC")
-Dataframe_Julia$Program = "Julia"
-
-Dataframe_R = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Durations_R.csv"))
-Dataframe_R1 = gather(Dataframe_R,analysis,duration,
-                     c(Duration_NelderMead_nAGQ0,Duration_NelderMead_nAGQ1,Duration_Bobyqa_nAGQ0,
-                       Duration_Bobyqa_nAGQ1,Duration_nloptwrap_nAGQ0,Duration_nloptwrap_nAGQ1),factor_key = TRUE)
-AIC_R2 = gather(Dataframe_R,analysis,AIC,
-                     c(AIC_NelderMead_nAGQ0,AIC_NelderMead_nAGQ1,AIC_Bobyqa_nAGQ0,
-                       AIC_Bobyqa_nAGQ1,AIC_nloptwrap_nAGQ0,AIC_nloptwrap_nAGQ1),factor_key = TRUE)$AIC
-Dataframe_R1$AIC = AIC_R2
-Dataframe_R = Dataframe_R1 %>% select(iteration, n, reps, analysis, duration,AIC)
-colnames(Dataframe_R) = c("iteration","n","reps","analysis", "duration","AIC")
-Dataframe_R$Program = "R"
-
-Dataframe = rbind(Dataframe_Julia,Dataframe_R) %>%
-  group_by(n,reps,Program,analysis) %>%
-  mutate(MeanDuration = median(duration),
-         MeanAIC = median(AIC))
-
-Dataframe = Dataframe %>%
-  group_by(n,reps,Program) %>%
-  mutate(MedianAIC_n_reps = median(AIC)) %>%
-  ungroup() %>%
-  mutate(AICDifferences = MeanAIC-MedianAIC_n_reps,
-         Optimizer = case_when(
-           analysis == "DurationGLMM_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, nAGQ 0",
-           analysis == "DurationGLMM_bobyqa_AGP0" ~ "Julia: bobyqa, nAGQ 0",
-           analysis == "Duration_NelderMead_nAGQ0" ~ "R: Nelder-Mead, nAGQ 0",
-           analysis == "Duration_NelderMead_nAGQ1" ~ "R: Nelder-Mead, nAGQ 1",
-           analysis == "Duration_Bobyqa_nAGQ0" ~ "R: bobyqa, nAGQ 0",
-           analysis == "Duration_Bobyqa_nAGQ1" ~ "R: bobyqa, nAGQ 1",
-           analysis == "Duration_nloptwrap_nAGQ0" ~ "R: nloptwrap, nAGQ 0",
-           analysis == "Duration_nloptwrap_nAGQ1" ~ "R: nloptwrap, nAGQ 1"
-          )
-         )
-
-ggplot(Dataframe,aes(n, MeanDuration, color = analysis)) +
-  geom_point() +
-  geom_line() +
-  facet_grid(.~reps) +
-  coord_cartesian(ylim = c(0,10)) +
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8))
-
-ggplot(Dataframe,aes(n, AICDifferences, color = Optimizer)) +
-  geom_point() +
-  geom_line() +
-  facet_grid(.~reps) +
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow,Red,"green"))(8)) +
-  coord_cartesian(ylim = c(-0.5,0.5))
 
 
 ########################################################################
-##############compare AICs for different algorithms#####################
+####################Compare Optimizer Configurations####################
 ########################################################################
-Dataframe_AICs = read.csv(header = T, file = paste0(Where_Am_I(),"/Data/AICs.csv"))
-
-Dataframe_AICs = Dataframe_AICs %>%
-  mutate(Optimizer = case_when(
-    label == "JuliaAIC_NeldMeader_AGP0" ~ "Julia: Nelder-Mead, nAGQ 0",
-    label == "JuliaAIC_bobyqa_AGP0" ~ "Julia: bobyqa, nAGQ 0",
-    label == "NelderMead_nAGQ0" ~ "R: Nelder-Mead, nAGQ 0",
-    label == "NelderMead_nAGQ1" ~ "R: Nelder-Mead, nAGQ 1",
-    label == "Bobyqa_nAGQ0" ~ "R: bobyqa, nAGQ 0",
-    label == "Bobyqa_nAGQ1" ~ "R: bobyqa, nAGQ 1",
-    label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, nAGQ 0",
-    label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, nAGQ 1")
-    )%>%
-  group_by(n,reps) %>%
-  mutate(MedianAIC_n_reps = median(AIC),
-         Median_pvalue_Accuracy_n_reps = median(Pvalues_Accuracy),
-         Median_pvalue_Interaction_n_reps = median(Pvalues_Interaction)) %>%
-  group_by(n,reps,label) %>%
-  mutate(MedianDuration = median(Duration),
-         SE_Duration_n_reps_label = SE(Duration),
-         MedianAIC_Difference = median(AIC)-MedianAIC_n_reps,
-         Median_Pvalue_Accuracy_Difference = median(Pvalues_Accuracy) - Median_pvalue_Accuracy_n_reps,
-         Median_Pvalue_Interaction_Difference = median(Pvalues_Interaction) - Median_pvalue_Interaction_n_reps)
-
-
-ggplot(Dataframe_AICs,aes(n, MedianDuration, color = Optimizer)) +
-  geom_point() +
-  geom_line() +
-  geom_errorbar(aes(ymin = MedianDuration-SE_Duration_n_reps_label, 
-                    ymax = MedianDuration+SE_Duration_n_reps_label), width = 0.7) +
-  facet_grid(.~reps) +
-  ylab("Median Duration (s)") +
-  scale_x_continuous(breaks =  c(10,12,14,16,18,20), name = "N° Participants") +
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow))(8), name = "") +
-  theme(legend.position = c(0.05,0.8))
-ggsave("Figures/Duration for each Optimizer.jpg", w = 10, h = 5)
-
-ggplot(Dataframe_AICs,aes(n, MedianAIC_Difference, color = Optimizer)) +
-  geom_point(size=2) +
-  geom_line() +
-  facet_grid(.~reps) +
-  ylab("Median AIC difference from median across optimizers") +
-  scale_x_continuous(breaks =  c(10,12,14,16,18,20), name = "N° Participants") +
-  scale_color_manual(values = colorRampPalette(c(BlauUB,Yellow))(8))
-ggsave("Figures/AICs for each Optimizer.jpg", w = 10, h = 5)
-
-
-########################################################################
-###########################compare p values#############################
-########################################################################
-Dataframe_pvalues = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia1.csv")),
-                          read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia2.csv")))
+Dataframe_pvalues = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia2.csv")))
 
 
 Dataframe_pvalues = Dataframe_pvalues %>%
@@ -631,8 +535,9 @@ Dataframe_pvalues = Dataframe_pvalues %>%
     label == "Bobyqa_nAGQ1" ~ "R: BOBYQA, slow",
     label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, fast",
     label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, slow",
-    label == "JuliaLRT" ~ "Julia: BOBYQA, fast, LRT")
-  )%>%
+    label == "JuliaLRT" ~ "Julia: BOBYQA, fast, LRT",
+    label == "R: LRT" ~ "R: LRT")
+    )%>%
   group_by(n,reps,label,PSE_Difference,JND_Difference) %>%
   mutate(MedianDuration = median(Duration),
          SEDuration = SE(Duration),
@@ -641,42 +546,59 @@ Dataframe_pvalues = Dataframe_pvalues %>%
            reps == 30 ~ "30 repetitions",
            reps == 40 ~ "40 repetitions",
            reps == 50 ~ "50 repetitions",
-           reps == 60 ~ "60 repetitions",
-         )
+           reps == 60 ~ "60 repetitions"),
+         Effect = case_when(
+           PSE_Difference == 0.025 ~ "Small Effect",
+           PSE_Difference == 0 ~ "No Effect")
   )
          
 Dataframe_pvalues = Dataframe_pvalues %>%         
-  group_by(reps,n,iteration) %>% 
-  mutate(AIC_Difference = AIC - AIC[2]) %>% 
+  group_by(reps,n,iteration,Effect) %>% 
+  mutate(AIC_Ratio = AIC/AIC[2]) %>% 
   group_by(reps,n,Optimizer) %>% 
-  mutate(Median_AIC_Difference = median(AIC_Difference))
+  mutate(Median_AIC_Ratio = median(AIC_Ratio))
 
 
 #######Timing
-ggplot(Dataframe_pvalues %>% 
-         filter(Optimizer != "Julia: bobyqa, fast, LRT" &
-                  PSE_Difference == 0),
-       aes(n,log(MedianDuration), color = Optimizer)) +
+TimingPlot1 = ggplot(Dataframe_pvalues %>% 
+         filter(Optimizer != "Julia: BOBYQA, fast, LRT" & Optimizer != "R: LRT"),
+       aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
-  facet_grid(~nTrials) +
-  ylab("Log Median Duration (s)") +
+  facet_grid(Effect~nTrials) +
+  ylab("Median Duration (s)") +
   scale_color_manual(values = rainbow(10), name = "Method") +
-  scale_x_continuous(breaks = c(10,12,14,16,18,20))
-ggsave("Figures/Different Durations.jpg",w=8,h=5)
+  scale_x_continuous(breaks = c(10,15,20)) +
+  ggtitle("A. All Configurations")
 
+
+TimingPlot2 = ggplot(Dataframe_pvalues %>% 
+         filter(Optimizer  %in% c("Julia: BOBYQA, fast",
+                                  "Julia: BOBYQA, slow",
+                                  "R: nloptwrap, slow",
+                                  "R: nloptwrap, fast")),
+       aes(n,MedianDuration, color = Optimizer)) +
+  geom_point(size=2) +
+  geom_line(size=1) +
+  facet_grid(Effect~nTrials) +
+  ylab("Median Duration (s)") +
+  scale_color_manual(values = rainbow(10)[c(1,2,9,10)], name = "Method") +
+  scale_x_continuous(breaks = c(10,15,20)) +
+  ggtitle("B. Fastest Confirgurations")
+
+plot_shared_legend(TimingPlot1,TimingPlot2)
+ggsave("Figures/Different Durations.jpg",w=12,h=6)
 
 
 #######False Positives
 Dataframe_pvalues$Bin_Accuracy = 0
 Dataframe_pvalues$Bin_Interaction = 0
 for (i in (1:length(Dataframe_pvalues$iteration))){
-  
+  print(i)  
   Bins = seq(0.025,0.975,0.05)
   Dataframe_pvalues$Bin_Accuracy[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Accuracy[i]))]+0.025
   Dataframe_pvalues$Bin_Interaction[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Interaction[i]))]+0.025
-  print(i)
-    
+
 }
 
 Dataframe_pvalues = Dataframe_pvalues %>%
@@ -686,64 +608,59 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
 PlotAccuracy = ggplot(Dataframe_pvalues %>% 
-         filter(PSE_Difference == 0 &
-                Optimizer != "Julia: bobyqa, fast, LRT"),
+         filter(Optimizer != "Julia: BOBYQA, fast, LRT" & Optimizer != "R: LRT" &
+                  Effect == "No Effect"),
        aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(43)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(37)) +
   theme(legend.position = "") +
   ylab("") +
   ggtitle("A. Accuracy, No Effect")
 
-PlotInteraction = ggplot(Dataframe_pvalues %>% 
-         filter(PSE_Difference == 0),
+PlotInteraction = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect"),
                 aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(38)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(45)) +
   theme(legend.position = "") +
   ylab("") +
   ggtitle("B. Interaction, No Effect")
 
 PlotAccuracy2 = ggplot(Dataframe_pvalues %>% 
-                        filter(PSE_Difference != 0 &
-                                 Optimizer != "Julia: bobyqa, fast, LRT"),
+                        filter(Effect == "Small Effect" &
+                                 Optimizer != "Julia: BOBYQA, fast, LRT" &
+                                 Optimizer != "R: LRT"),
                       aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
-  geom_tile() +
-  xlab("") +
-  ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(43)) +
-  theme(legend.position = "") +
-  ggtitle("C. Accuracy, Small Effect")
-
-PlotInteraction2 = ggplot(Dataframe_pvalues %>% 
-                           filter(PSE_Difference != 0),
-                         aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
   ylab("") +
   scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(38)) +
   theme(legend.position = "") +
-  ggtitle("D. Interaction, Small Effect")
+  ggtitle("C. Accuracy, Small Effect")
 
+PlotInteraction2 = ggplot(Dataframe_pvalues %>% 
+                           filter(Effect == "Small Effect"),
+                         aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+  geom_tile() +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(46)) +
+  theme(legend.position = "") +
+  ggtitle("D. Interaction, Small Effect")
 plot_grid(PlotAccuracy,PlotInteraction,PlotAccuracy2,PlotInteraction2, nrow = 2)
 ggsave("Figures/False Positives.jpg",w=12,h=8)
 
 
-
 ############AICs
-ggplot(Dataframe_pvalues %>% 
-         filter(Optimizer != "Julia: bobyqa, fast, LRT" &
-                  PSE_Difference == 0),
-       aes(n,Median_AIC_Difference, color = Optimizer)) +
+ggplot(Dataframe_pvalues %>%
+         filter(Optimizer != "Julia: BOBYQA, fast, LRT" & 
+                  Optimizer != "R: LRT"),
+       aes(n,Median_AIC_Ratio, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
-  facet_grid(~nTrials) +
+  facet_grid(Effect~nTrials) +
   ylab("AIC DIfference") +
   scale_color_manual(values = rainbow(10), name = "Method") +
-  scale_x_continuous(breaks = c(10,12,14,16,18,20))
+  scale_x_continuous(breaks = c(10,15,20))
 ggsave("Figures/AIC differences.jpg",w=12,h=6)
-
-
-?glmer
