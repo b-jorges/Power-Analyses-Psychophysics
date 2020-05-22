@@ -572,7 +572,7 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   group_by(reps,n,Optimizer) %>% 
   mutate(Median_AIC_Ratio = median(AIC_Ratio))
 
-
+Dataframe_pvalues$label
 #######Timing
 TimingPlot1 = ggplot(Dataframe_pvalues %>% 
          filter(Optimizer != "Julia: BOBYQA, fast, LRT" & Optimizer != "R: LRT"),
