@@ -1,7 +1,0 @@
-n,ConditionsOfInterest,StandardValue1,StandardValue2,reps,PSE_Difference,JND_Difference,Multiplicator_PSE_Standard,Multiplicator_SD_Standard,SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between,power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,Duration
-10,2,5,8,60,0.05,0.2,0,0.108,0.1,0.1,0.1,1.0,0.49,1.0,0.55,484642 milliseconds
-12,2,5,8,60,0.05,0.2,0,0.108,0.1,0.1,0.1,1.0,0.5,1.0,0.58,562808 milliseconds
-14,2,5,8,60,0.05,0.2,0,0.108,0.1,0.1,0.1,1.0,0.58,1.0,0.66,686129 milliseconds
-16,2,5,8,60,0.05,0.2,0,0.108,0.1,0.1,0.1,1.0,0.65,1.0,0.71,837476 milliseconds
-18,2,5,8,60,0.05,0.2,0,0.108,0.1,0.1,0.1,1.0,0.62,1.0,0.72,932839 milliseconds
-20,2,5,8,60,0.05,0.2,0,0.108,0.1,0.1,0.1,1.0,0.63,1.0,0.66,1067510 milliseconds
