@@ -463,7 +463,7 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 ########################################################################
 ##############compare power for GLMM and Two-Level approach#############
 ########################################################################
-Dataframe_wide = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Final Sample Powers.csv"))) %>%
+Dataframe_wide = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Different_Ns.csv"))) %>%
                   select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
 Dataframe_Powers = data.frame(PSE_Difference = rep(Dataframe_wide$PSE_Difference,4),
                               JND_Difference = rep(Dataframe_wide$JND_Difference,4),
@@ -493,7 +493,7 @@ Powers1 = ggplot(Dataframe_Powers %>% filter(reps == 40), aes(n,power,color = la
                      name = "") +
   ggtitle("A. 40 Repetitions")
 
-Powers2 = ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = label)) +
+Powers2 = ggplot(Dataframe_Powers %>% filter(reps == 70), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
   xlab("N° of Subjects") +
@@ -505,7 +505,21 @@ Powers2 = ggplot(Dataframe_Powers %>% filter(reps == 60), aes(n,power,color = la
   scale_y_continuous(breaks=c(0.25,0.75)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
                      name = "") +
-  ggtitle("A. 60 Repetitions")
+  ggtitle("A. 70 Repetitions")
+
+Powers3 = ggplot(Dataframe_Powers %>% filter(reps == 100), aes(n,power,color = label)) +
+  geom_line(size = 2) +
+  facet_grid(JND_Difference~PSE_Difference) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 1, yintercept = 0.05) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,15,20)) +
+  scale_y_continuous(breaks=c(0.25,0.75)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+                     name = "") +
+  ggtitle("A. 100 Repetitions")
 
 plot_shared_legend(Powers1,Powers2)
 ggsave("Figures/Powers.jpg", w = 12, h = 8)
@@ -520,7 +534,7 @@ ggsave("Figures/Powers.jpg", w = 12, h = 8)
 ########################################################################
 ####################Compare Optimizer Configurations####################
 ########################################################################
-Dataframe_pvalues = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Julia2.csv")))
+Dataframe_pvalues = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Comparison_Methods.csv")))
 
 
 Dataframe_pvalues = Dataframe_pvalues %>%
