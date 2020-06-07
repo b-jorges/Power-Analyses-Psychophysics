@@ -521,7 +521,7 @@ Powers3 = ggplot(Dataframe_Powers %>% filter(reps == 100), aes(n,power,color = l
                      name = "") +
   ggtitle("A. 100 Repetitions")
 
-plot_shared_legend(Powers1,Powers2)
+plot_shared_legend(Powers1,Powers2, Powers3)
 ggsave("Figures/Powers.jpg", w = 12, h = 8)
 ########################################################################
 ########################################################################
