@@ -463,23 +463,38 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 ########################################################################
 ##############compare power for GLMM and Two-Level approach#############
 ########################################################################
-Dataframe_wide = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Pvalues_Different_Ns.csv"))) %>%
+Dataframe_wide_Big = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers_BiggerModel.csv"))) %>%
                   select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
-Dataframe_Powers = data.frame(PSE_Difference = rep(Dataframe_wide$PSE_Difference,4),
-                              JND_Difference = rep(Dataframe_wide$JND_Difference,4),
-                              n = rep(Dataframe_wide$n,4),
-                              reps = rep(Dataframe_wide$reps,4),
-                              power = c(Dataframe_wide$power_Accuracy,
-                                        Dataframe_wide$power_Precision,
-                                        Dataframe_wide$power_Accuracy_Twolevel,
-                                        Dataframe_wide$power_Precision_Twolevel),
-                              label = c(rep("Accuracy_GLMM",length(Dataframe_wide$reps)),
-                                        rep("Precision_GLMM",length(Dataframe_wide$reps)),
-                                        rep("Accuracy_Twolevel",length(Dataframe_wide$reps)),
-                                        rep("Precision_Twolevel",length(Dataframe_wide$reps))))
+Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference,4),
+                              JND_Difference = rep(Dataframe_wide_Big$JND_Difference,4),
+                              n = rep(Dataframe_wide_Big$n,4),
+                              reps = rep(Dataframe_wide_Big$reps,4),
+                              power = c(Dataframe_wide_Big$power_Accuracy,
+                                        Dataframe_wide_Big$power_Precision,
+                                        Dataframe_wide_Big$power_Accuracy_Twolevel,
+                                        Dataframe_wide_Big$power_Precision_Twolevel),
+                              label = c(rep("Accuracy_GLMM",length(Dataframe_wide_Big$reps)),
+                                        rep("Precision_GLMM",length(Dataframe_wide_Big$reps)),
+                                        rep("Accuracy_Twolevel",length(Dataframe_wide_Big$reps)),
+                                        rep("Precision_Twolevel",length(Dataframe_wide_Big$reps))))
+
+Dataframe_wide_Small = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers_SmallerModel.csv"))) %>%
+  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
+Dataframe_Powers_Small = data.frame(PSE_Difference = rep(Dataframe_wide_Small$PSE_Difference,4),
+                                  JND_Difference = rep(Dataframe_wide_Small$JND_Difference,4),
+                                  n = rep(Dataframe_wide_Small$n,4),
+                                  reps = rep(Dataframe_wide_Small$reps,4),
+                                  power = c(Dataframe_wide_Small$power_Accuracy,
+                                            Dataframe_wide_Small$power_Precision,
+                                            Dataframe_wide_Small$power_Accuracy_Twolevel,
+                                            Dataframe_wide_Small$power_Precision_Twolevel),
+                                  label = c(rep("Accuracy_GLMM",length(Dataframe_wide_Small$reps)),
+                                            rep("Precision_GLMM",length(Dataframe_wide_Small$reps)),
+                                            rep("Accuracy_Twolevel",length(Dataframe_wide_Small$reps)),
+                                            rep("Precision_Twolevel",length(Dataframe_wide_Small$reps))))
 
 
-Powers1 = ggplot(Dataframe_Powers %>% filter(reps == 40), aes(n,power,color = label)) +
+Powers1 = ggplot(Dataframe_Powers_Big %>% filter(reps == 40), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
   xlab("N° of Subjects") +
@@ -493,7 +508,7 @@ Powers1 = ggplot(Dataframe_Powers %>% filter(reps == 40), aes(n,power,color = la
                      name = "") +
   ggtitle("A. 40 Repetitions")
 
-Powers2 = ggplot(Dataframe_Powers %>% filter(reps == 70), aes(n,power,color = label)) +
+Powers2 = ggplot(Dataframe_Powers_Big %>% filter(reps == 70), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
   xlab("N° of Subjects") +
@@ -507,7 +522,7 @@ Powers2 = ggplot(Dataframe_Powers %>% filter(reps == 70), aes(n,power,color = la
                      name = "") +
   ggtitle("A. 70 Repetitions")
 
-Powers3 = ggplot(Dataframe_Powers %>% filter(reps == 100), aes(n,power,color = label)) +
+Powers3 = ggplot(Dataframe_Powers_Big %>% filter(reps == 100), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
   xlab("N° of Subjects") +
@@ -522,7 +537,53 @@ Powers3 = ggplot(Dataframe_Powers %>% filter(reps == 100), aes(n,power,color = l
   ggtitle("A. 100 Repetitions")
 
 plot_shared_legend(Powers1,Powers2, Powers3)
-ggsave("Figures/Powers.jpg", w = 12, h = 8)
+ggsave("Figures/PowersBigModel.jpg", w = 12, h = 8)
+
+
+Powers4 = ggplot(Dataframe_Powers_Small %>% filter(reps == 40), aes(n,power,color = label)) +
+  geom_line(size = 2) +
+  facet_grid(JND_Difference~PSE_Difference) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 1, yintercept = 0.05) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,15,20)) +
+  scale_y_continuous(breaks=c(0.25,0.75)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+                     name = "") +
+  ggtitle("A. 40 Repetitions")
+
+Powers5 = ggplot(Dataframe_Powers_Small %>% filter(reps == 70), aes(n,power,color = label)) +
+  geom_line(size = 2) +
+  facet_grid(JND_Difference~PSE_Difference) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 1, yintercept = 0.05) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,15,20)) +
+  scale_y_continuous(breaks=c(0.25,0.75)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+                     name = "") +
+  ggtitle("A. 70 Repetitions")
+
+Powers6 = ggplot(Dataframe_Powers_Small %>% filter(reps == 100), aes(n,power,color = label)) +
+  geom_line(size = 2) +
+  facet_grid(JND_Difference~PSE_Difference) +
+  xlab("N° of Subjects") +
+  ylab("Power") +
+  geom_hline(linetype = 2, yintercept = 0.8) +
+  geom_hline(linetype = 1, yintercept = 0.05) +
+  geom_hline(linetype = 3, yintercept = 0.95) +
+  scale_x_continuous(breaks=c(10,15,20)) +
+  scale_y_continuous(breaks=c(0.25,0.75)) +
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+                     name = "") +
+  ggtitle("A. 100 Repetitions")
+
+plot_shared_legend(Powers4,Powers5, Powers6)
+ggsave("Figures/Powers_SmallModel.jpg", w = 12, h = 8)
 ########################################################################
 ########################################################################
 ########################################################################
@@ -534,8 +595,11 @@ ggsave("Figures/Powers.jpg", w = 12, h = 8)
 ########################################################################
 ####################Compare Optimizer Configurations####################
 ########################################################################
-Dataframe_pvalues = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Comparison_Methods.csv")))
-
+Dataframe_pvalues1 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Comparison_Methods_SmallerModel.csv")))
+Dataframe_pvalues1$Size = "Smaller Model"
+Dataframe_pvalues2 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Comparison_Methods_BiggerModel.csv")))
+Dataframe_pvalues2$Size = "Bigger Model"
+Dataframe_pvalues = rbind(Dataframe_pvalues1,Dataframe_pvalues2)
 
 Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(Optimizer = case_when(
@@ -549,14 +613,11 @@ Dataframe_pvalues = Dataframe_pvalues %>%
     label == "Bobyqa_nAGQ1" ~ "R: BOBYQA, slow",
     label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, fast",
     label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, slow",
-    label == "JuliaLRT" ~ "Julia: BOBYQA, fast, LRT",
+    label == "JuliaLRT" ~ "Julia: LRT",
     label == "R: LRT" ~ "R: LRT")
     )%>%
-  group_by(n,reps,label,PSE_Difference,JND_Difference) %>%
-  mutate(MedianDuration = median(Duration),
-         SEDuration = SE(Duration),
-         SE_Duration_n_reps_label = SE(Duration),
-         nTrials = case_when(
+  group_by(n,reps,label,PSE_Difference,JND_Difference,Size) %>%
+  mutate(nTrials = case_when(
            reps == 30 ~ "30 repetitions",
            reps == 40 ~ "40 repetitions",
            reps == 50 ~ "50 repetitions",
@@ -567,38 +628,53 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   )
          
 Dataframe_pvalues = Dataframe_pvalues %>%         
-  group_by(reps,n,iteration,Effect) %>% 
-  mutate(AIC_Ratio = AIC/AIC[2]) %>% 
-  group_by(reps,n,Optimizer) %>% 
+  group_by(reps,n,iteration,Effect,Size) %>% 
+  mutate(AIC_Ratio = AIC/AIC[2],
+         Duration_LRT_Julia = Duration[9] + Duration[12],
+         Duration_LRT_R = Duration[5] + Duration[7]) %>% 
+  group_by(reps,n,Optimizer,Size) %>% 
   mutate(Median_AIC_Ratio = median(AIC_Ratio))
 
+Dataframe_pvalues$Duration[Dataframe_pvalues$label == "JuliaLRT"] = 
+        Dataframe_pvalues$Duration_LRT_Julia[Dataframe_pvalues$label == "JuliaLRT"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$label == "R: LRT"] = 
+  Dataframe_pvalues$Duration_LRT_R[Dataframe_pvalues$label == "R: LRT"]
+
+Dataframe_pvalues = Dataframe_pvalues %>%         
+  group_by(reps,n,label,Effect,Size) %>% 
+    mutate(MedianDuration = median(Duration),
+           SEDuration = SE(Duration),
+           SE_Duration_n_reps_label = SE(Duration))
 
 #######Timing
 TimingPlot1 = ggplot(Dataframe_pvalues %>% 
-         filter(Optimizer != "Julia: BOBYQA, fast, LRT" & Optimizer != "R: LRT"),
+         filter(Size == "Bigger Model") ,
        aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
   facet_grid(Effect~nTrials) +
   ylab("Median Duration (s)") +
-  scale_color_manual(values = rainbow(10), name = "Method") +
+  scale_color_manual(values = rainbow(12), name = "Method") +
   scale_x_continuous(breaks = c(10,15,20)) +
   ggtitle("A. All Configurations")
 
 
 TimingPlot2 = ggplot(Dataframe_pvalues %>% 
          filter(Optimizer  %in% c("Julia: BOBYQA, fast",
-                                  "Julia: BOBYQA, slow",
+                                  "R: nloptwrap, fast",
+                                  "Julia: LRT",
+                                  "R: LRT",
                                   "R: nloptwrap, slow",
-                                  "R: nloptwrap, fast")),
+                                  "Julia: BOBYQA, slow") &
+                Size == "Bigger Model"),
        aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
   facet_grid(Effect~nTrials) +
   ylab("Median Duration (s)") +
-  scale_color_manual(values = rainbow(10)[c(1,2,9,10)], name = "Method") +
+  scale_color_manual(values = rainbow(6), name = "Method") +
   scale_x_continuous(breaks = c(10,15,20)) +
-  ggtitle("B. Fastest Confirgurations")
+  ggtitle("B. Fastest Configurations")
 
 plot_shared_legend(TimingPlot1,TimingPlot2)
 ggsave("Figures/Different Durations.jpg",w=12,h=6)
@@ -616,9 +692,9 @@ for (i in (1:length(Dataframe_pvalues$iteration))){
 }
 
 Dataframe_pvalues = Dataframe_pvalues %>%
-  group_by(Bin_Accuracy,Optimizer,PSE_Difference) %>%
+  group_by(Bin_Accuracy,Optimizer,PSE_Difference,Size) %>%
   mutate(BinCountAccuracy = length(Bin_Accuracy))%>%
-  group_by(Bin_Interaction,Optimizer,PSE_Difference) %>%
+  group_by(Bin_Interaction,Optimizer,PSE_Difference,Size) %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
 PlotAccuracy = ggplot(Dataframe_pvalues %>% 
