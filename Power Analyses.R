@@ -176,6 +176,7 @@ ggplot(ResponseDistributions %>% filter(label %in% c("Cauchy","Normal")), aes(Va
 ggsave("Figure1 Distributions.jpg", w = 6, h = 4)
 
 
+
 ####################################################################################
 ##################Getting power for a couple for GLMMs##############################
 ####################################################################################
@@ -233,7 +234,6 @@ ggplot(Power,aes(nSubjects,value, color = label)) +
 ##################Comparing Two-Level approach and GLMMs############################
 ####################################################################################
 Parameters = quickpsy(Psychometric,Difference,Answer,grouping = .(ID,ConditionOfInterest,StandardValues), bootstrap = "none")$par
-plot(quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none"))
 Parameters2 = Parameters %>%
   filter(parn == "p1") %>%
   select(ID,ConditionOfInterest,Mean=par, StandardValues)
@@ -497,7 +497,7 @@ Dataframe_Powers_Small = data.frame(PSE_Difference = rep(Dataframe_wide_Small$PS
 Powers1 = ggplot(Dataframe_Powers_Big %>% filter(reps == 40), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
-  xlab("N° of Subjects") +
+  xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 1, yintercept = 0.05) +
@@ -511,7 +511,7 @@ Powers1 = ggplot(Dataframe_Powers_Big %>% filter(reps == 40), aes(n,power,color 
 Powers2 = ggplot(Dataframe_Powers_Big %>% filter(reps == 70), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
-  xlab("N° of Subjects") +
+  xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 1, yintercept = 0.05) +
@@ -525,7 +525,7 @@ Powers2 = ggplot(Dataframe_Powers_Big %>% filter(reps == 70), aes(n,power,color 
 Powers3 = ggplot(Dataframe_Powers_Big %>% filter(reps == 100), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
-  xlab("N° of Subjects") +
+  xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 1, yintercept = 0.05) +
@@ -543,7 +543,7 @@ ggsave("Figures/PowersBigModel.jpg", w = 12, h = 8)
 Powers4 = ggplot(Dataframe_Powers_Small %>% filter(reps == 40), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
-  xlab("N° of Subjects") +
+  xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 1, yintercept = 0.05) +
@@ -557,7 +557,7 @@ Powers4 = ggplot(Dataframe_Powers_Small %>% filter(reps == 40), aes(n,power,colo
 Powers5 = ggplot(Dataframe_Powers_Small %>% filter(reps == 70), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
-  xlab("N° of Subjects") +
+  xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 1, yintercept = 0.05) +
@@ -571,7 +571,7 @@ Powers5 = ggplot(Dataframe_Powers_Small %>% filter(reps == 70), aes(n,power,colo
 Powers6 = ggplot(Dataframe_Powers_Small %>% filter(reps == 100), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +
-  xlab("N° of Subjects") +
+  xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
   geom_hline(linetype = 1, yintercept = 0.05) +
@@ -698,8 +698,9 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
 PlotAccuracy = ggplot(Dataframe_pvalues %>% 
-         filter(Optimizer != "Julia: BOBYQA, fast, LRT" & Optimizer != "R: LRT" &
-                  Effect == "No Effect"),
+         filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
+                  Effect == "No Effect" &
+                  Size == "Bigger Model"),
        aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
@@ -708,19 +709,21 @@ PlotAccuracy = ggplot(Dataframe_pvalues %>%
   ylab("") +
   ggtitle("A. Accuracy, No Effect")
 
-PlotInteraction = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect"),
+PlotInteraction = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect" &
+                                                        Size == "Bigger Model"),
                 aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(45)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(44)) +
   theme(legend.position = "") +
   ylab("") +
   ggtitle("B. Interaction, No Effect")
 
 PlotAccuracy2 = ggplot(Dataframe_pvalues %>% 
                         filter(Effect == "Small Effect" &
-                                 Optimizer != "Julia: BOBYQA, fast, LRT" &
-                                 Optimizer != "R: LRT"),
+                                 Optimizer != "Julia: LRT" &
+                                 Optimizer != "R: LRT" &
+                                 Size == "Bigger Model"),
                       aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
@@ -730,7 +733,8 @@ PlotAccuracy2 = ggplot(Dataframe_pvalues %>%
   ggtitle("C. Accuracy, Small Effect")
 
 PlotInteraction2 = ggplot(Dataframe_pvalues %>% 
-                           filter(Effect == "Small Effect"),
+                           filter(Effect == "Small Effect" &
+                                    Size == "Bigger Model"),
                          aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
@@ -739,13 +743,14 @@ PlotInteraction2 = ggplot(Dataframe_pvalues %>%
   theme(legend.position = "") +
   ggtitle("D. Interaction, Small Effect")
 plot_grid(PlotAccuracy,PlotInteraction,PlotAccuracy2,PlotInteraction2, nrow = 2)
-ggsave("Figures/False Positives.jpg",w=12,h=8)
+ggsave("Figures/False Positives Bigger Model.jpg",w=12,h=8)
 
 
 ############AICs
 ggplot(Dataframe_pvalues %>%
-         filter(Optimizer != "Julia: BOBYQA, fast, LRT" & 
-                  Optimizer != "R: LRT"),
+         filter(Optimizer != "Julia: LRT" & 
+                  Optimizer != "R: LRT" &
+                  Size == "Bigger Model"),
        aes(n,Median_AIC_Ratio, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
@@ -754,3 +759,5 @@ ggplot(Dataframe_pvalues %>%
   scale_color_manual(values = rainbow(10), name = "Method") +
   scale_x_continuous(breaks = c(10,15,20))
 ggsave("Figures/AIC differences.jpg",w=12,h=6)
+
+aov()

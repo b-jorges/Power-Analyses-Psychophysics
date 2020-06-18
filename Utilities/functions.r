@@ -21,6 +21,47 @@ kfilter <- function(x,k=c(1,2,3,2,1)/9) # local gaussian smoothing
   
 }
 
+plot_shared_legend <- function(..., ncol = NA, nrow = NA, position = c("bottom", "right"), title = NULL, rel=NA) {
+  require(cowplot)
+  if(is.na(ncol)){
+    if(is.na(nrow)){
+      ncol = length(list(...))
+      nrow = 1
+    }
+  }
+  
+  if (is.na(ncol)){
+    ncol = round(length(list(...))/nrow,0)
+  } else {
+    nrow = round(length(list(...))/ncol,0)
+  }
+  
+  
+  plots <- list(...)
+  position <- match.arg(position)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position = position))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  lwidth <- sum(legend$width)
+  gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+  gl <- c(gl, ncol = ncol, nrow = nrow)
+  
+  combined <- switch(position,
+                     "bottom" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
+                                                       legend,
+                                                       ncol = 1,
+                                                       heights = grid::unit.c(unit(1, "npc") - lheight, lheight)),
+                     "right" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
+                                                      legend,
+                                                      ncol = 2,
+                                                      widths = grid::unit.c(unit(1, "npc") - lwidth, lwidth)))
+  title <- ggdraw() + draw_label(title)
+  
+  
+  
+  return(plot_grid(title, combined, ncol=1, rel_heights=c(0.1, 1)))
+}
+
 
 #scale2cm(kk$time,kk$xf,kk$npos_y,kk$ax,kk$pupilTime+0.7,kk$pupilTime+0.7+kk$timeStill,kk$xinit,kk$conf1,kk$conf2)
 
