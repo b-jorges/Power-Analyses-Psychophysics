@@ -596,9 +596,13 @@ ggsave("Figures/Powers_SmallModel.jpg", w = 12, h = 8)
 ####################Compare Optimizer Configurations####################
 ########################################################################
 Dataframe_pvalues1 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethods_BigModel.csv")))
-Dataframe_pvalues1$Size = "Smaller Model"
+Dataframe_pvalues1$Size = "Bigger Model"
 Dataframe_pvalues2 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethods_SmallModel.csv")))
-Dataframe_pvalues2$Size = "Bigger Model"
+Dataframe_pvalues2$Size = "Smaller Model"
+colnames(Dataframe_pvalues2)[1] <- "iteration"
+
+
+
 Dataframe_pvalues = rbind(Dataframe_pvalues1,Dataframe_pvalues2)
 
 Dataframe_pvalues = Dataframe_pvalues %>%
