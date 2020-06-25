@@ -146,6 +146,8 @@ Psychometric %>%
 
 
 PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
+PsychometricFunctions$par
+
 plot(PsychometricFunctions) +
   scale_color_manual(name = "",
                      values = c(Red,BlauUB),
@@ -241,11 +243,10 @@ Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
 Parameters = Parameters2
 
 ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
-summary(ANOVA_Mean)
+Pvalue_Mean_ANOVA = summary(ANOVA_Mean)[[1]][["Pr(>F)"]][1]
 
 ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
-summary(ANOVA_SD)
-
+Pvalue_SD_ANOVA = summary(ANOVA_SD)[[1]][["Pr(>F)"]][1]
 
 
 Power = data.frame()
@@ -589,9 +590,6 @@ ggsave("Figures/Powers_SmallModel.jpg", w = 12, h = 8)
 ########################################################################
 
 
-
-
-
 ########################################################################
 ####################Compare Optimizer Configurations####################
 ########################################################################
@@ -651,7 +649,7 @@ Dataframe_pvalues = Dataframe_pvalues %>%
            SE_Duration_n_reps_label = SE(Duration))
 
 #######Timing
-TimingPlot1 = ggplot(Dataframe_pvalues %>% 
+TimingPlot1_Bigger = ggplot(Dataframe_pvalues %>% 
          filter(Size == "Bigger Model") ,
        aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
@@ -663,7 +661,7 @@ TimingPlot1 = ggplot(Dataframe_pvalues %>%
   ggtitle("A. All Configurations")
 
 
-TimingPlot2 = ggplot(Dataframe_pvalues %>% 
+TimingPlot2_Bigger = ggplot(Dataframe_pvalues %>% 
          filter(Optimizer  %in% c("Julia: BOBYQA, fast",
                                   "R: nloptwrap, fast",
                                   "Julia: LRT",
@@ -680,8 +678,40 @@ TimingPlot2 = ggplot(Dataframe_pvalues %>%
   scale_x_continuous(breaks = c(10,15,20)) +
   ggtitle("B. Fastest Configurations")
 
-plot_shared_legend(TimingPlot1,TimingPlot2)
-ggsave("Figures/Different Durations.jpg",w=12,h=6)
+plot_shared_legend(TimingPlot1_Bigger,TimingPlot2_Bigger)
+ggsave("Figures/Different Durations Bigger.jpg",w=12,h=6)
+
+TimingPlot1_Smaller = ggplot(Dataframe_pvalues %>% 
+                              filter(Size == "Smaller Model") ,
+                            aes(n,MedianDuration, color = Optimizer)) +
+  geom_point(size=2) +
+  geom_line(size=1) +
+  facet_grid(Effect~nTrials) +
+  ylab("Median Duration (s)") +
+  scale_color_manual(values = rainbow(12), name = "Method") +
+  scale_x_continuous(breaks = c(10,15,20)) +
+  ggtitle("A. All Configurations")
+
+
+TimingPlot2_Smaller = ggplot(Dataframe_pvalues %>% 
+                              filter(Optimizer  %in% c("Julia: BOBYQA, fast",
+                                                       "R: nloptwrap, fast",
+                                                       "Julia: LRT",
+                                                       "R: LRT",
+                                                       "R: nloptwrap, slow",
+                                                       "Julia: BOBYQA, slow") &
+                                       Size == "Smaller Model"),
+                            aes(n,MedianDuration, color = Optimizer)) +
+  geom_point(size=2) +
+  geom_line(size=1) +
+  facet_grid(Effect~nTrials) +
+  ylab("Median Duration (s)") +
+  scale_color_manual(values = rainbow(6), name = "Method") +
+  scale_x_continuous(breaks = c(10,15,20)) +
+  ggtitle("B. Fastest Configurations")
+
+plot_shared_legend(TimingPlot1_Smaller,TimingPlot2_Smaller)
+ggsave("Figures/Different Durations Smaller",w=12,h=6)
 
 
 #######False Positives
