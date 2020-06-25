@@ -689,9 +689,9 @@ Dataframe_pvalues$Bin_Accuracy = 0
 Dataframe_pvalues$Bin_Interaction = 0
 for (i in (1:length(Dataframe_pvalues$iteration))){
   print(i)  
-  Bins = seq(0.025,0.975,0.05)
-  Dataframe_pvalues$Bin_Accuracy[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Accuracy[i]))]+0.025
-  Dataframe_pvalues$Bin_Interaction[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Interaction[i]))]+0.025
+  Bins = seq(0.025,0.975,0.025)
+  Dataframe_pvalues$Bin_Accuracy[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Accuracy[i]))]+0.0125
+  Dataframe_pvalues$Bin_Interaction[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Interaction[i]))]+0.0125
 
 }
 
@@ -701,29 +701,30 @@ Dataframe_pvalues = Dataframe_pvalues %>%
   group_by(Bin_Interaction,Optimizer,PSE_Difference,Size) %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
-PlotAccuracy = ggplot(Dataframe_pvalues %>% 
+PlotAccuracy_Bigger = ggplot(Dataframe_pvalues %>% 
          filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
                   Effect == "No Effect" &
                   Size == "Bigger Model"),
-       aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
+       aes(Bin_Accuracy-0.0125,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(37)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(27)) +
   theme(legend.position = "") +
   ylab("") +
   ggtitle("A. Accuracy, No Effect")
 
-PlotInteraction = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect" &
+PlotInteraction_Bigger = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect" &
                                                         Size == "Bigger Model"),
                 aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(44)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(32)) +
   theme(legend.position = "") +
   ylab("") +
   ggtitle("B. Interaction, No Effect")
 
-PlotAccuracy2 = ggplot(Dataframe_pvalues %>% 
+
+PlotAccuracy2_Bigger = ggplot(Dataframe_pvalues %>% 
                         filter(Effect == "Small Effect" &
                                  Optimizer != "Julia: LRT" &
                                  Optimizer != "R: LRT" &
@@ -732,23 +733,73 @@ PlotAccuracy2 = ggplot(Dataframe_pvalues %>%
   geom_tile() +
   xlab("") +
   ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(38)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(40)) +
   theme(legend.position = "") +
   ggtitle("C. Accuracy, Small Effect")
 
-PlotInteraction2 = ggplot(Dataframe_pvalues %>% 
+PlotInteraction2_Bigger = ggplot(Dataframe_pvalues %>% 
                            filter(Effect == "Small Effect" &
                                     Size == "Bigger Model"),
                          aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
   ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(46)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(41)) +
   theme(legend.position = "") +
   ggtitle("D. Interaction, Small Effect")
-plot_grid(PlotAccuracy,PlotInteraction,PlotAccuracy2,PlotInteraction2, nrow = 2)
+plot_grid(PlotAccuracy_Bigger,PlotInteraction_Bigger,PlotAccuracy2_Bigger,PlotInteraction2_Bigger, nrow = 2)
 ggsave("Figures/False Positives Bigger Model.jpg",w=12,h=8)
 
+
+
+PlotAccuracy_Small = ggplot(Dataframe_pvalues %>% 
+                        filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
+                                 Effect == "No Effect" &
+                                 Size == "Smaller Model"),
+                      aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
+  geom_tile() +
+  xlab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(25)) +
+  theme(legend.position = "") +
+  ylab("") +
+  ggtitle("A. Accuracy, No Effect")
+
+PlotInteraction_Small = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect" &
+                                                        Size == "Smaller Model"),
+                         aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+  geom_tile() +
+  xlab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(24)) +
+  theme(legend.position = "") +
+  ylab("") +
+  ggtitle("B. Interaction, No Effect")
+
+
+PlotAccuracy2_Small = ggplot(Dataframe_pvalues %>% 
+                         filter(Effect == "Small Effect" &
+                                  Optimizer != "Julia: LRT" &
+                                  Optimizer != "R: LRT" &
+                                  Size == "Smaller Model"),
+                       aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
+  geom_tile() +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(16)) +
+  theme(legend.position = "") +
+  ggtitle("C. Accuracy, Small Effect")
+
+PlotInteraction2_Small = ggplot(Dataframe_pvalues %>% 
+                            filter(Effect == "Small Effect" &
+                                     Size == "Smaller Model"),
+                          aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+  geom_tile() +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(30)) +
+  theme(legend.position = "") +
+  ggtitle("D. Interaction, Small Effect")
+plot_grid(PlotAccuracy_Small,PlotInteraction_Small,PlotAccuracy2_Small,PlotInteraction2_Small, nrow = 2)
+ggsave("Figures/False Positives Smaller Model.jpg",w=12,h=8)
 
 ############AICs
 ggplot(Dataframe_pvalues %>%
