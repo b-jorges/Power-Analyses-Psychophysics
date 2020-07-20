@@ -140,5 +140,57 @@ plot(PsychometricFunctions) +
   geom_hline(linetype = 2, yintercept = 0.5, color = "grey")
 ggsave("Figure3 Psychometric Functions.jpg", w = 10, h = 5)
 ##################################################################
-#################################FIGURE 1 END#####################
+#################################FIGURE 3 END#####################
+##################################################################
+
+
+
+##################################################################
+#############FIGURE 3: LMM explainer #################
+##################################################################
+
+require(dplyr)
+require(ggplot2)
+require(cowplot)
+require(lme4)
+require(lmerTest)
+theme_set(theme_cowplot())
+ID = paste0("S0",1:3)
+Condition = c("Baseline","Manipulation")
+trial = 1:100
+LMM_Example = expand.grid(ID=ID,Condition=Condition,trial=trial)
+LMM_Example = LMM_Example %>% 
+  mutate(Effect_ID = case_when(
+            ID == "S01" ~ 1,
+            ID == "S02" ~ -0.25,
+            ID == "S03" ~ 0),
+         Effect_Manipulation = case_when(
+            Condition == "Baseline" ~ 0,
+            Condition == "Manipulation" ~ 1
+         ),
+         Stimulus = runif(length(ID)),
+         Response = rnorm(length(ID),Effect_ID +Stimulus*Effect_Manipulation,0.3))
+
+Plot_LMM = ggplot(LMM_Example,aes(Stimulus,Response,color = ID)) +
+  geom_point(size = 2) +
+  facet_grid(.~Condition) +
+  scale_color_manual(name = "",
+                     values = c(Red, Yellow, BlauUB))
+
+Plot_LM = ggplot(LMM_Example,aes(Stimulus,Response)) +
+  geom_point(size = 2) +
+  facet_grid(.~Condition)
+
+LM_Fit = lm(Response ~ Stimulus*Condition,
+   data = LMM_Example)
+summary(LM_Fit)
+
+LMM_Fit = lmer(Response ~ Stimulus*Condition + (1 | ID),
+   data = LMM_Example)
+summary(LMM_Fit)
+
+plot_grid(Plot_LM,Plot_LMM)
+ggsave("(Figure 4) LMM.jpg", w = 12, h = 5)
+##################################################################
+#################################FIGURE 3 END#####################
 ##################################################################

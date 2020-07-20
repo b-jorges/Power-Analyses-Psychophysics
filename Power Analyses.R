@@ -9,6 +9,7 @@ require(quickpsy)
 require(brms)
 require(rstan)
 #require(lmerTest)
+require(DHARMa)
 
 Where_Am_I <- function(path=T){
   if (path == T){
@@ -118,21 +119,42 @@ Psychometric = Psychometric %>%
 
 
 GLMM = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
-                       family = binomial(link = "probit"), 
+                       family = binomial(link = "logit"), 
                        data = Psychometric,
                        nAGQ = 0,
                        control = glmerControl(optimizer = "nloptwrap"))
 
-GLMM2 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues), 
+GLMM1.5 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues), 
              family = binomial(link = "probit"), 
              data = Psychometric,
              nAGQ = 0,
              control = glmerControl(optimizer = "nloptwrap"))
 
+GLMM2 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues), 
+             family = binomial(link = "logit"), 
+             data = Psychometric,
+             nAGQ = 0,
+             control = glmerControl(optimizer = "nloptwrap"))
+
+GLMM3 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID) + (1| StandardValues), 
+              family = binomial(link = "logit"), 
+              data = Psychometric,
+              nAGQ = 0,
+              control = glmerControl(optimizer = "nloptwrap"))
+
+
 haha = anova(GLMM,GLMM2)
+
 haha$`Pr(>Chisq)`[2]
-summary(GLMM2)
-summary(GLMM)
+
+SummaryGLMM2 = summary(GLMM2)
+SummaryGLMM = summary(GLMM)
+
+SummaryGLMM$AICtab
+SummaryGLMM2$AICtab
+
+plot(GLMM)
+plot(GLMM2)
 
 hallo = anova(GLMM,GLMM2)
 hallo
@@ -242,8 +264,59 @@ Parameters2 = Parameters %>%
 Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
 Parameters = Parameters2
 
+require(lmerTest)
+
 ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
 Pvalue_Mean_ANOVA = summary(ANOVA_Mean)[[1]][["Pr(>F)"]][1]
+summary(GLMM)
+summary(GLMM2)
+
+LMM_Mean_Big = lmer(Mean ~ ConditionOfInterest*Difference + (ConditionOfInterest+Difference| ID) + (ConditionOfInterest+Difference| StandardValues),
+              data = Psychometric)
+LMM_Mean_Small = lmer(Mean ~ ConditionOfInterest*Difference + (Difference| ID) + (Difference| StandardValues),
+                data = Psychometric)
+LMM_Mean_VerySmall = lmer(Mean ~ ConditionOfInterest*Difference + (1| ID) + (1| StandardValues),
+                      data = Psychometric)
+Hello$residuals.GLMM.
+Hello = data.frame(residuals(GLMM))
+
+
+ggplot(data.frame(residuals(GLMM)),aes(residuals.GLMM.)) +
+  geom_density()
+
+ggplot(data.frame(residuals(GLMM2)),aes(residuals.GLMM2.)) +
+  geom_density()
+
+ggplot(data.frame(residuals(GLMM3)),aes(residuals.GLMM3.)) +
+  geom_density()
+
+ggplot(data.frame(residuals(LMM_Mean_Big)),aes(residuals.LMM_Mean_Big.)) +
+  geom_density()
+ggplot(data.frame(residuals(LMM_Mean_Small)),aes(residuals.LMM_Mean_Small.)) +
+  geom_density()
+ggplot(data.frame(residuals(LMM_Mean_VerySmall)),aes(residuals.LMM_Mean_VerySmall.)) +
+  geom_density()
+
+library(fitdistrplus)
+Hello = descdist(data.frame(residuals(LMM_Mean_VerySmall))$residuals.LMM_Mean_VerySmall., discrete = FALSE)
+Hello2 = descdist(data.frame(residuals(LMM_Mean_Small))$residuals.LMM_Mean_Small., discrete = FALSE)
+Hello3 = descdist(data.frame(residuals(LMM_Mean_Big))$residuals.LMM_Mean_Big., discrete = FALSE)
+
+plot(fitdist(data.frame(residuals(LMM_Mean_VerySmall))$residuals.LMM_Mean_VerySmall., "norm"))
+plot(fitdist(data.frame(residuals(LMM_Mean_Small))$residuals.LMM_Mean_Small., "norm"))
+plot(fitdist(data.frame(residuals(LMM_Mean_Big))$residuals.LMM_Mean_Big., "norm"))
+
+Hello$kurtosis
+Hello2$kurtosis
+Hello3$kurtosis
+Hello$skewness
+Hello2$skewness
+Hello3$skewness
+
+
+ggplot(Hello,aes(residuals.GLMM.)) +
+  geom_density()
+
 
 ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
 Pvalue_SD_ANOVA = summary(ANOVA_SD)[[1]][["Pr(>F)"]][1]
@@ -255,9 +328,11 @@ pvalue = 0.05
 NumbersOfSubjects = c(10,12,14,16,18,20)
 #NumbersOfSubjects = c(2,3,4,5,6)
 
-Mean_Variability_Between = 0.1
-SD_Variability_Between = 0.1
 
+
+
+
+                           
 
 
 Powers1 = ComparePowers(ConditionOfInterest, StandardValues, reps = 1:55, PSE_Difference=-0.05, JND_Difference=-0.05, 
@@ -465,34 +540,44 @@ ggplot(PowerFrame %>% filter(label != c("Accuracy Two-Level LMM","Precision Two-
 ##############compare power for GLMM and Two-Level approach#############
 ########################################################################
 Dataframe_wide_Big = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers_BiggerModel.csv"))) %>%
-                  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
-Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference,4),
-                              JND_Difference = rep(Dataframe_wide_Big$JND_Difference,4),
-                              n = rep(Dataframe_wide_Big$n,4),
-                              reps = rep(Dataframe_wide_Big$reps,4),
+                  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,power_Accuracy_ANOVA,
+                         power_Precision_ANOVA,n, PSE_Difference, JND_Difference, reps)
+Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference,6),
+                              JND_Difference = rep(Dataframe_wide_Big$JND_Difference,6),
+                              n = rep(Dataframe_wide_Big$n,6),
+                              reps = rep(Dataframe_wide_Big$reps,6),
                               power = c(Dataframe_wide_Big$power_Accuracy,
                                         Dataframe_wide_Big$power_Precision,
                                         Dataframe_wide_Big$power_Accuracy_Twolevel,
-                                        Dataframe_wide_Big$power_Precision_Twolevel),
+                                        Dataframe_wide_Big$power_Precision_Twolevel,
+                                        Dataframe_wide_Big$power_Accuracy_ANOVA,
+                                        Dataframe_wide_Big$power_Precision_ANOVA),
                               label = c(rep("Accuracy_GLMM",length(Dataframe_wide_Big$reps)),
                                         rep("Precision_GLMM",length(Dataframe_wide_Big$reps)),
                                         rep("Accuracy_Twolevel",length(Dataframe_wide_Big$reps)),
-                                        rep("Precision_Twolevel",length(Dataframe_wide_Big$reps))))
+                                        rep("Precision_Twolevel",length(Dataframe_wide_Big$reps)),
+                                        rep("Accuracy_Twolevel_ANOVA",length(Dataframe_wide_Big$reps)),
+                                        rep("Precision_Twolevel_ANOVA",length(Dataframe_wide_Big$reps))))
 
 Dataframe_wide_Small = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers_SmallerModel.csv"))) %>%
-  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
-Dataframe_Powers_Small = data.frame(PSE_Difference = rep(Dataframe_wide_Small$PSE_Difference,4),
-                                  JND_Difference = rep(Dataframe_wide_Small$JND_Difference,4),
-                                  n = rep(Dataframe_wide_Small$n,4),
-                                  reps = rep(Dataframe_wide_Small$reps,4),
+                  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,power_Accuracy_ANOVA,
+                         power_Precision_ANOVA,n,PSE_Difference, JND_Difference, reps)
+Dataframe_Powers_Small = data.frame(PSE_Difference = rep(Dataframe_wide_Small$PSE_Difference,6),
+                                  JND_Difference = rep(Dataframe_wide_Small$JND_Difference,6),
+                                  n = rep(Dataframe_wide_Small$n,6),
+                                  reps = rep(Dataframe_wide_Small$reps,6),
                                   power = c(Dataframe_wide_Small$power_Accuracy,
                                             Dataframe_wide_Small$power_Precision,
                                             Dataframe_wide_Small$power_Accuracy_Twolevel,
-                                            Dataframe_wide_Small$power_Precision_Twolevel),
+                                            Dataframe_wide_Small$power_Precision_Twolevel,
+                                            Dataframe_wide_Small$power_Accuracy_ANOVA,
+                                            Dataframe_wide_Small$power_Precision_ANOVA),
                                   label = c(rep("Accuracy_GLMM",length(Dataframe_wide_Small$reps)),
                                             rep("Precision_GLMM",length(Dataframe_wide_Small$reps)),
                                             rep("Accuracy_Twolevel",length(Dataframe_wide_Small$reps)),
-                                            rep("Precision_Twolevel",length(Dataframe_wide_Small$reps))))
+                                            rep("Precision_Twolevel",length(Dataframe_wide_Small$reps)),
+                                            rep("Accuracy_Twolevel_ANOVA",length(Dataframe_wide_Small$reps)),
+                                            rep("Precision_Twolevel_ANOVA",length(Dataframe_wide_Small$reps))))
 
 
 Powers1 = ggplot(Dataframe_Powers_Big %>% filter(reps == 40), aes(n,power,color = label)) +
@@ -505,7 +590,7 @@ Powers1 = ggplot(Dataframe_Powers_Big %>% filter(reps == 40), aes(n,power,color 
   geom_hline(linetype = 3, yintercept = 0.95) +
   scale_x_continuous(breaks=c(10,15,20)) +
   scale_y_continuous(breaks=c(0.25,0.75)) +
-  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow), 
                      name = "") +
   ggtitle("A. 40 Repetitions")
 
@@ -519,7 +604,7 @@ Powers2 = ggplot(Dataframe_Powers_Big %>% filter(reps == 70), aes(n,power,color 
   geom_hline(linetype = 3, yintercept = 0.95) +
   scale_x_continuous(breaks=c(10,15,20)) +
   scale_y_continuous(breaks=c(0.25,0.75)) +
-  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow), 
                      name = "") +
   ggtitle("A. 70 Repetitions")
 
@@ -533,7 +618,7 @@ Powers3 = ggplot(Dataframe_Powers_Big %>% filter(reps == 100), aes(n,power,color
   geom_hline(linetype = 3, yintercept = 0.95) +
   scale_x_continuous(breaks=c(10,15,20)) +
   scale_y_continuous(breaks=c(0.25,0.75)) +
-  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow), 
                      name = "") +
   ggtitle("A. 100 Repetitions")
 
@@ -551,7 +636,7 @@ Powers4 = ggplot(Dataframe_Powers_Small %>% filter(reps == 40), aes(n,power,colo
   geom_hline(linetype = 3, yintercept = 0.95) +
   scale_x_continuous(breaks=c(10,15,20)) +
   scale_y_continuous(breaks=c(0.25,0.75)) +
-  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow), 
                      name = "") +
   ggtitle("A. 40 Repetitions")
 
@@ -565,7 +650,7 @@ Powers5 = ggplot(Dataframe_Powers_Small %>% filter(reps == 70), aes(n,power,colo
   geom_hline(linetype = 3, yintercept = 0.95) +
   scale_x_continuous(breaks=c(10,15,20)) +
   scale_y_continuous(breaks=c(0.25,0.75)) +
-  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow), 
                      name = "") +
   ggtitle("A. 70 Repetitions")
 
@@ -579,7 +664,7 @@ Powers6 = ggplot(Dataframe_Powers_Small %>% filter(reps == 100), aes(n,power,col
   geom_hline(linetype = 3, yintercept = 0.95) +
   scale_x_continuous(breaks=c(10,15,20)) +
   scale_y_continuous(breaks=c(0.25,0.75)) +
-  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
+  scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow), 
                      name = "") +
   ggtitle("A. 100 Repetitions")
 
