@@ -41,7 +41,7 @@ Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7')
 #set.seed(9121)
 
 
-ID = paste0("S0",1:10)
+ID = paste0("S0",1:5)
 ConditionOfInterest = c(0,1)
 StandardValues = c(5,6,7,8)
 reps = 1:100

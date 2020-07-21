@@ -4,7 +4,7 @@ require(lme4)
 require(DHARMa)
 
 
-set.seed(1)
+set.seed(653)
 
 
 ID = paste0("S0",1:10)
@@ -12,8 +12,8 @@ ConditionOfInterest = c(0,1)
 StandardValues = c(5,6,7,8)
 reps = 1:100
 
-PSE_Difference = 0.5
-JND_Difference = 0.5
+PSE_Difference = 0.2
+JND_Difference = 0.2
 
 Multiplicator_PSE_Standard = 0
 Multiplicator_SD_Standard = 0.15
@@ -89,10 +89,39 @@ Psychometric = Psychometric %>%
 
 
 
-
-GLMM_RandomIntercepts_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (1| ID), 
+##########error:
+GLMM_RandomIntercepts_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID), 
                                   family = binomial(link = "probit"),
                                   data = Psychometric)
+summary(GLMM_RandomIntercepts_PSE)
 
 Sim = simulateResiduals(GLMM_RandomIntercepts_PSE)
+plot(Sim)
+
+########error
+GLMM_RandomIntercepts_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID), 
+                                  family = binomial(link = "probit"),
+                                  data = Psychometric)
+summary(GLMM_RandomIntercepts_PSE)
+
+Sim = simulateResiduals(GLMM_RandomIntercepts_PSE)
+plot(Sim)
+
+#######error
+GLMM_RandomInterceptsRandomSlopes_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID), 
+                                              family = binomial(link = "logit"),
+                                              data = Psychometric)
+summary(GLMM_RandomInterceptsRandomSlopes_PSE)
+
+Sim = simulateResiduals(GLMM_RandomInterceptsRandomSlopes_PSE)
+plot(Sim)
+
+
+########no error:
+GLMM_RandomInterceptsRandomSlopes_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID), 
+                                  family = binomial(link = "logit"),
+                                  data = Psychometric)
+summary(GLMM_RandomInterceptsRandomSlopes_PSE)
+
+Sim = simulateResiduals(GLMM_RandomInterceptsRandomSlopes_PSE)
 plot(Sim)

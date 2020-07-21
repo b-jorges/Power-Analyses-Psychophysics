@@ -55,13 +55,17 @@ ggsave("(Figure 4) Means.jpg", w = 12, h = 5)
 
 
 GLMM_RandomIntercepts_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID), 
-             family = binomial(link = "logit"),
+             family = binomial(link = "probit"),
              data = Psychometric)
 GLMM2_RandomInterceptsAndSlopes_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference| ID), 
-             family = binomial(link = "logit"),
+             family = binomial(link = "probit"),
              data = Psychometric)
-summary(GLMM_RandomIntercepts)
-summary(GLMM2_RandomInterceptsAndSlopes)
+GLMM3_RandomInterceptsAndTwoSlopes_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference+ConditionOfInterest| ID), 
+                                            family = binomial(link = "probit"),
+                                            data = Psychometric)
+summary(GLMM_RandomIntercepts_JND)
+summary(GLMM2_RandomInterceptsAndSlopes_JND)
+summary(GLMM3_RandomInterceptsAndTwoSlopes_JND)
 
 GLMM_RandomIntercepts_Null_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (1| ID), 
                               family = binomial(link = "probit"),
@@ -69,21 +73,25 @@ GLMM_RandomIntercepts_Null_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInte
 GLMM2_RandomInterceptsAndSlopes_Null_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (Difference| ID), 
                                         family = binomial(link = "probit"),
                                         data = Psychometric)
+GLMM3_RandomInterceptsTwoAndSlopes_Null_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (Difference + ConditionOfInterest| ID), 
+                                                 family = binomial(link = "probit"),
+                                                 data = Psychometric)
 
-anova(GLMM_RandomIntercepts,GLMM_RandomIntercepts_Null)
-anova(GLMM2_RandomInterceptsAndSlopes,GLMM2_RandomInterceptsAndSlopes_Null)
+anova(GLMM_RandomIntercepts_JND,GLMM_RandomIntercepts_Null_JND)
+anova(GLMM2_RandomInterceptsAndSlopes_JND,GLMM2_RandomInterceptsAndSlopes_Null_JND)
+anova(GLMM3_RandomInterceptsAndTwoSlopes_JND,GLMM3_RandomInterceptsTwoAndSlopes_Null_JND)
 
 
 
 
 
-GLMM_RandomIntercepts_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (1| ID), 
+GLMM_RandomIntercepts_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID), 
                               family = binomial(link = "probit"),
                               data = Psychometric)
 GLMM2_RandomInterceptsAndSlopes_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (Difference| ID), 
                                         family = binomial(link = "probit"),
                                         data = Psychometric)
-GLMM3_RandomInterceptsAndSlopes_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (Difference + ConditionOfInterest| ID), 
+GLMM3_RandomInterceptsTwoAndSlopes_PSE = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest + Difference + (Difference + ConditionOfInterest| ID), 
                                             family = binomial(link = "probit"),
                                             data = Psychometric)
 
@@ -93,50 +101,67 @@ GLMM_RandomIntercepts_Null_PSE = glmer(cbind(Yes, Total - Yes) ~ Difference + (1
 GLMM2_RandomInterceptsAndSlopes_Null_PSE = glmer(cbind(Yes, Total - Yes) ~ Difference + (Difference| ID), 
                                              family = binomial(link = "probit"),
                                              data = Psychometric)
+GLMM3_RandomInterceptsAndTwoSlopes_Null_PSE = glmer(cbind(Yes, Total - Yes) ~ Difference + (Difference + ConditionOfInterest| ID), 
+                                                 family = binomial(link = "probit"),
+                                                 data = Psychometric)
 
-anova(GLMM_RandomIntercepts_PSE,GLMM2_RandomInterceptsAndSlopes_PSE)
-anova(GLMM_RandomIntercepts_JND,GLMM2_RandomInterceptsAndSlopes_JND)
+anova(GLMM_RandomIntercepts_PSE,GLMM_RandomIntercepts_Null_PSE)
+anova(GLMM2_RandomInterceptsAndSlopes_PSE,GLMM2_RandomInterceptsAndSlopes_Null_PSE)
+anova(GLMM3_RandomInterceptsTwoAndSlopes_PSE,GLMM3_RandomInterceptsAndTwoSlopes_Null_PSE)
 
 
+####Testing assumptions is hard. The DHARMa package helps a lot with that: 
 require(DHARMa)
 
 
-summary(GLMM_RandomIntercepts_PSE)
+Sim1 = simulateResiduals(GLMM_RandomIntercepts_JND)
+plot(Sim1)
 
-summary(GLMM_RandomIntercepts_PSE)
-Sim = simulateResiduals(GLMM_RandomIntercepts_PSE)
-plot(Sim)
+Sim2 = simulateResiduals(GLMM2_RandomInterceptsAndSlopes_JND)
+plot(Sim2)
 
-Sim = simulateResiduals(GLMM2_RandomInterceptsAndSlopes_JND)
-plot(Sim)
-
-Sim = simulateResiduals(GLMM_RandomIntercepts_PSE)
-plot(Sim)
-
-Sim = simulateResiduals(GLMM3_RandomInterceptsAndSlopes_PSE)
-plot(Sim)
-
-plot(predict(GLMM3_RandomInterceptsAndSlopes_PSE),resid(GLMM3_RandomInterceptsAndSlopes_PSE))
-plot(predict(GLMM3_RandomInterceptsAndSlopes_PSE),residuals(GLMM3_RandomInterceptsAndSlopes_PSE,"response"))
+Sim3 = simulateResiduals(GLMM3_RandomInterceptsAndTwoSlopes_JND)
+plot(Sim3)
 
 
-ggplot(data.frame(residuals(GLMM3_RandomInterceptsAndSlopes_PSE,"response")),aes(residuals.GLMM3_RandomInterceptsAndSlopes_PSE...response..)) +
-  geom_density()
+Sim4 = simulateResiduals(GLMM_RandomIntercepts_PSE)
+plot(Sim4)
 
-colnames(data.frame(residuals(GLMM3_RandomInterceptsAndSlopes_PSE,"response")))
+Sim5 = simulateResiduals(GLMM2_RandomInterceptsAndSlopes_PSE)
+plot(Sim5)
 
-plot(residuals(GLMM3_RandomInterceptsAndSlopes_PSE,"response"))
+Sim6 = simulateResiduals(GLMM3_RandomInterceptsTwoAndSlopes_PSE)
+plot(Sim6)
 
-GLMM3_RandomInterceptsAndSlopes_PSE
 
+GLMM4_RandomInterceptsTimesTwo_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
+                                            (1| ID) + 
+                                            (1| StandardValues), 
+                                  family = binomial(link = "probit"),
+                                  data = Psychometric)
+GLMM5_RandomInterceptsAndSlopesTimesTwo_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
+                                                      (Difference| ID) + 
+                                                      (Difference| StandardValues), 
+                                            family = binomial(link = "probit"),
+                                            data = Psychometric)
+GLMM6_RandomInterceptsAndTwoSlopesTimesTwo_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
+                                                         (Difference+ConditionOfInterest| ID) +
+                                                         (Difference+ConditionOfInterest| StandardValues), 
+                                               family = binomial(link = "probit"),
+                                               data = Psychometric)
 
-GLMM_RandomIntercepts_PSE
+Sim7 = simulateResiduals(GLMM4_RandomInterceptsTimesTwo_JND)
+plot(Sim7)
 
-Sim = simulateResiduals(GLMM2_RandomInterceptsAndSlopes_Null_PSE)
-plot(Sim)
-plot(GLMM3_RandomInterceptsAndSlopes_PSE)
+Sim8 = simulateResiduals(GLMM5_RandomInterceptsAndSlopesTimesTwo_JND)
+plot(Sim8)
 
-devtools::install_github("goodekat/ggResidpanel")
-require(ggResidpanel)
-resid_panel(GLMM2_RandomInterceptsAndSlopes_PSE)
-resid_panel(GLMM3_RandomInterceptsAndSlopes_PSE)
+Sim9 = simulateResiduals(GLMM6_RandomInterceptsAndTwoSlopesTimesTwo_JND)
+plot(Sim9)
+
+hello = testResiduals(Sim9)
+hello$uniformity$p.value
+hello$dispersion$p.value
+
+testDispersion(Sim9)
+?simulateResiduals

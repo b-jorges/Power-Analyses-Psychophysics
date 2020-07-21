@@ -39,7 +39,7 @@ Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7')
 #set.seed(9121)
 
 
-ID = paste0("s",1:15)
+ID = paste0("s",1:5)
 ConditionOfInterest = c(0,1)
 StandardValues = c(5,8)
 reps = 1:100
@@ -930,4 +930,3 @@ ggplot(Dataframe_pvalues %>%
   scale_x_continuous(breaks = c(10,15,20))
 ggsave("Figures/AIC differences.jpg",w=12,h=6)
 
-aov()
