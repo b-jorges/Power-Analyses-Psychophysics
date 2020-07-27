@@ -10,7 +10,7 @@ require(brms)
 require(rstan)
 #require(lmerTest)
 require(DHARMa)
-set.seed(1)
+set.seed(2)
 
 
 Where_Am_I <- function(path=T){
