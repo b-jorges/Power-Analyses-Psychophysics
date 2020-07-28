@@ -1,59 +1,19 @@
-###Pull the whole repository
-require(dplyr)
-require(tidyverse)
-require(lme4)
-require(ggplot2)
-require(cowplot)
-theme_set(theme_cowplot())
-require(quickpsy)
-require(brms)
-require(rstan)
-#require(lmerTest)
-require(DHARMa)
-set.seed(2)
+
+SimulatePsychometricData = function(nParticipants,
+                                    ConditionOfInterest,
+                                    StandardValues,
+                                    reps,
+                                    PSE_Difference,
+                                    JND_Difference,
+                                    Multiplicator_PSE_Standard,
+                                    Multiplicator_SD_Standard,
+                                    Type_ResponseFunction,
+                                    SD_ResponseFunction,
+                                    Mean_Variability_Between,
+                                    SD_Variability_Between){
 
 
-Where_Am_I <- function(path=T){
-  if (path == T){
-    dirname(rstudioapi::getSourceEditorContext()$path)
-  }
-  else {
-    rstudioapi::getSourceEditorContext()$path
-  }
-}
-
-binomial_smooth <- function(...) {
-  geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)}
-
-setwd(Where_Am_I())
-?rbernoulli
-source("Utilities/parabolic.r")
-source("Utilities/functions.r")
-source("Utilities/colourschemes.r")
-source("Utilities/PowerFunctions.r")
-
-#optimize for fitting of Bayesian Linear Mixed Models (packages "rstan", "bmrs")
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = TRUE)
-Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7')
-
-
-#set.seed(9121)
-
-
-ID = paste0("S0",1:5)
-ConditionOfInterest = c(0,1)
-StandardValues = c(5,6,7,8)
-reps = 1:100
-PSE_Difference = -0.1
-JND_Difference = 0.25
-Multiplicator_PSE_Standard = 0
-Multiplicator_SD_Standard = 0.15
-Type_ResponseFunction = "normal"
-SD_ResponseFunction = 0.1
-Mean_Variability_Between = 0.1
-SD_Variability_Between = 0.1
-
+ID = paste0("S0",1:nParticipants)
 
 Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
 
@@ -99,7 +59,7 @@ if (Type_ResponseFunction == "normal"){
 }
 
 Psychometric = Psychometric %>%
-    mutate(Presented_TestStimulusStrength = Mean*staircase_factor,
+  mutate(Presented_TestStimulusStrength = Mean*staircase_factor,
     Difference = Presented_TestStimulusStrength - StandardValues)
 
 Psychometric = Psychometric %>%
@@ -116,3 +76,8 @@ Psychometric = Psychometric %>%
   group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
   mutate(Yes = sum(Answer==1),
          Total = length(ConditionOfInterest))
+
+Psychometric
+}
+
+

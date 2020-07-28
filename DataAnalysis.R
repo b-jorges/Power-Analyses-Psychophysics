@@ -1,9 +1,12 @@
 ###########################################
 ####Parameter-As-Outcome Model (PAOM)######
 ###########################################
-
+require(quickpsy)
 
 ###Fitting psychometric functions and extracting means and standard deviations
+Psychometric$AnswerProbability
+PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
+
 Parameters = PsychometricFunctions$par
 Parameters2 = Parameters %>%
   filter(parn == "p1") %>%
