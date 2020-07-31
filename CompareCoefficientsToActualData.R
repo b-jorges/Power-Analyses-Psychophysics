@@ -25,6 +25,7 @@ FitCumGaussian = function(par,Difference,Prediction){
 
 for (i in 1:50){
   
+  print(i)
   Beginning = Sys.time()
   Dataframe1 = SimulatePsychometricData(nParticipants,
                                         ConditionOfInterest,
@@ -253,58 +254,85 @@ for (i in 1:50){
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model25 = predict(Model25, type = "response", newdata = Dataframe1)
   
+  
+  Dataframe1$AIC1 = Model1$aic
+  Dataframe1$AIC2 = summary(Model2)$AICtab[1]
+  Dataframe1$AIC3 = summary(Model3)$AICtab[1]
+  Dataframe1$AIC4 = summary(Model4)$AICtab[1]
+  Dataframe1$AIC5 = summary(Model5)$AICtab[1]
+  Dataframe1$AIC6 = summary(Model6)$AICtab[1]
+  Dataframe1$AIC7 = summary(Model7)$AICtab[1]
+  Dataframe1$AIC8 = summary(Model8)$AICtab[1]
+  Dataframe1$AIC9 = summary(Model9)$AICtab[1]
+  Dataframe1$AIC10 = summary(Model10)$AICtab[1]
+  Dataframe1$AIC11 = summary(Model11)$AICtab[1]
+  Dataframe1$AIC12 = summary(Model12)$AICtab[1]
+  Dataframe1$AIC13 = summary(Model13)$AICtab[1]
+  Dataframe1$AIC14 = summary(Model14)$AICtab[1]
+  Dataframe1$AIC15 = summary(Model15)$AICtab[1]
+  Dataframe1$AIC16 = summary(Model16)$AICtab[1]
+  Dataframe1$AIC17 = summary(Model17)$AICtab[1]
+  Dataframe1$AIC18 = summary(Model18)$AICtab[1]
+  Dataframe1$AIC19 = summary(Model19)$AICtab[1]
+  Dataframe1$AIC20 = summary(Model20)$AICtab[1]
+  Dataframe1$AIC21 = summary(Model21)$AICtab[1]
+  Dataframe1$AIC22 = summary(Model22)$AICtab[1]
+  Dataframe1$AIC23 = summary(Model23)$AICtab[1]
+  Dataframe1$AIC24 = summary(Model24)$AICtab[1]
+  Dataframe1$AIC25 = summary(Model25)$AICtab[1]
+
   Dataframe1 = Dataframe1 %>%
     group_by(ConditionOfInterest,ID,StandardValues) %>%
-    mutate(Mean_Model1 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model1)$par[1],
-           SD_Model1 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model1)$par[2],
-           Mean_Model2 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model2)$par[1],
-           SD_Model2 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model2)$par[2],
-           Mean_Model3 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model3)$par[1],
-           SD_Model3 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model3)$par[2],
-           Mean_Model4 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model4)$par[1],
-           SD_Model4 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model4)$par[2],
-           Mean_Model5 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model5)$par[1],
-           SD_Model5 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model5)$par[2],
-           Mean_Model6 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model6)$par[1],
-           SD_Model6 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model6)$par[2],
-           Mean_Model7 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model7)$par[1],
-           SD_Model7 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model7)$par[2],
-           Mean_Model8 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model8)$par[1],
-           SD_Model8 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model8)$par[2],
-           Mean_Model9 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model9)$par[1],
-           SD_Model9 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model9)$par[2],
-           Mean_Model10 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model10)$par[1],
-           SD_Model10 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model10)$par[2],
-           Mean_Model11 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model11)$par[1],
-           SD_Model11 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model11)$par[2],
-           Mean_Model12 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model12)$par[1],
-           SD_Model12 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model12)$par[2],
-           Mean_Model13 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model13)$par[1],
-           SD_Model13 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model13)$par[2],
-           Mean_Model14 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model14)$par[1],
-           SD_Model14 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model14)$par[2],
-           Mean_Model15 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model15)$par[1],
-           SD_Model15 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model15)$par[2],
-           Mean_Model16 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model16)$par[1],
-           SD_Model16 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model16)$par[2],
-           Mean_Model17 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model17)$par[1],
-           SD_Model17 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model17)$par[2],
-           Mean_Model18 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model18)$par[1],
-           SD_Model18 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model18)$par[2],
-           Mean_Model19 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model19)$par[1],
-           SD_Model19 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model19)$par[2],
-           Mean_Model20 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model20)$par[1],
-           SD_Model20 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model20)$par[2],
-           Mean_Model21 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model21)$par[1],
-           SD_Model21 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model21)$par[2],
-           Mean_Model22 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model22)$par[1],
-           SD_Model22 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model22)$par[2],
-           Mean_Model23 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model23)$par[1],
-           SD_Model23 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model23)$par[2],
-           Mean_Model24 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model24)$par[1],
-           SD_Model24 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model24)$par[2],
-           Mean_Model25 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model25)$par[1],
-           SD_Model25 = optim(par = c(0,0.2),FitCumGaussian,par,Difference,Prediction_Model25)$par[2])
+    mutate(Mean_Model1 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model1)$par[1],
+           SD_Model1 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model1)$par[2],
+           Mean_Model2 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model2)$par[1],
+           SD_Model2 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model2)$par[2],
+           Mean_Model3 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model3)$par[1],
+           SD_Model3 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model3)$par[2],
+           Mean_Model4 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model4)$par[1],
+           SD_Model4 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model4)$par[2],
+           Mean_Model5 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model5)$par[1],
+           SD_Model5 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model5)$par[2],
+           Mean_Model6 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model6)$par[1],
+           SD_Model6 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model6)$par[2],
+           Mean_Model7 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model7)$par[1],
+           SD_Model7 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model7)$par[2],
+           Mean_Model8 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model8)$par[1],
+           SD_Model8 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model8)$par[2],
+           Mean_Model9 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model9)$par[1],
+           SD_Model9 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model9)$par[2],
+           Mean_Model10 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model10)$par[1],
+           SD_Model10 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model10)$par[2],
+           Mean_Model11 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model11)$par[1],
+           SD_Model11 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model11)$par[2],
+           Mean_Model12 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model12)$par[1],
+           SD_Model12 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model12)$par[2],
+           Mean_Model13 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model13)$par[1],
+           SD_Model13 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model13)$par[2],
+           Mean_Model14 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model14)$par[1],
+           SD_Model14 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model14)$par[2],
+           Mean_Model15 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model15)$par[1],
+           SD_Model15 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model15)$par[2],
+           Mean_Model16 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model16)$par[1],
+           SD_Model16 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model16)$par[2],
+           Mean_Model17 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model17)$par[1],
+           SD_Model17 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model17)$par[2],
+           Mean_Model18 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model18)$par[1],
+           SD_Model18 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model18)$par[2],
+           Mean_Model19 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model19)$par[1],
+           SD_Model19 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model19)$par[2],
+           Mean_Model20 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model20)$par[1],
+           SD_Model20 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model20)$par[2],
+           Mean_Model21 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model21)$par[1],
+           SD_Model21 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model21)$par[2],
+           Mean_Model22 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model22)$par[1],
+           SD_Model22 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model22)$par[2],
+           Mean_Model23 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model23)$par[1],
+           SD_Model23 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model23)$par[2],
+           Mean_Model24 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model24)$par[1],
+           SD_Model24 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model24)$par[2],
+           Mean_Model25 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model25)$par[1],
+           SD_Model25 = optim(par = c(0,1),FitCumGaussian,par,Difference,Prediction_Model25)$par[2])
   
   Dataframe = rbind(Dataframe,Dataframe1 %>% 
                       group_by(ConditionOfInterest,ID,StandardValues) %>%
@@ -335,13 +363,36 @@ Dataframe2 = data.frame(Model = rep(paste0("Model",1:25),each=nParticipants*leng
 Dataframe2 = Dataframe2 %>% 
   mutate(ActualPSEs = case_when(
     ConditionOfInterest == 1 ~ -0.1*StandardValues,
-    ConditionOfInterest == 0 ~ 0))
+    ConditionOfInterest == 0 ~ 0),
+    ActualSDs = case_when(
+      ConditionOfInterest == 0 ~ 0.15*StandardValues,
+      ConditionOfInterest == 1 ~ 1.25*0.15*StandardValues
+    ))
 
 ggplot(Dataframe2,aes(Model,Mean)) +
   geom_boxplot() + 
   facet_grid(ConditionOfInterest~StandardValues) +
-  geom_hline(aes(yintercept = Actual_PSEs))
+  geom_hline(aes(yintercept = ActualPSEs))
 
 ggplot(Dataframe2,aes(Model,SD)) +
   geom_boxplot() + 
-  facet_grid(ConditionOfInterest~StandardValues)
+  facet_grid(ConditionOfInterest~StandardValues) +
+  coord_cartesian(ylim = c(0,4)) +
+  geom_hline(aes(yintercept = ActualSDs))
+
+
+
+Dataframe1$predict = predict(Model25, type = "response", newdata = Dataframe1)
+ggplot(Dataframe1, aes(x = Difference, y = predict, color = as.factor(ConditionOfInterest))) +
+  geom_point() +
+  facet_grid(StandardValues ~ ID)
+
+
+plot(seq(-4,4,0.01),
+  pnorm(seq(-4,4,0.01),
+      optim(par = c(0,1),FitCumGaussian,par,
+            Dataframe1$Difference[Dataframe1$ID == "S03" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
+            Dataframe1$Prediction_Model3[Dataframe1$ID == "S03" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0])$par[1],
+      optim(par = c(0,1),FitCumGaussian,par,
+            Dataframe1$Difference[Dataframe1$ID == "S03" & Dataframe1$StandardValues == 5 & Dataframe1$ConditionOfInterest == 0],
+            Dataframe1$Prediction_Model15[Dataframe1$ID == "S03" & Dataframe1$StandardValues == 5 & Dataframe1$ConditionOfInterest == 0])$par[2]))
