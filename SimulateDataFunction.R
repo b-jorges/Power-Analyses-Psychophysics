@@ -79,5 +79,3 @@ Psychometric = Psychometric %>%
 
 Psychometric
 }
-
-

@@ -461,7 +461,8 @@ Dataframe2 = Dataframe2 %>%
     Condition = case_when(
       ConditionOfInterest == 0 ~ "Baseline",
       ConditionOfInterest == 1 ~ ""
-    ))
+    ),
+    AIC_Norm = AIC-median(Dataframe2$AIC[Dataframe2$Model == "M25"]))
 
 
 
@@ -471,7 +472,7 @@ ggplot(Dataframe2,aes(Model,Mean_Modeled-Mean_Actual)) +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
   coord_cartesian(ylim = c(-3,3)) +
   xlab("")
-ggsave("Figure Comparison PSEs.jpg", w = 12, h = 5)
+ggsave("Figure Comparison PSEs.jpeg", w = 12, h = 5)
 
 ggplot(Dataframe2,aes(Model,SD_Modeled-SD_Actual)) +
   geom_boxplot() + 
@@ -479,7 +480,26 @@ ggplot(Dataframe2,aes(Model,SD_Modeled-SD_Actual)) +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ylab("SD Output of GLMM - Actual SD") +
   xlab("")
-ggsave("Figure Comparison SDs.jpg", w = 12, h = 5)
+ggsave("Figure Comparison SDs.jpeg", w = 12, h = 5)
+
+ggplot(Dataframe2,aes(Model,CoefCond)) +
+  geom_boxplot() + 
+  ylab("SE PSE Difference") +
+  xlab("")
+ggsave("Figure SE PSEs.jpeg", w = 12, h = 5)
+
+ggplot(Dataframe2,aes(Model,CoefInteract)) +
+  geom_boxplot() + 
+  ylab("SE JND Difference") +
+  xlab("")
+ggsave("Figure SE SDs.jpeg", w = 12, h = 5)
+
+ggplot(Dataframe2,aes(Model,AIC_Norm)) +
+  geom_boxplot() + 
+  xlab("") +
+  ylab("AIC - AIC(Model25)") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
+ggsave("Figure AICs Models.jpeg", w = 12, h = 5)
 
 
 
