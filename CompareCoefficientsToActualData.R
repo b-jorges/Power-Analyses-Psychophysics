@@ -89,7 +89,7 @@ for (i in 1:50){
   
   Model7 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1| ID) +
-                   (1|StandardValues), 
+                   (1|StandardValues),
                  family = binomial(link = "probit"),
                  data = Dataframe1,
                  nAGQ = 0,
@@ -405,7 +405,11 @@ unique(Dataframe1$SD_Model24)
 
 
 
-Dataframe2 = data.frame(Model = rep(paste0("Model",1:25),each=nParticipants*length(ConditionOfInterest)*length(StandardValues)*50),
+Dataframe2 = data.frame(Model = rep(c("M01", "M02", "M03", "M04", "M05", "M06", "M07", 
+                                    "M08", "M09", "M10", "M11", "M12", "M13", "M14",
+                                    "M15", "M16", "M17", "M18", "M19", "M20", "M21",
+                                    "M22", "M23", "M24", "M25"),
+                                    each=nParticipants*length(ConditionOfInterest)*length(StandardValues)*50),
                         StandardValues = rep(Dataframe$StandardValues,25),
                         ConditionOfInterest = rep(Dataframe$ConditionOfInterest,25),
                         ID = rep(Dataframe$ID,25),
@@ -453,20 +457,29 @@ Dataframe2 = Dataframe2 %>%
     ActualSDs = case_when(
       ConditionOfInterest == 0 ~ 0.15*StandardValues,
       ConditionOfInterest == 1 ~ 1.25*0.15*StandardValues
+    ),
+    Condition = case_when(
+      ConditionOfInterest == 0 ~ "Baseline",
+      ConditionOfInterest == 1 ~ ""
     ))
+
+
 
 ggplot(Dataframe2,aes(Model,Mean_Modeled-Mean_Actual)) +
   geom_boxplot() + 
-  facet_grid(ConditionOfInterest~StandardValues) +
-  geom_hline(aes(yintercept = 0)) +
-  coord_cartesian(ylim = c(-1,1))
+  ylab("PSE Output of GLMM - Actual PSE") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
+  coord_cartesian(ylim = c(-3,3)) +
+  xlab("")
+ggsave("Figure Comparison PSEs.jpg", w = 12, h = 5)
 
-ggplot(Dataframe2,aes(Model,SD_Modeled)) +
+ggplot(Dataframe2,aes(Model,SD_Modeled-SD_Actual)) +
   geom_boxplot() + 
-  facet_grid(ConditionOfInterest~StandardValues) +
-  coord_cartesian(ylim = c(0,3)) +
-  geom_hline(aes(yintercept = ActualSDs))
-
+  coord_cartesian(ylim = c(-1,2.5)) +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
+  ylab("SD Output of GLMM - Actual SD") +
+  xlab("")
+ggsave("Figure Comparison SDs.jpg", w = 12, h = 5)
 
 
 
