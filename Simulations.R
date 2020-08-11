@@ -26,7 +26,6 @@ binomial_smooth <- function(...) {
   geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)}
 
 setwd(Where_Am_I())
-?rbernoulli
 source("Utilities/parabolic.r")
 source("Utilities/functions.r")
 source("Utilities/colourschemes.r")

@@ -653,7 +653,7 @@ Powers5 = ggplot(Dataframe_Powers_Small %>% filter(reps == 70), aes(n,power,colo
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed,Yellow,LightYellow), 
                      name = "") +
   ggtitle("A. 70 Repetitions")
-
+?brm
 Powers6 = ggplot(Dataframe_Powers_Small %>% filter(reps == 100), aes(n,power,color = label)) +
   geom_line(size = 2) +
   facet_grid(JND_Difference~PSE_Difference) +

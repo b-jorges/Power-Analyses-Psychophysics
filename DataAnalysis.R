@@ -25,14 +25,9 @@ ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
 summary(ANOVA_SD)
 
 
-LM = lm(Mean/StandardValues ~ ConditionOfInterest*StandardValues,
-   data = Parameters)
-summary(LM)
-
-LMM = lmer(Mean/StandardValues ~ ConditionOfInterest*StandardValues + (1 | ID),
+LMM_Mean = lmer(Mean ~ ConditionOfInterest*StandardValues + (1 | ID),
          data = Parameters)
-summary(LMM)
-
+summary(LMM_Mean)
 
 Parameters$ConditionOfInterest[Parameters$ConditionOfInterest == 1] = "Condition of Interest"
 Parameters$ConditionOfInterest[Parameters$ConditionOfInterest == 0] = "Baseline"
@@ -55,6 +50,16 @@ Plot_LM_Mean = ggplot(Parameters,aes(StandardValues,Mean/StandardValues)) +
 plot_grid(Plot_LM_Mean,Plot_LMM_Mean, labels = "AUTO")
 ggsave("(Figure 4) Means.jpg", w = 12, h = 5)
 
+LMM_SD = lmer(SD ~ ConditionOfInterest*StandardValues + (1 | ID),
+           data = Parameters)
+summary(LMM_SD)
+
+LMM_Mean = lmer(Mean ~ ConditionOfInterest + (1 | ID) + (1 | StandardValues),
+                data = Parameters)
+LMM_SD = lmer(SD ~ ConditionOfInterest + (1 | ID) + (1 | StandardValues),
+              data = Parameters)
+summary(LMM_Mean)
+summary(LMM_SD)
 
 
 GLMM_RandomIntercepts_JND = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + (1| ID), 

@@ -2,31 +2,65 @@ require(dplyr)
 require(tidyverse)
 require(lme4)
 require(purrr)
+require(ggplot2)
+require(cowplot)
+theme_set(theme_cowplot())
 
 set.seed(1)
-
-nParticipants = 10
-ConditionOfInterest = c(0,1)
-StandardValues = c(5,6,7,8)
-reps = 1:100
-PSE_Difference = -0.1
-JND_Difference = 0.25
-Multiplicator_PSE_Standard = 0
-Multiplicator_SD_Standard = 0.15
-Type_ResponseFunction = "normal"
-SD_ResponseFunction = 0.20
-Mean_Variability_Between = 0.15
-SD_Variability_Between = 0.15
 Dataframe = c()
 
-Prediction = pnorm(Difference,Mean,1.1)
 FitCumGaussian = function(par,Mean,Difference,Prediction){
   (mean((pnorm(Difference,Mean,par)-Prediction)^2))
 }
 
-for (i in 1:50){
+Repetitions = 200
+
+for (j in 1:5){
+
+  nParticipants = 10
+  ConditionOfInterest = c(0,1)
+  StandardValues = c(5,6,7,8)
+  reps = 1:100  
+  Multiplicator_PSE_Standard = 0
+  Multiplicator_SD_Standard = 0.15
+  Type_ResponseFunction = "normal"
+  SD_ResponseFunction = 0.20
+  Mean_Variability_Between = 0.15
+  SD_Variability_Between = 0.15
+  
+if (j == 1){
+  PSE_Difference = -0.1
+  JND_Difference = 0.25
+} 
+  
+else if (j == 2){
+  PSE_Difference = 0
+  JND_Difference = 0.25
+}
+
+else if (j == 3){
+  PSE_Difference = 0.1
+  JND_Difference = 0
+}
+  
+else if (j == 4){
+  PSE_Difference = -0.1
+  JND_Difference = -0.25
+}
+  
+else if (j == 5){
+  PSE_Difference = 0.1
+  JND_Difference = -0.25
+}
+
+
+
+for (i in 1:Repetitions){
   
   print(i)
+  print(PSE_Difference)
+  print(JND_Difference)
+  
   Beginning = Sys.time()
   Dataframe1 = SimulatePsychometricData(nParticipants,
                                         ConditionOfInterest,
@@ -284,59 +318,163 @@ for (i in 1:50){
   Dataframe1$AIC24 = summary(Model24)$AICtab[1]
   Dataframe1$AIC25 = summary(Model25)$AICtab[1]
   
-
-  Dataframe1$CoefCond1 =   summary(Model1)$coefficients[6]
-  Dataframe1$CoefCond2 = summary(Model2)$coefficients[6]
-  Dataframe1$CoefCond3 = summary(Model3)$coefficients[6]
-  Dataframe1$CoefCond4 = summary(Model4)$coefficients[6]
-  Dataframe1$CoefCond5 = summary(Model5)$coefficients[6]
-  Dataframe1$CoefCond6 = summary(Model6)$coefficients[6]
-  Dataframe1$CoefCond7 = summary(Model7)$coefficients[6]
-  Dataframe1$CoefCond8 = summary(Model8)$coefficients[6]
-  Dataframe1$CoefCond9 = summary(Model9)$coefficients[6]
-  Dataframe1$CoefCond10 = summary(Model10)$coefficients[6]
-  Dataframe1$CoefCond11 = summary(Model11)$coefficients[6]
-  Dataframe1$CoefCond12 = summary(Model12)$coefficients[6]
-  Dataframe1$CoefCond13 = summary(Model13)$coefficients[6]
-  Dataframe1$CoefCond14 = summary(Model14)$coefficients[6]
-  Dataframe1$CoefCond15 = summary(Model15)$coefficients[6]
-  Dataframe1$CoefCond16 = summary(Model16)$coefficients[6]
-  Dataframe1$CoefCond17 = summary(Model17)$coefficients[6]
-  Dataframe1$CoefCond18 = summary(Model18)$coefficients[6]
-  Dataframe1$CoefCond19 = summary(Model19)$coefficients[6]
-  Dataframe1$CoefCond20 = summary(Model20)$coefficients[6]
-  Dataframe1$CoefCond21 = summary(Model21)$coefficients[6]
-  Dataframe1$CoefCond22 = summary(Model22)$coefficients[6]
-  Dataframe1$CoefCond23 = summary(Model23)$coefficients[6]
-  Dataframe1$CoefCond24 = summary(Model24)$coefficients[6]
-  Dataframe1$CoefCond25 = summary(Model25)$coefficients[6]
   
-  Dataframe1$CoefInteraction1 =   summary(Model1)$coefficients[8]
-  Dataframe1$CoefInteraction2 = summary(Model2)$coefficients[8]
-  Dataframe1$CoefInteraction3 = summary(Model3)$coefficients[8]
-  Dataframe1$CoefInteraction4 = summary(Model4)$coefficients[8]
-  Dataframe1$CoefInteraction5 = summary(Model5)$coefficients[8]
-  Dataframe1$CoefInteraction6 = summary(Model6)$coefficients[8]
-  Dataframe1$CoefInteraction7 = summary(Model7)$coefficients[8]
-  Dataframe1$CoefInteraction8 = summary(Model8)$coefficients[8]
-  Dataframe1$CoefInteraction9 = summary(Model9)$coefficients[8]
-  Dataframe1$CoefInteraction10 = summary(Model10)$coefficients[8]
-  Dataframe1$CoefInteraction11 = summary(Model11)$coefficients[8]
-  Dataframe1$CoefInteraction12 = summary(Model12)$coefficients[8]
-  Dataframe1$CoefInteraction13 = summary(Model13)$coefficients[8]
-  Dataframe1$CoefInteraction14 = summary(Model14)$coefficients[8]
-  Dataframe1$CoefInteraction15 = summary(Model15)$coefficients[8]
-  Dataframe1$CoefInteraction16 = summary(Model16)$coefficients[8]
-  Dataframe1$CoefInteraction17 = summary(Model17)$coefficients[8]
-  Dataframe1$CoefInteraction18 = summary(Model18)$coefficients[8]
-  Dataframe1$CoefInteraction19 = summary(Model19)$coefficients[8]
-  Dataframe1$CoefInteraction20 = summary(Model20)$coefficients[8]
-  Dataframe1$CoefInteraction21 = summary(Model21)$coefficients[8]
-  Dataframe1$CoefInteraction22 = summary(Model22)$coefficients[8]
-  Dataframe1$CoefInteraction23 = summary(Model23)$coefficients[8]
-  Dataframe1$CoefInteraction24 = summary(Model24)$coefficients[8]
-  Dataframe1$CoefInteraction25 = summary(Model25)$coefficients[8]
-
+  Dataframe1$CoefCond1 =   summary(Model1)$coefficients[2]
+  Dataframe1$CoefCond2 = summary(Model2)$coefficients[2]
+  Dataframe1$CoefCond3 = summary(Model3)$coefficients[2]
+  Dataframe1$CoefCond4 = summary(Model4)$coefficients[2]
+  Dataframe1$CoefCond5 = summary(Model5)$coefficients[2]
+  Dataframe1$CoefCond6 = summary(Model6)$coefficients[2]
+  Dataframe1$CoefCond7 = summary(Model7)$coefficients[2]
+  Dataframe1$CoefCond8 = summary(Model8)$coefficients[2]
+  Dataframe1$CoefCond9 = summary(Model9)$coefficients[2]
+  Dataframe1$CoefCond10 = summary(Model10)$coefficients[2]
+  Dataframe1$CoefCond11 = summary(Model11)$coefficients[2]
+  Dataframe1$CoefCond12 = summary(Model12)$coefficients[2]
+  Dataframe1$CoefCond13 = summary(Model13)$coefficients[2]
+  Dataframe1$CoefCond14 = summary(Model14)$coefficients[2]
+  Dataframe1$CoefCond15 = summary(Model15)$coefficients[2]
+  Dataframe1$CoefCond16 = summary(Model16)$coefficients[2]
+  Dataframe1$CoefCond17 = summary(Model17)$coefficients[2]
+  Dataframe1$CoefCond18 = summary(Model18)$coefficients[2]
+  Dataframe1$CoefCond19 = summary(Model19)$coefficients[2]
+  Dataframe1$CoefCond20 = summary(Model20)$coefficients[2]
+  Dataframe1$CoefCond21 = summary(Model21)$coefficients[2]
+  Dataframe1$CoefCond22 = summary(Model22)$coefficients[2]
+  Dataframe1$CoefCond23 = summary(Model23)$coefficients[2]
+  Dataframe1$CoefCond24 = summary(Model24)$coefficients[2]
+  Dataframe1$CoefCond25 = summary(Model25)$coefficients[2]
+  
+  Dataframe1$CoefInteraction1 =   summary(Model1)$coefficients[4]
+  Dataframe1$CoefInteraction2 = summary(Model2)$coefficients[4]
+  Dataframe1$CoefInteraction3 = summary(Model3)$coefficients[4]
+  Dataframe1$CoefInteraction4 = summary(Model4)$coefficients[4]
+  Dataframe1$CoefInteraction5 = summary(Model5)$coefficients[4]
+  Dataframe1$CoefInteraction6 = summary(Model6)$coefficients[4]
+  Dataframe1$CoefInteraction7 = summary(Model7)$coefficients[4]
+  Dataframe1$CoefInteraction8 = summary(Model8)$coefficients[4]
+  Dataframe1$CoefInteraction9 = summary(Model9)$coefficients[4]
+  Dataframe1$CoefInteraction10 = summary(Model10)$coefficients[4]
+  Dataframe1$CoefInteraction11 = summary(Model11)$coefficients[4]
+  Dataframe1$CoefInteraction12 = summary(Model12)$coefficients[4]
+  Dataframe1$CoefInteraction13 = summary(Model13)$coefficients[4]
+  Dataframe1$CoefInteraction14 = summary(Model14)$coefficients[4]
+  Dataframe1$CoefInteraction15 = summary(Model15)$coefficients[4]
+  Dataframe1$CoefInteraction16 = summary(Model16)$coefficients[4]
+  Dataframe1$CoefInteraction17 = summary(Model17)$coefficients[4]
+  Dataframe1$CoefInteraction18 = summary(Model18)$coefficients[4]
+  Dataframe1$CoefInteraction19 = summary(Model19)$coefficients[4]
+  Dataframe1$CoefInteraction20 = summary(Model20)$coefficients[4]
+  Dataframe1$CoefInteraction21 = summary(Model21)$coefficients[4]
+  Dataframe1$CoefInteraction22 = summary(Model22)$coefficients[4]
+  Dataframe1$CoefInteraction23 = summary(Model23)$coefficients[4]
+  Dataframe1$CoefInteraction24 = summary(Model24)$coefficients[4]
+  Dataframe1$CoefInteraction25 = summary(Model25)$coefficients[4]
+  
+  Dataframe1$PvaluesCoI1 =   summary(Model1)$coefficients[14]
+  Dataframe1$PvaluesCoI2 = summary(Model2)$coefficients[14]
+  Dataframe1$PvaluesCoI3 = summary(Model3)$coefficients[14]
+  Dataframe1$PvaluesCoI4 = summary(Model4)$coefficients[14]
+  Dataframe1$PvaluesCoI5 = summary(Model5)$coefficients[14]
+  Dataframe1$PvaluesCoI6 = summary(Model6)$coefficients[14]
+  Dataframe1$PvaluesCoI7 = summary(Model7)$coefficients[14]
+  Dataframe1$PvaluesCoI8 = summary(Model8)$coefficients[14]
+  Dataframe1$PvaluesCoI9 = summary(Model9)$coefficients[14]
+  Dataframe1$PvaluesCoI10 = summary(Model10)$coefficients[14]
+  Dataframe1$PvaluesCoI11 = summary(Model11)$coefficients[14]
+  Dataframe1$PvaluesCoI12 = summary(Model12)$coefficients[14]
+  Dataframe1$PvaluesCoI13 = summary(Model13)$coefficients[14]
+  Dataframe1$PvaluesCoI14 = summary(Model14)$coefficients[14]
+  Dataframe1$PvaluesCoI15 = summary(Model15)$coefficients[14]
+  Dataframe1$PvaluesCoI16 = summary(Model16)$coefficients[14]
+  Dataframe1$PvaluesCoI17 = summary(Model17)$coefficients[14]
+  Dataframe1$PvaluesCoI18 = summary(Model18)$coefficients[14]
+  Dataframe1$PvaluesCoI19 = summary(Model19)$coefficients[14]
+  Dataframe1$PvaluesCoI20 = summary(Model20)$coefficients[14]
+  Dataframe1$PvaluesCoI21 = summary(Model21)$coefficients[14]
+  Dataframe1$PvaluesCoI22 = summary(Model22)$coefficients[14]
+  Dataframe1$PvaluesCoI23 = summary(Model23)$coefficients[14]
+  Dataframe1$PvaluesCoI24 = summary(Model24)$coefficients[14]
+  Dataframe1$PvaluesCoI25 = summary(Model25)$coefficients[14]
+  
+  Dataframe1$PvaluesInterac1 =   summary(Model1)$coefficients[16]
+  Dataframe1$PvaluesInterac2 = summary(Model2)$coefficients[16]
+  Dataframe1$PvaluesInterac3 = summary(Model3)$coefficients[16]
+  Dataframe1$PvaluesInterac4 = summary(Model4)$coefficients[16]
+  Dataframe1$PvaluesInterac5 = summary(Model5)$coefficients[16]
+  Dataframe1$PvaluesInterac6 = summary(Model6)$coefficients[16]
+  Dataframe1$PvaluesInterac7 = summary(Model7)$coefficients[16]
+  Dataframe1$PvaluesInterac8 = summary(Model8)$coefficients[16]
+  Dataframe1$PvaluesInterac9 = summary(Model9)$coefficients[16]
+  Dataframe1$PvaluesInterac10 = summary(Model10)$coefficients[16]
+  Dataframe1$PvaluesInterac11 = summary(Model11)$coefficients[16]
+  Dataframe1$PvaluesInterac12 = summary(Model12)$coefficients[16]
+  Dataframe1$PvaluesInterac13 = summary(Model13)$coefficients[16]
+  Dataframe1$PvaluesInterac14 = summary(Model14)$coefficients[16]
+  Dataframe1$PvaluesInterac15 = summary(Model15)$coefficients[16]
+  Dataframe1$PvaluesInterac16 = summary(Model16)$coefficients[16]
+  Dataframe1$PvaluesInterac17 = summary(Model17)$coefficients[16]
+  Dataframe1$PvaluesInterac18 = summary(Model18)$coefficients[16]
+  Dataframe1$PvaluesInterac19 = summary(Model19)$coefficients[16]
+  Dataframe1$PvaluesInterac20 = summary(Model20)$coefficients[16]
+  Dataframe1$PvaluesInterac21 = summary(Model21)$coefficients[16]
+  Dataframe1$PvaluesInterac22 = summary(Model22)$coefficients[16]
+  Dataframe1$PvaluesInterac23 = summary(Model23)$coefficients[16]
+  Dataframe1$PvaluesInterac24 = summary(Model24)$coefficients[16]
+  Dataframe1$PvaluesInterac25 = summary(Model25)$coefficients[16]
+  
+  Dataframe1$SECoI1 =   summary(Model1)$coefficients[6]
+  Dataframe1$SECoI2 = summary(Model2)$coefficients[6]
+  Dataframe1$SECoI3 = summary(Model3)$coefficients[6]
+  Dataframe1$SECoI4 = summary(Model4)$coefficients[6]
+  Dataframe1$SECoI5 = summary(Model5)$coefficients[6]
+  Dataframe1$SECoI6 = summary(Model6)$coefficients[6]
+  Dataframe1$SECoI7 = summary(Model7)$coefficients[6]
+  Dataframe1$SECoI8 = summary(Model8)$coefficients[6]
+  Dataframe1$SECoI9 = summary(Model9)$coefficients[6]
+  Dataframe1$SECoI10 = summary(Model10)$coefficients[6]
+  Dataframe1$SECoI11 = summary(Model11)$coefficients[6]
+  Dataframe1$SECoI12 = summary(Model12)$coefficients[6]
+  Dataframe1$SECoI13 = summary(Model13)$coefficients[6]
+  Dataframe1$SECoI14 = summary(Model14)$coefficients[6]
+  Dataframe1$SECoI15 = summary(Model15)$coefficients[6]
+  Dataframe1$SECoI16 = summary(Model16)$coefficients[6]
+  Dataframe1$SECoI17 = summary(Model17)$coefficients[6]
+  Dataframe1$SECoI18 = summary(Model18)$coefficients[6]
+  Dataframe1$SECoI19 = summary(Model19)$coefficients[6]
+  Dataframe1$SECoI20 = summary(Model20)$coefficients[6]
+  Dataframe1$SECoI21 = summary(Model21)$coefficients[6]
+  Dataframe1$SECoI22 = summary(Model22)$coefficients[6]
+  Dataframe1$SECoI23 = summary(Model23)$coefficients[6]
+  Dataframe1$SECoI24 = summary(Model24)$coefficients[6]
+  Dataframe1$SECoI25 = summary(Model25)$coefficients[6]
+  
+  Dataframe1$SEInterac1 =   summary(Model1)$coefficients[8]
+  Dataframe1$SEInterac2 = summary(Model2)$coefficients[8]
+  Dataframe1$SEInterac3 = summary(Model3)$coefficients[8]
+  Dataframe1$SEInterac4 = summary(Model4)$coefficients[8]
+  Dataframe1$SEInterac5 = summary(Model5)$coefficients[8]
+  Dataframe1$SEInterac6 = summary(Model6)$coefficients[8]
+  Dataframe1$SEInterac7 = summary(Model7)$coefficients[8]
+  Dataframe1$SEInterac8 = summary(Model8)$coefficients[8]
+  Dataframe1$SEInterac9 = summary(Model9)$coefficients[8]
+  Dataframe1$SEInterac10 = summary(Model10)$coefficients[8]
+  Dataframe1$SEInterac11 = summary(Model11)$coefficients[8]
+  Dataframe1$SEInterac12 = summary(Model12)$coefficients[8]
+  Dataframe1$SEInterac13 = summary(Model13)$coefficients[8]
+  Dataframe1$SEInterac14 = summary(Model14)$coefficients[8]
+  Dataframe1$SEInterac15 = summary(Model15)$coefficients[8]
+  Dataframe1$SEInterac16 = summary(Model16)$coefficients[6]
+  Dataframe1$SEInterac17 = summary(Model17)$coefficients[6]
+  Dataframe1$SEInterac18 = summary(Model18)$coefficients[6]
+  Dataframe1$SEInterac19 = summary(Model19)$coefficients[6]
+  Dataframe1$SEInterac20 = summary(Model20)$coefficients[6]
+  Dataframe1$SEInterac21 = summary(Model21)$coefficients[6]
+  Dataframe1$SEInterac22 = summary(Model22)$coefficients[6]
+  Dataframe1$SEInterac23 = summary(Model23)$coefficients[6]
+  Dataframe1$SEInterac24 = summary(Model24)$coefficients[6]
+  Dataframe1$SEInterac25 = summary(Model25)$coefficients[6]
+  
   Dataframe1 = Dataframe1 %>%
     group_by(ConditionOfInterest,ID,StandardValues) %>%
     mutate(Mean_Model1 = Difference[which.min(abs(Prediction_Model1-0.5))],
@@ -392,64 +530,101 @@ for (i in 1:50){
            SD_Model23 = optimize(FitCumGaussian,c(0,5),Mean = Mean_Model23,Difference = Difference,Prediction = Prediction_Model23)$minimum,
            SD_Model24 = optimize(FitCumGaussian,c(0,5),Mean = Mean_Model24,Difference = Difference,Prediction = Prediction_Model24)$minimum,
            SD_Model25 = optimize(FitCumGaussian,c(0,5),Mean = Mean_Model25,Difference = Difference,Prediction = Prediction_Model25)$minimum)
-
   
-unique(Dataframe1$Mean_Model24)
-unique(Dataframe1$SD_Model24)
+  Dataframe1$Repetition = i
+  Dataframe1$PSE_Difference = PSE_Difference
+  Dataframe1$SD_Difference = JND_Difference
+  Dataframe1$CombinationStimuli = j
+  
   Dataframe = rbind(Dataframe,Dataframe1 %>% 
                       group_by(ConditionOfInterest,ID,StandardValues) %>%
                       slice(1))
   
   print(Sys.time() - Beginning)
+  }
 }
 
-
+SaveThis = Dataframe
+Dataframe = Dataframe %>% filter(!is.na(Repetition))
 
 Dataframe2 = data.frame(Model = rep(c("M01", "M02", "M03", "M04", "M05", "M06", "M07", 
-                                    "M08", "M09", "M10", "M11", "M12", "M13", "M14",
-                                    "M15", "M16", "M17", "M18", "M19", "M20", "M21",
-                                    "M22", "M23", "M24", "M25"),
-                                    each=nParticipants*length(ConditionOfInterest)*length(StandardValues)*50),
+                                      "M08", "M09", "M10", "M11", "M12", "M13", "M14",
+                                      "M15", "M16", "M17", "M18", "M19", "M20", "M21",
+                                      "M22", "M23", "M24", "M25"),
+                                    each=nParticipants*length(ConditionOfInterest)*length(StandardValues)*Repetitions*5),
                         StandardValues = rep(Dataframe$StandardValues,25),
                         ConditionOfInterest = rep(Dataframe$ConditionOfInterest,25),
                         ID = rep(Dataframe$ID,25),
+                        Repetition = rep(Dataframe$Repetition,25),
                         Mean_Modeled = c(Dataframe$Mean_Model1,Dataframe$Mean_Model2,Dataframe$Mean_Model3,Dataframe$Mean_Model4,
-                                Dataframe$Mean_Model5,Dataframe$Mean_Model6,Dataframe$Mean_Model7,Dataframe$Mean_Model8,
-                                Dataframe$Mean_Model9,Dataframe$Mean_Model10,Dataframe$Mean_Model11,Dataframe$Mean_Model12,
-                                Dataframe$Mean_Model13,Dataframe$Mean_Model14,Dataframe$Mean_Model15,Dataframe$Mean_Model16,
-                                Dataframe$Mean_Model17,Dataframe$Mean_Model18,Dataframe$Mean_Model19,Dataframe$Mean_Model20,
-                                Dataframe$Mean_Model21,Dataframe$Mean_Model22,Dataframe$Mean_Model23,Dataframe$Mean_Model24,
-                                Dataframe$Mean_Model25),
+                                         Dataframe$Mean_Model5,Dataframe$Mean_Model6,Dataframe$Mean_Model7,Dataframe$Mean_Model8,
+                                         Dataframe$Mean_Model9,Dataframe$Mean_Model10,Dataframe$Mean_Model11,Dataframe$Mean_Model12,
+                                         Dataframe$Mean_Model13,Dataframe$Mean_Model14,Dataframe$Mean_Model15,Dataframe$Mean_Model16,
+                                         Dataframe$Mean_Model17,Dataframe$Mean_Model18,Dataframe$Mean_Model19,Dataframe$Mean_Model20,
+                                         Dataframe$Mean_Model21,Dataframe$Mean_Model22,Dataframe$Mean_Model23,Dataframe$Mean_Model24,
+                                         Dataframe$Mean_Model25),
                         SD_Modeled = c(Dataframe$SD_Model1,Dataframe$SD_Model2,Dataframe$SD_Model3,Dataframe$SD_Model4,
-                                Dataframe$SD_Model5,Dataframe$SD_Model6,Dataframe$SD_Model7,Dataframe$SD_Model8,
-                                Dataframe$SD_Model9,Dataframe$SD_Model10,Dataframe$SD_Model11,Dataframe$SD_Model12,
-                                Dataframe$SD_Model13,Dataframe$SD_Model14,Dataframe$SD_Model15,Dataframe$SD_Model16,
-                                Dataframe$SD_Model17,Dataframe$SD_Model18,Dataframe$SD_Model19,Dataframe$SD_Model20,
-                                Dataframe$SD_Model21,Dataframe$SD_Model22,Dataframe$SD_Model23,Dataframe$SD_Model24,
-                                Dataframe$SD_Model25),
+                                       Dataframe$SD_Model5,Dataframe$SD_Model6,Dataframe$SD_Model7,Dataframe$SD_Model8,
+                                       Dataframe$SD_Model9,Dataframe$SD_Model10,Dataframe$SD_Model11,Dataframe$SD_Model12,
+                                       Dataframe$SD_Model13,Dataframe$SD_Model14,Dataframe$SD_Model15,Dataframe$SD_Model16,
+                                       Dataframe$SD_Model17,Dataframe$SD_Model18,Dataframe$SD_Model19,Dataframe$SD_Model20,
+                                       Dataframe$SD_Model21,Dataframe$SD_Model22,Dataframe$SD_Model23,Dataframe$SD_Model24,
+                                       Dataframe$SD_Model25),
                         AIC = c(Dataframe$AIC1,Dataframe$AIC2,Dataframe$AIC3,Dataframe$AIC4,
-                                     Dataframe$AIC5,Dataframe$AIC6,Dataframe$AIC7,Dataframe$AIC8,
-                                     Dataframe$AIC9,Dataframe$AIC10,Dataframe$AIC11,Dataframe$AIC12,
-                                     Dataframe$AIC13,Dataframe$AIC14,Dataframe$AIC15,Dataframe$AIC16,
-                                     Dataframe$AIC17,Dataframe$AIC18,Dataframe$AIC19,Dataframe$AIC20,
-                                     Dataframe$AIC21,Dataframe$AIC22,Dataframe$AIC23,Dataframe$AIC24,
-                                     Dataframe$AIC25),
+                                Dataframe$AIC5,Dataframe$AIC6,Dataframe$AIC7,Dataframe$AIC8,
+                                Dataframe$AIC9,Dataframe$AIC10,Dataframe$AIC11,Dataframe$AIC12,
+                                Dataframe$AIC13,Dataframe$AIC14,Dataframe$AIC15,Dataframe$AIC16,
+                                Dataframe$AIC17,Dataframe$AIC18,Dataframe$AIC19,Dataframe$AIC20,
+                                Dataframe$AIC21,Dataframe$AIC22,Dataframe$AIC23,Dataframe$AIC24,
+                                Dataframe$AIC25),
                         CoefCond = c(Dataframe$CoefCond1,Dataframe$CoefCond2,Dataframe$CoefCond3,Dataframe$CoefCond4,
-                                       Dataframe$CoefCond5,Dataframe$CoefCond6,Dataframe$CoefCond7,Dataframe$CoefCond8,
-                                       Dataframe$CoefCond9,Dataframe$CoefCond10,Dataframe$CoefCond11,Dataframe$CoefCond12,
-                                       Dataframe$CoefCond13,Dataframe$CoefCond14,Dataframe$CoefCond15,Dataframe$CoefCond16,
-                                       Dataframe$CoefCond17,Dataframe$CoefCond18,Dataframe$CoefCond19,Dataframe$CoefCond20,
-                                       Dataframe$CoefCond21,Dataframe$CoefCond22,Dataframe$CoefCond23,Dataframe$CoefCond24,
-                                       Dataframe$CoefCond25),
+                                     Dataframe$CoefCond5,Dataframe$CoefCond6,Dataframe$CoefCond7,Dataframe$CoefCond8,
+                                     Dataframe$CoefCond9,Dataframe$CoefCond10,Dataframe$CoefCond11,Dataframe$CoefCond12,
+                                     Dataframe$CoefCond13,Dataframe$CoefCond14,Dataframe$CoefCond15,Dataframe$CoefCond16,
+                                     Dataframe$CoefCond17,Dataframe$CoefCond18,Dataframe$CoefCond19,Dataframe$CoefCond20,
+                                     Dataframe$CoefCond21,Dataframe$CoefCond22,Dataframe$CoefCond23,Dataframe$CoefCond24,
+                                     Dataframe$CoefCond25),
                         CoefInteract = c(Dataframe$CoefInteraction1,Dataframe$CoefInteraction2,Dataframe$CoefInteraction3,Dataframe$CoefInteraction4,
-                                     Dataframe$CoefInteraction5,Dataframe$CoefInteraction6,Dataframe$CoefInteraction7,Dataframe$CoefInteraction8,
-                                     Dataframe$CoefInteraction9,Dataframe$CoefInteraction10,Dataframe$CoefInteraction11,Dataframe$CoefInteraction12,
-                                     Dataframe$CoefInteraction13,Dataframe$CoefInteraction14,Dataframe$CoefInteraction15,Dataframe$CoefInteraction16,
-                                     Dataframe$CoefInteraction17,Dataframe$CoefInteraction18,Dataframe$CoefInteraction19,Dataframe$CoefInteraction20,
-                                     Dataframe$CoefInteraction21,Dataframe$CoefInteraction22,Dataframe$CoefInteraction23,Dataframe$CoefInteraction24,
-                                     Dataframe$CoefInteraction25),
+                                         Dataframe$CoefInteraction5,Dataframe$CoefInteraction6,Dataframe$CoefInteraction7,Dataframe$CoefInteraction8,
+                                         Dataframe$CoefInteraction9,Dataframe$CoefInteraction10,Dataframe$CoefInteraction11,Dataframe$CoefInteraction12,
+                                         Dataframe$CoefInteraction13,Dataframe$CoefInteraction14,Dataframe$CoefInteraction15,Dataframe$CoefInteraction16,
+                                         Dataframe$CoefInteraction17,Dataframe$CoefInteraction18,Dataframe$CoefInteraction19,Dataframe$CoefInteraction20,
+                                         Dataframe$CoefInteraction21,Dataframe$CoefInteraction22,Dataframe$CoefInteraction23,Dataframe$CoefInteraction24,
+                                         Dataframe$CoefInteraction25),
+                        PvaluesCoI = c(Dataframe$PvaluesCoI1,Dataframe$PvaluesCoI2,Dataframe$PvaluesCoI3,Dataframe$PvaluesCoI4,
+                                         Dataframe$PvaluesCoI5,Dataframe$PvaluesCoI6,Dataframe$PvaluesCoI7,Dataframe$PvaluesCoI8,
+                                         Dataframe$PvaluesCoI9,Dataframe$PvaluesCoI10,Dataframe$PvaluesCoI11,Dataframe$PvaluesCoI12,
+                                         Dataframe$PvaluesCoI13,Dataframe$PvaluesCoI14,Dataframe$PvaluesCoI15,Dataframe$PvaluesCoI16,
+                                         Dataframe$PvaluesCoI17,Dataframe$PvaluesCoI18,Dataframe$PvaluesCoI19,Dataframe$PvaluesCoI20,
+                                         Dataframe$PvaluesCoI21,Dataframe$PvaluesCoI22,Dataframe$PvaluesCoI23,Dataframe$PvaluesCoI24,
+                                         Dataframe$PvaluesCoI25),
+                        PvaluesInterac = c(Dataframe$PvaluesInterac1,Dataframe$PvaluesInterac2,Dataframe$PvaluesInterac3,Dataframe$PvaluesInterac4,
+                                         Dataframe$PvaluesInterac5,Dataframe$PvaluesInterac6,Dataframe$PvaluesInterac7,Dataframe$PvaluesInterac8,
+                                         Dataframe$PvaluesInterac9,Dataframe$PvaluesInterac10,Dataframe$PvaluesInterac11,Dataframe$PvaluesInterac12,
+                                         Dataframe$PvaluesInterac13,Dataframe$PvaluesInterac14,Dataframe$PvaluesInterac15,Dataframe$PvaluesInterac16,
+                                         Dataframe$PvaluesInterac17,Dataframe$PvaluesInterac18,Dataframe$PvaluesInterac19,Dataframe$PvaluesInterac20,
+                                         Dataframe$PvaluesInterac21,Dataframe$PvaluesInterac22,Dataframe$PvaluesInterac23,Dataframe$PvaluesInterac24,
+                                         Dataframe$PvaluesInterac25),
+                        SECoI = c(Dataframe$SECoI1,Dataframe$SECoI2,Dataframe$SECoI3,Dataframe$SECoI4,
+                                       Dataframe$SECoI5,Dataframe$SECoI6,Dataframe$SECoI7,Dataframe$SECoI8,
+                                       Dataframe$SECoI9,Dataframe$SECoI10,Dataframe$SECoI11,Dataframe$SECoI12,
+                                       Dataframe$SECoI13,Dataframe$SECoI14,Dataframe$SECoI15,Dataframe$SECoI16,
+                                       Dataframe$SECoI17,Dataframe$SECoI18,Dataframe$SECoI19,Dataframe$SECoI20,
+                                       Dataframe$SECoI21,Dataframe$SECoI22,Dataframe$SECoI23,Dataframe$SECoI24,
+                                       Dataframe$SECoI25),
+                        SEInterac = c(Dataframe$SEInterac1,Dataframe$SEInterac2,Dataframe$SEInterac3,Dataframe$SEInterac4,
+                                           Dataframe$SEInterac5,Dataframe$SEInterac6,Dataframe$SEInterac7,Dataframe$SEInterac8,
+                                           Dataframe$SEInterac9,Dataframe$SEInterac10,Dataframe$SEInterac11,Dataframe$SEInterac12,
+                                           Dataframe$SEInterac13,Dataframe$SEInterac14,Dataframe$SEInterac15,Dataframe$SEInterac16,
+                                           Dataframe$SEInterac17,Dataframe$SEInterac18,Dataframe$SEInterac19,Dataframe$SEInterac20,
+                                           Dataframe$SEInterac21,Dataframe$SEInterac22,Dataframe$SEInterac23,Dataframe$SEInterac24,
+                                           Dataframe$SEInterac25),
                         Mean_Actual = rep(Dataframe$Mean, 25)-rep(Dataframe$StandardValues,25),
-                        SD_Actual = rep(Dataframe$SD, 25))
+                        SD_Actual = rep(Dataframe$SD, 25),
+                        PSE_Difference = rep(Dataframe$PSE_Difference, 25),
+                        JND_Difference = rep(Dataframe$SD_Difference, 25))
+Dataframe2$Condition_PSEJND = paste0(Dataframe2$JND_Difference,Dataframe2$PSE_Difference)
+
 Dataframe2 = Dataframe2 %>% 
   mutate(ActualPSEs = case_when(
     ConditionOfInterest == 1 ~ -0.1*StandardValues,
@@ -461,99 +636,287 @@ Dataframe2 = Dataframe2 %>%
     Condition = case_when(
       ConditionOfInterest == 0 ~ "Baseline",
       ConditionOfInterest == 1 ~ ""
-    ),
-    AIC_Norm = AIC-median(Dataframe2$AIC[Dataframe2$Model == "M25"]))
+    )) %>% 
+  group_by(Condition_PSEJND) %>% 
+  mutate(AIC_Norm = AIC-median(AIC[Model == "M25"]))
 
 
-
-ggplot(Dataframe2,aes(Model,Mean_Modeled-Mean_Actual)) +
+#####MAIN PLOTS
+#model predictions
+FigurePSEsFromGLMM = ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == -0.25),aes(Model,Mean_Modeled-Mean_Actual)) +
   geom_boxplot() + 
   ylab("PSE Output of GLMM - Actual PSE") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
   coord_cartesian(ylim = c(-3,3)) +
   xlab("")
-ggsave("Figure Comparison PSEs.jpeg", w = 12, h = 5)
 
-ggplot(Dataframe2,aes(Model,SD_Modeled-SD_Actual)) +
+FigureSDsFromGLMM = ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == -0.25),aes(Model,SD_Modeled-SD_Actual)) +
   geom_boxplot() + 
   coord_cartesian(ylim = c(-1,2.5)) +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ylab("SD Output of GLMM - Actual SD") +
   xlab("")
-ggsave("Figure Comparison SDs.jpeg", w = 12, h = 5)
+FigureValuesFromGLMMs = plot_grid(FigurePSEsFromGLMM,FigureSDsFromGLMM, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1-0.25.jpeg"), w = 12, h = 10)
+#####
 
-ggplot(Dataframe2,aes(Model,CoefCond)) +
-  geom_boxplot() + 
-  ylab("SE PSE Difference") +
-  xlab("")
-ggsave("Figure SE PSEs.jpeg", w = 12, h = 5)
+#####
+#p values
+Dataframe3 = Dataframe2 %>%
+  filter(PSE_Difference == -0.1 & JND_Difference == -0.25) %>% 
+  group_by(Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200)
 
-ggplot(Dataframe2,aes(Model,CoefInteract)) +
-  geom_boxplot() + 
-  ylab("SE JND Difference") +
-  xlab("")
-ggsave("Figure SE SDs.jpeg", w = 12, h = 5)
+FigurePvaluesFromGLMM_CoI = ggplot(Dataframe3,aes(Model,Power_CoI)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigurePvaluesFromGLMM_Interac = ggplot(Dataframe3,aes(Model,Power_Interac)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigureValuesFromGLMMs = plot_grid(FigurePvaluesFromGLMM_CoI,FigurePvaluesFromGLMM_Interac, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1-0.25.jpeg"), w = 12, h = 10)
+#####
 
-ggplot(Dataframe2,aes(Model,AIC_Norm)) +
+#####
+#AICs
+ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == -0.25),aes(Model,AIC_Norm)) +
   geom_boxplot() + 
   xlab("") +
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
-ggsave("Figure AICs Models.jpeg", w = 12, h = 5)
+ggsave(paste0("Figure AICs_-0.1-0.25_Models.jpeg"), w = 12, h = 5)
+#####
 
 
 
+###################################################################################################################
+###################################SUPPLEMENTARY PLOTS#############################################################
+###################################################################################################################
+###################################PSE = 0, JND = 0.25
+FigurePSEsFromGLMM_0_0.25_ = ggplot(Dataframe2 %>% filter(PSE_Difference == 0 & JND_Difference == 0.25),aes(Model,Mean_Modeled-Mean_Actual)) +
+  geom_boxplot() + 
+  ylab("PSE Output of GLMM - Actual PSE") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
+  coord_cartesian(ylim = c(-3,3)) +
+  xlab("")
+
+FigureSDsFromGLMM_0_0.25_ = ggplot(Dataframe2 %>% filter(PSE_Difference == 0 & JND_Difference == 0.25),aes(Model,SD_Modeled-SD_Actual)) +
+  geom_boxplot() + 
+  coord_cartesian(ylim = c(-1,2.5)) +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
+  ylab("SD Output of GLMM - Actual SD") +
+  xlab("")
+plot_grid(FigurePSEsFromGLMM_0_0.25_,FigureSDsFromGLMM_0_0.25_, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0-0.25.jpeg"), w = 12, h = 10)
+#####
+
+#####
+#p values
+Dataframe4 = Dataframe2 %>%
+  filter(PSE_Difference == 0 & JND_Difference == 0.25) %>% 
+  group_by(Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+
+FigurePvaluesFromGLMM_CoI_0_0.25_ = ggplot(Dataframe4,aes(Model,Power_CoI)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigurePvaluesFromGLMM_Interac_0_0.25_ = ggplot(Dataframe4,aes(Model,Power_Interac)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+plot_grid(FigurePvaluesFromGLMM_CoI_0_0.25_,FigurePvaluesFromGLMM_Interac_0_0.25_, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0-0.25.jpeg"), w = 12, h = 10)
+#####
+
+#####
+#AICs
+ggplot(Dataframe2 %>% filter(PSE_Difference == 0 & JND_Difference == 0.25),aes(Model,AIC_Norm)) +
+  geom_boxplot() + 
+  xlab("") +
+  ylab("AIC - AIC(Model25)") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
+ggsave(paste0("Figures/Figure AICs_0-0.25_Models.jpeg"), w = 12, h = 5)
+#####
 
 
-optimize(FitCumGaussian,c(0,2),
-         Mean = Dataframe1$Mean_Model24[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-         Difference = Dataframe1$Difference[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-         Prediction = Dataframe1$Prediction_Model24[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-         tol = 0.000000000000000000000000000000001)
+###################################################################################################################
+###################################PSE = -0.1, JND = 0.25 _M0.1_0.25
+FigurePSEsFromGLMM_M0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == 0.25),aes(Model,Mean_Modeled-Mean_Actual)) +
+  geom_boxplot() + 
+  ylab("PSE Output of GLMM - Actual PSE") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
+  coord_cartesian(ylim = c(-3,3)) +
+  xlab("")
+FigureSDsFromGLMM_M0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == 0.25),aes(Model,SD_Modeled-SD_Actual)) +
+  geom_boxplot() + 
+  coord_cartesian(ylim = c(-1,2.5)) +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
+  ylab("SD Output of GLMM - Actual SD") +
+  xlab("")
+plot_grid(FigurePSEsFromGLMM_M0.1_0.25,FigureSDsFromGLMM_M0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 10)
+#####
+
+#####
+#p values
+Dataframe5 = Dataframe2 %>%
+  filter(PSE_Difference == -0.1 & JND_Difference == 0.25) %>% 
+  group_by(Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+
+FigurePvaluesFromGLMM_CoI_M0.1_0.25 = ggplot(Dataframe5,aes(Model,Power_CoI)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigurePvaluesFromGLMM_Interac_M0.1_0.25 = ggplot(Dataframe5,aes(Model,Power_Interac)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+plot_grid(FigurePvaluesFromGLMM_CoI_M0.1_0.25,FigurePvaluesFromGLMM_Interac_M0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 10)
+#####
+
+#####
+#AICs
+ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == 0.25),aes(Model,AIC_Norm)) +
+  geom_boxplot() + 
+  xlab("") +
+  ylab("AIC - AIC(Model25)") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
+ggsave(paste0("Figures/Figure AICs_-0.1_0.25_Models.jpeg"), w = 12, h = 5)
+#####
 
 
-plot(seq(-4,4,0.01),
-     pnorm(seq(-4,4,0.01),
-           Dataframe1$Mean_Model25[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-           optimize(FitCumGaussian,c(0,2),Mean = Dataframe1$Mean_Model25[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-                    Difference = Dataframe1$Difference[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-                    Prediction = Dataframe1$Prediction_Model25[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-                    tol = 0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001)$minimum))
+###################################################################################################################
+###################################PSE = 0.1, JND = 0 _0.1_0
+FigurePSEsFromGLMM_0.1_0 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0),aes(Model,Mean_Modeled-Mean_Actual)) +
+  geom_boxplot() + 
+  ylab("PSE Output of GLMM - Actual PSE") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
+  coord_cartesian(ylim = c(-3,3)) +
+  xlab("")
+FigureSDsFromGLMM_0.1_0 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0),aes(Model,SD_Modeled-SD_Actual)) +
+  geom_boxplot() + 
+  coord_cartesian(ylim = c(-1,2.5)) +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
+  ylab("SD Output of GLMM - Actual SD") +
+  xlab("")
+plot_grid(FigurePSEsFromGLMM_0.1_0,FigureSDsFromGLMM_0.1_0, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.jpeg"), w = 12, h = 10)
+#####
 
-plot(Dataframe1$Difference[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-       Dataframe1$Prediction_Model24[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0])
-lines(seq(-4,4,0.01),
-     pnorm(seq(-4,4,0.01),
-           Dataframe1$Mean_Model24[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-           optimize(FitCumGaussian,c(0,2),Mean = Dataframe1$Mean_Model24[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-                    Difference = Dataframe1$Difference[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-                    Prediction = Dataframe1$Prediction_Model24[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0])$minimum))
+#####
+#p values
+Dataframe6 = Dataframe2 %>%
+  filter(PSE_Difference == 0.1 & JND_Difference == 0) %>% 
+  group_by(Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+
+FigurePvaluesFromGLMM_CoI_0.1_0 = ggplot(Dataframe6,aes(Model,Power_CoI)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigurePvaluesFromGLMM_Interac_0.1_0 = ggplot(Dataframe6,aes(Model,Power_Interac)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+plot_grid(FigurePvaluesFromGLMM_CoI_0.1_0,FigurePvaluesFromGLMM_Interac_0.1_0, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_0.jpeg"), w = 12, h = 10)
+#####
+
+#####
+#AICs
+ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0),aes(Model,AIC_Norm)) +
+  geom_boxplot() + 
+  xlab("") +
+  ylab("AIC - AIC(Model25)") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
+ggsave(paste0("Figures/Figure AICs_0.1_0_Models.jpeg"), w = 12, h = 5)
+#####
 
 
+###################################################################################################################
+###################################PSE = 0.1, JND = -0.25##########################################################
+#_0.1_M0.25
+FigurePSEsFromGLMM_0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == -0.25),aes(Model,Mean_Modeled-Mean_Actual)) +
+  geom_boxplot() + 
+  ylab("PSE Output of GLMM - Actual PSE") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
+  coord_cartesian(ylim = c(-3,3)) +
+  xlab("")
+FigureSDsFromGLMM_0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == -0.25),aes(Model,SD_Modeled-SD_Actual)) +
+  geom_boxplot() + 
+  coord_cartesian(ylim = c(-1,2.5)) +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
+  ylab("SD Output of GLMM - Actual SD") +
+  xlab("")
+plot_grid(FigurePSEsFromGLMM_0.1_M0.25,FigureSDsFromGLMM_0.1_M0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 10)
+#####
 
+#####
+#p values
+Dataframe7 = Dataframe2 %>%
+  filter(PSE_Difference == 0.1 & JND_Difference == -0.25) %>% 
+  group_by(Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200)
 
-Dataframe1$predict = predict(Model25, type = "response", newdata = Dataframe1)
-ggplot(Dataframe1, aes(x = Difference, y = predict, color = as.factor(ConditionOfInterest))) +
-  geom_point() +
-  facet_grid(StandardValues ~ ID)
-?optimize
-MeanSD = optimize(par = c(0,0.5),FitCumGaussian,par,
-               Dataframe1$Difference[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-               Dataframe1$Prediction_Model3[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-               control = list(abstol = 0.0000000000000000001))$par
-plot(seq(-4,4,0.01),
-  pnorm(seq(-4,4,0.01),
-      MeanSD[1],
-      MeanSD[2]))
-points(Dataframe1$Difference[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0],
-       Dataframe1$Prediction_Model15[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0])
+FigurePvaluesFromGLMM_CoI_0.1_M0.25 = ggplot(Dataframe7,aes(Model,Power_CoI)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigurePvaluesFromGLMM_Interac_0.1_M0.25 = ggplot(Dataframe7,aes(Model,Power_Interac)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+plot_grid(FigurePvaluesFromGLMM_CoI_0.1_M0.25,FigurePvaluesFromGLMM_Interac_0.1_M0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 10)
+#####
 
-Dataframe5 = Dataframe1 %>% 
-  group_by(ConditionOfInterest,StandardValues,ID) %>% 
-  mutate(PSE_Alt = Difference[which.min(abs(Prediction_Model1-0.5))],
-         PSE_Theoretical = Mean-StandardValues) %>% 
-  filter(ID == "S04" & StandardValues == 7 & ConditionOfInterest == 0)
-plot(Dataframe1$PSE_Alt,Dataframe1$PSE_Theoretical) %>%
-
-
-Dataframe1$Difference[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0][which.min(abs(Dataframe1$Prediction_Model1[Dataframe1$ID == "S04" & Dataframe1$StandardValues == 7 & Dataframe1$ConditionOfInterest == 0]-0.5))]
+#####
+#AICs
+ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == -0.25),aes(Model,AIC_Norm)) +
+  geom_boxplot() + 
+  xlab("") +
+  ylab("AIC - AIC(Model25)") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
+ggsave(paste0("Figures/Figure AICs_0.1_-0.25_Models.jpeg"), w = 12, h = 5)
+#####
