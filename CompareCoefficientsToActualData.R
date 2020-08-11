@@ -15,7 +15,7 @@ FitCumGaussian = function(par,Mean,Difference,Prediction){
 
 Repetitions = 200
 
-for (j in 1:5){
+for (j in 1:6){
 
   nParticipants = 10
   ConditionOfInterest = c(0,1)
@@ -51,6 +51,11 @@ else if (j == 4){
 else if (j == 5){
   PSE_Difference = 0.1
   JND_Difference = -0.25
+}
+  
+else if (j == 6){
+    PSE_Difference = 0.1
+    JND_Difference = 0.25
 }
 
 
