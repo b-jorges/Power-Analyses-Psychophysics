@@ -55,7 +55,6 @@ if (Type_ResponseFunction == "normal"){
 } else{
   
   print("distribution not valid")
-  
 }
 
 Psychometric = Psychometric %>%
@@ -72,7 +71,7 @@ Psychometric = Psychometric %>%
 
 ###prepare for glmer() - needs sum of YES/Total per stimulus strength and condition
 Psychometric = Psychometric %>%
-#  filter(abs(staircase_factor-1) < 0.75) %>%
+  filter(abs(staircase_factor-1) < 0.75) %>%
   group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
   mutate(Yes = sum(Answer==1),
          Total = length(ConditionOfInterest))

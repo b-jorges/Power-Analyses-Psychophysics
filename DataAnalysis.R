@@ -7,6 +7,8 @@ require(quickpsy)
 Psychometric$AnswerProbability
 PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
 
+plot(PsychometricFunctions)
+
 Parameters = PsychometricFunctions$par
 Parameters2 = Parameters %>%
   filter(parn == "p1") %>%
