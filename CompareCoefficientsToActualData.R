@@ -701,7 +701,7 @@ FigureSDsFromGLMM = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Dif
   ylab("SD Output of GLMM - Actual SD") +
   xlab("")
 FigureValuesFromGLMMs = plot_grid(FigurePSEsFromGLMM,FigureSDsFromGLMM, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg", w = 12, h = 10)
 #####
 
 ###SE
@@ -1110,4 +1110,76 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == -0.25),ae
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
 ggsave(paste0("Figures/Figure AICs_0.1_-0.25_Models.jpeg"), w = 12, h = 5)
+#####
+
+
+
+###################################################################################################################
+###################################PSE = 0.1, JND = 0.25##########################################################
+#_0.1_0.25
+FigurePSEsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes(Model,Mean_Modeled-Mean_Actual)) +
+  geom_boxplot() + 
+  ylab("PSE Output of GLMM - Actual PSE") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
+  coord_cartesian(ylim = c(-3,3)) +
+  xlab("")
+FigureSDsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes(Model,SD_Modeled-SD_Actual)) +
+  geom_boxplot() + 
+  coord_cartesian(ylim = c(-1,2.5)) +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
+  ylab("SD Output of GLMM - Actual SD") +
+  xlab("")
+plot_grid(FigurePSEsFromGLMM_0.1_0.25,FigureSDsFromGLMM_0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+#####
+
+###SE
+FigureSEsPSEsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),
+                                         aes(Model,SECoI)) +
+  geom_boxplot() + 
+  ylab("SE for PSE estimate") +
+  xlab("")
+FigureSEsSDsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),
+                                        aes(Model,SEInterac)) +
+  geom_boxplot() + 
+  ylab("SE for SD estimate") +
+  xlab("")
+FigureSEsFromGLMMs_0.1_M0.25 = plot_grid(FigureSEsPSEsFromGLMM_0.1_0.25,FigureSEsSDsFromGLMM_0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+
+
+#####
+#p values
+Dataframe8 = Dataframe2 %>%
+  filter(PSE_Difference == 0.1 & JND_Difference == 0.25) %>% 
+  group_by(Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+
+FigurePvaluesFromGLMM_CoI_0.1_0.25 = ggplot(Dataframe8,aes(Model,Power_CoI)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigurePvaluesFromGLMM_Interac_0.1_0.25 = ggplot(Dataframe8,aes(Model,Power_Interac)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+plot_grid(FigurePvaluesFromGLMM_CoI_0.1_0.25,FigurePvaluesFromGLMM_Interac_0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+#####
+
+#####
+#AICs
+ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes(Model,AIC_Norm)) +
+  geom_boxplot() + 
+  xlab("") +
+  ylab("AIC - AIC(Model25)") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
+ggsave(paste0("Figures/Figure AICs_0.1_0.25_Models.jpeg"), w = 12, h = 5)
 #####
