@@ -1,4 +1,3 @@
-
 SimulatePsychometricData = function(nParticipants,
                                     ConditionOfInterest,
                                     StandardValues,
@@ -15,7 +14,7 @@ SimulatePsychometricData = function(nParticipants,
 
 ID = paste0("S0",1:nParticipants)
 
-Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
+Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = 1:reps)
 
 Psychometric = Psychometric %>%
   group_by(ID) %>%#
@@ -45,13 +44,7 @@ if (Type_ResponseFunction == "normal"){
   Psychometric = Psychometric %>%
     mutate(
       staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction*(1+ConditionOfInterest*JND_Difference)))
-  
-  #} else if (Type_ResponseFunction == "uniform"){
-  #  
-  #  Psychometric = Psychometric %>%
-  #  mutate(
-  #      staircase_factor = seq(SD_ResponseFunction[1],SD_ResponseFunction[2],(SD_ResponseFunction[2]-SD_ResponseFunc#tion[1]/6)))
-  
+
 } else{
   
   print("distribution not valid")
@@ -72,7 +65,7 @@ Psychometric = Psychometric %>%
 
 ###prepare for glmer() - needs sum of YES/Total per stimulus strength and condition
 Psychometric = Psychometric %>%
-#  filter(abs(staircase_factor-1) < 0.75) %>%
+  filter(abs(staircase_factor-1) < 0.75) %>%
   group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
   mutate(Yes = sum(Answer==1),
          Total = length(ConditionOfInterest))

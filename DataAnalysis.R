@@ -4,7 +4,6 @@
 require(quickpsy)
 
 ###Fitting psychometric functions and extracting means and standard deviations
-Psychometric$AnswerProbability
 PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
 
 Parameters = PsychometricFunctions$par
@@ -16,18 +15,23 @@ Parameters = Parameters2
 
 ###performing ANOVA
 ###computes pvalues for ANOVA
-require(lmerTest) 
+require(lmerTest)
 
-ANOVA_Mean = aov(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
-summary(ANOVA_Mean)
-
-ANOVA_SD = aov(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
-summary(ANOVA_SD)
-
-
-LMM_Mean = lmer(Mean ~ ConditionOfInterest*StandardValues + (1 | ID),
+ANOVA_Mean = lm(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
+ANOVA_SD = lm(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
+LMM_Mean = lmer(Mean ~ as.factor(ConditionOfInterest)*StandardValues + (1 | ID),
          data = Parameters)
+LMM_SD = lmer(SD ~ as.factor(ConditionOfInterest)*StandardValues + (1 | ID),
+                data = Parameters)
+
+summary(ANOVA_Mean)
+summary(ANOVA_SD)
 summary(LMM_Mean)
+summary(LMM_SD)
+ranef(LMM_Mean)
+
+
+
 
 Parameters$ConditionOfInterest[Parameters$ConditionOfInterest == 1] = "Condition of Interest"
 Parameters$ConditionOfInterest[Parameters$ConditionOfInterest == 0] = "Baseline"
