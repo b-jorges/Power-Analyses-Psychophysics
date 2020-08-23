@@ -1,0 +1,13 @@
+n,ConditionsOfInterest,StandardValue1,StandardValue2,reps,PSE_Difference,JND_Difference,Multiplicator_PSE_Standard,Multiplicator_SD_Standard,SD_ResponseFunction,Mean_Variability_Between,SD_Variability_Between,power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,power_Accuracy_ANOVA,power_Precision_ANOVA,Duration
+10,2,5,8,40,-0.05,-0.1,0,0.108,0.1,0.1,0.1,1.0,0.19,0.99,0.13,0.0,0.03,271953 milliseconds
+12,2,5,8,40,-0.05,-0.1,0,0.108,0.1,0.1,0.1,1.0,0.18,1.0,0.19,0.0,0.03,277385 milliseconds
+14,2,5,8,40,-0.05,-0.1,0,0.108,0.1,0.1,0.1,1.0,0.18,1.0,0.14,0.0,0.01,318505 milliseconds
+16,2,5,8,40,-0.05,-0.1,0,0.108,0.1,0.1,0.1,1.0,0.22,1.0,0.25,0.0,0.03,406196 milliseconds
+18,2,5,8,40,-0.05,-0.1,0,0.108,0.1,0.1,0.1,1.0,0.29,1.0,0.27,0.02,0.03,467268 milliseconds
+20,2,5,8,40,-0.05,-0.1,0,0.108,0.1,0.1,0.1,1.0,0.31,1.0,0.23,0.02,0.06,513811 milliseconds
+10,2,5,8,40,-0.05,-0.05,0,0.108,0.1,0.1,0.1,0.99,0.14,1.0,0.1,0.02,0.0,226953 milliseconds
+12,2,5,8,40,-0.05,-0.05,0,0.108,0.1,0.1,0.1,1.0,0.05,1.0,0.05,0.01,0.0,270749 milliseconds
+14,2,5,8,40,-0.05,-0.05,0,0.108,0.1,0.1,0.1,1.0,0.1,1.0,0.08,0.01,0.0,321861 milliseconds
+16,2,5,8,40,-0.05,-0.05,0,0.108,0.1,0.1,0.1,1.0,0.21,1.0,0.07,0.02,0.02,402157 milliseconds
+18,2,5,8,40,-0.05,-0.05,0,0.108,0.1,0.1,0.1,1.0,0.14,1.0,0.1,0.0,0.02,461219 milliseconds
+20,2,5,8,40,-0.05,-0.05,0,0.108,0.1,0.1,0.1,1.0,0.17,1.0,0.08,0.0,0.02,514476 milliseconds
