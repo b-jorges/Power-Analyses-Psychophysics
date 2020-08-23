@@ -703,7 +703,7 @@ FigureSDsFromGLMM = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Dif
   xlab("") +
   ggtitle("Estimate of SD coefficient (PSE Difference = 0.1/JND Difference = 0.25)")
 FigureValuesFromGLMMs = plot_grid(FigurePSEsFromGLMM,FigureSDsFromGLMM, nrow = 2, labels = "AUTO")
-ggsave("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg", w = 12, h = 10)
+ggsave("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg", w = 12, h = 7.2)
 #####
 
 ###SE
@@ -722,7 +722,7 @@ FigureSEsSDsFromGLMM = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_
   coord_cartesian(ylim = c(0,0.3)) +
   ggtitle("Estimate of SE of PSE coefficient (PSE Difference = 0.1/JND Difference = 0.25)")
 FigureSEsFromGLMMs = plot_grid(FigureSEsPSEsFromGLMM,FigureSEsSDsFromGLMM, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 7.2)
 
 
 #####
@@ -750,7 +750,7 @@ FigurePvaluesFromGLMM_Interac = ggplot(Dataframe3,aes(Model,Power_Interac)) +
   geom_hline(yintercept = 0.9, linetype = 2) +
   ggtitle("Power JND coefficient (PSE Difference = 0.1/JND Difference = 0.25)")
 FigureValuesFromGLMMs = plot_grid(FigurePvaluesFromGLMM_CoI,FigurePvaluesFromGLMM_Interac, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 #####
@@ -761,7 +761,7 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ggtitle("AIC (PSE Difference = 0.1/JND Difference = 0.25)")
-ggsave(paste0("Figures/Figure AICs_0.1_0.25_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_0.1_0.25_Models.jpeg"), w = 12, h = 3.6)
 #####
 
 
@@ -787,7 +787,7 @@ FigureSDsFromGLMM_M0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == -0
   xlab("") +
   ggtitle("Estimate of JND coefficient (PSE Difference = -0.1/JND Difference = -0.25)")
 FigureValuesFromGLMMs_M0.1_M0.25 = plot_grid(FigurePSEsFromGLMM_M0.1_M0.25,FigureSDsFromGLMM_M0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 ###SE
@@ -806,7 +806,7 @@ FigureSEsSDsFromGLMM_M0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference ==
   coord_cartesian(ylim = c(0,0.3)) +
   ggtitle("Estimate of SE of JND coefficient (PSE Difference = -0.1/JND Difference = -0.25)")
 FigureSEsFromGLMMs_M0.1_M0.25 = plot_grid(FigureSEsPSEsFromGLMM_M0.1_M0.25,FigureSEsSDsFromGLMM_M0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureSEsFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 7.2)
 
 
 #####
@@ -834,7 +834,7 @@ FigurePvaluesFromGLMM_Interac_M0.1_M0.25 = ggplot(Dataframe3_M0.1_M0.25,aes(Mode
   geom_hline(yintercept = 0.9, linetype = 2) +
   ggtitle("Power JND coefficient (PSE Difference = -0.1/JND Difference = -0.25)")
 FigureValuesFromGLMMs_M0.1_M0.25 = plot_grid(FigurePvaluesFromGLMM_CoI_M0.1_M0.25,FigurePvaluesFromGLMM_Interac_M0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 #####
@@ -845,7 +845,7 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == -0.25),a
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ggtitle("AIC (PSE Difference = -0.1/JND Difference = -0.25)")
-ggsave(paste0("Figures/Figure AICs_-0.1_-0.25_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_-0.1_-0.25_Models.jpeg"), w = 12, h = 3.6)
 #####
 
 
@@ -866,7 +866,7 @@ FigureSDsFromGLMM_0_0.25_ = ggplot(Dataframe2 %>% filter(PSE_Difference == 0 & J
   xlab("") +
   ggtitle("Estimate of JND coefficient (PSE Difference = 0/JND Difference = 0.25)")
 plot_grid(FigurePSEsFromGLMM_0_0.25_,FigureSDsFromGLMM_0_0.25_, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0_0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 ###SE
@@ -885,7 +885,7 @@ FigureSEsSDsFromGLMM_0_0.25_ = ggplot(Dataframe2 %>% filter(PSE_Difference == 0 
   coord_cartesian(ylim = c(0,0.3)) +
   ggtitle("Estimate of SE of JND coefficient (PSE Difference = 0/JND Difference = 0.25)")
 FigureSEsFromGLMMs_0_0.25_ = plot_grid(FigureSEsPSEsFromGLMM_0_0.25_,FigureSEsSDsFromGLMM_0_0.25_, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureSEsFromGLMMs_0_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0_0.25.jpeg"), w = 12, h = 7.2)
 
 #####
 #p values
@@ -912,7 +912,7 @@ FigurePvaluesFromGLMM_Interac_0_0.25_ = ggplot(Dataframe4,aes(Model,Power_Intera
   geom_hline(yintercept = 0.9, linetype = 2) +
   ggtitle("JND coefficient (PSE Difference = 0/JND Difference = 0.25)")
 plot_grid(FigurePvaluesFromGLMM_CoI_0_0.25_,FigurePvaluesFromGLMM_Interac_0_0.25_, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_0_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0_0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 #####
@@ -923,7 +923,7 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0 & JND_Difference == 0.25),aes(M
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ggtitle("AIC (PSE Difference = 0/JND Difference = 0.25)")
-ggsave(paste0("Figures/Figure AICs_0-0.25_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_0-0.25_Models.jpeg"), w = 12, h = 3.6)
 #####
 
 
@@ -944,7 +944,7 @@ FigureSDsFromGLMM_M0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == -0.
   xlab("") +
   ggtitle("Estimate of JND coefficient (PSE Difference = -0.1/JND Difference = 0.25)")
 plot_grid(FigurePSEsFromGLMM_M0.1_0.25,FigureSDsFromGLMM_M0.1_0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 
@@ -964,7 +964,7 @@ FigureSEsSDsFromGLMM_M0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 
   coord_cartesian(ylim = c(0,0.3)) +
   ggtitle("Estimate of SE of JND coefficient (PSE Difference = -0.1/JND Difference = 0.25)")
 FigureSEsFromGLMMs_M0.1_0.25 = plot_grid(FigureSEsPSEsFromGLMM_M0.1_0.25,FigureSEsSDsFromGLMM_M0.1_0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureSEsFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 7.2)
 
 
 
@@ -993,7 +993,7 @@ FigurePvaluesFromGLMM_Interac_M0.1_0.25 = ggplot(Dataframe5,aes(Model,Power_Inte
   geom_hline(yintercept = 0.9, linetype = 2) +
   ggtitle("Power JND coefficient (PSE Difference = -0.1/JND Difference = 0.25)")
 plot_grid(FigurePvaluesFromGLMM_CoI_M0.1_0.25,FigurePvaluesFromGLMM_Interac_M0.1_0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 #####
@@ -1004,7 +1004,7 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == 0.25),ae
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ggtitle("AIC (PSE Difference = -0.1/JND Difference = 0.25)")
-ggsave(paste0("Figures/Figure AICs_-0.1_0.25_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_-0.1_0.25_Models.jpeg"), w = 12, h = 3.6)
 #####
 
 
@@ -1025,7 +1025,7 @@ FigureSDsFromGLMM_0.1_0 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & J
   xlab("") +
   ggtitle("Estimate of JND coefficient (PSE Difference = 0.1/JND Difference = 0)")
 plot_grid(FigurePSEsFromGLMM_0.1_0,FigureSDsFromGLMM_0.1_0, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.jpeg"), w = 12, h = 7.2)
 #####
 
 ###SE
@@ -1044,7 +1044,7 @@ FigureSEsSDsFromGLMM_0.1_0 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 
   coord_cartesian(ylim = c(0,0.3)) +
   ggtitle("Estimate of SE of JND coefficient (PSE Difference = 0.1/JND Difference = 0)")
 FigureSEsFromGLMMs_0.1_0 = plot_grid(FigureSEsPSEsFromGLMM_0.1_0,FigureSEsSDsFromGLMM_0.1_0, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.jpeg"), w = 12, h = 7.2)
 
 
 #####
@@ -1072,7 +1072,7 @@ FigurePvaluesFromGLMM_Interac_0.1_0 = ggplot(Dataframe6,aes(Model,Power_Interac)
   geom_hline(yintercept = 0.9, linetype = 2) +
   ggtitle("Power JND coefficient (PSE Difference = 0.1/JND Difference = 0)")
 plot_grid(FigurePvaluesFromGLMM_CoI_0.1_0,FigurePvaluesFromGLMM_Interac_0.1_0, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_0.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_0.jpeg"), w = 12, h = 7.2)
 #####
 
 #####
@@ -1083,7 +1083,7 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0),aes(Mo
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ggtitle("AIC (PSE Difference = 0.1/JND Difference = 0)")
-ggsave(paste0("Figures/Figure AICs_0.1_0_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_0.1_0_Models.jpeg"), w = 12, h = 3.6)
 #####
 
 
@@ -1105,7 +1105,7 @@ FigureSDsFromGLMM_0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1
   xlab("") +
   ggtitle("Estimate of JND coefficient (PSE Difference = 0.1/JND Difference = -0.25)")
 plot_grid(FigurePSEsFromGLMM_0.1_M0.25,FigureSDsFromGLMM_0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 ###SE
@@ -1124,7 +1124,7 @@ FigureSEsSDsFromGLMM_0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 
   coord_cartesian(ylim = c(0,0.3)) +
   ggtitle("Estimate of SE of JND coefficient (PSE Difference = 0.1/JND Difference = -0.25)")
 FigureSEsFromGLMMs_0.1_M0.25 = plot_grid(FigureSEsPSEsFromGLMM_0.1_M0.25,FigureSEsSDsFromGLMM_0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 7.2)
 
 
 #####
@@ -1152,7 +1152,7 @@ FigurePvaluesFromGLMM_Interac_0.1_M0.25 = ggplot(Dataframe7,aes(Model,Power_Inte
   geom_hline(yintercept = 0.9, linetype = 2) +
   ggtitle("Power PSE coefficient (PSE Difference = 0.1/JND Difference = -0.25)")
 plot_grid(FigurePvaluesFromGLMM_CoI_0.1_M0.25,FigurePvaluesFromGLMM_Interac_0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 7.2)
 #####
 
 #####
@@ -1163,5 +1163,5 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == -0.25),ae
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
   ggtitle("AIC (PSE Difference = 0.1/JND Difference = -0.25)")
-ggsave(paste0("Figures/Figure AICs_0.1_-0.25_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_0.1_-0.25_Models.jpeg"), w = 12, h = 3.6)
 #####
