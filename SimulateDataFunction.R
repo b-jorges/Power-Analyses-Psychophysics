@@ -48,7 +48,6 @@ if (Type_ResponseFunction == "normal"){
 } else{
   
   print("distribution not valid")
-  
 }
 
 Psychometric = Psychometric %>%

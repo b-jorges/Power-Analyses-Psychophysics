@@ -6,7 +6,7 @@ require(ggplot2)
 require(cowplot)
 theme_set(theme_cowplot())
 
-set.seed(1)
+set.seed(4)
 Dataframe = c()
 
 FitCumGaussian = function(par,Mean,Difference,Prediction){
@@ -17,16 +17,18 @@ Repetitions = 200
 
 for (j in 1:6){
 
-  nParticipants = 10
+  nParticipants = 20
   ConditionOfInterest = c(0,1)
   StandardValues = c(5,6,7,8)
   reps = 1:100  
   Multiplicator_PSE_Standard = 0
   Multiplicator_SD_Standard = 0.15
-  Type_ResponseFunction = "normal"
-  SD_ResponseFunction = 0.20
-  Mean_Variability_Between = 0.15
-  SD_Variability_Between = 0.15
+  Type_ResponseFunction = "Cauchy"
+  SD_ResponseFunction = 0.1
+  Mean_Variability_Between = 0.2
+  SD_Variability_Between = 0.2
+  
+  ID = paste0("s",1:nParticipants)
   
 if (j == 1){
   PSE_Difference = -0.1
@@ -67,232 +69,270 @@ for (i in 1:Repetitions){
   print(JND_Difference)
   
   Beginning = Sys.time()
-  Dataframe1 = SimulatePsychometricData(nParticipants,
-                                        ConditionOfInterest,
-                                        StandardValues,
-                                        reps,
-                                        PSE_Difference,
-                                        JND_Difference,
-                                        Multiplicator_PSE_Standard,
-                                        Multiplicator_SD_Standard,
-                                        Type_ResponseFunction,
-                                        SD_ResponseFunction,
-                                        Mean_Variability_Between,
-                                        SD_Variability_Between)
+  Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
   
+  Psychometric = Psychometric %>%
+    group_by(ID) %>%#
+    mutate(PSE_Factor_ID = rnorm(1,1,Mean_Variability_Between),
+           SD_Factor_ID = rnorm(1,1,SD_Variability_Between))
+  
+  Psychometric = Psychometric %>%
+    mutate(
+      Mean_Standard = StandardValues+StandardValues*Multiplicator_PSE_Standard,
+      SD_Standard = StandardValues*Multiplicator_SD_Standard,
+      Mean = (Mean_Standard + (ConditionOfInterest==ConditionOfInterest[2])*StandardValues*PSE_Difference)*PSE_Factor_ID,
+      SD = abs((SD_Standard + (ConditionOfInterest==ConditionOfInterest[2])*SD_Standard*JND_Difference)*SD_Factor_ID),
+      staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction), 
+      Presented_TestStimulusStrength = Mean*staircase_factor,
+      Difference = Presented_TestStimulusStrength - StandardValues,
+      AnswerProbability = pnorm(Presented_TestStimulusStrength,Mean,SD),
+      Answer = as.numeric(rbernoulli(length(AnswerProbability),AnswerProbability))
+    )
+  
+  Psychometric = Psychometric %>%
+    filter(abs(staircase_factor-1) < 0.75) %>%
+    group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
+    mutate(Yes = sum(Answer==1),
+           Total = length(ConditionOfInterest))
+  
+  Dataframe1 = Psychometric
+  
+  print("Model1")
   Model1 = glm(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference, 
-               family = binomial(link = "probit"),
+               family = binomial(link = "logit"),
                data = Dataframe1,
                )
   Dataframe1$Prediction_Model1 = predict(Model1, type = "response", newdata = Dataframe1)
   
+  print("Model2")
   Model2 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1| ID), 
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model2 = predict(Model2, type = "response", newdata = Dataframe1)
   
+  print("Model3")
   Model3 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1 + Difference| ID), 
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model3 = predict(Model3, type = "response", newdata = Dataframe1)
   
+  print("Model4")
   Model4 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1 + ConditionOfInterest| ID), 
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model4 = predict(Model4, type = "response", newdata = Dataframe1)
   
+  print("Model5")
   Model5 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1 + Difference + ConditionOfInterest| ID), 
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model5 = predict(Model5, type = "response", newdata = Dataframe1)
   
+  print("Model6")
   Model6 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1|StandardValues), 
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model6 = predict(Model6, type = "response", newdata = Dataframe1)
   
+  print("Model7")
   Model7 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1| ID) +
                    (1|StandardValues),
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model7 = predict(Model7, type = "response", newdata = Dataframe1)
   
+  print("Model8")
   Model8 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1 + Difference| ID) +
                    (1|StandardValues), 
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model8 = predict(Model8, type = "response", newdata = Dataframe1)
   
+  print("Model9")
   Model9 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                    (1 + ConditionOfInterest| ID) +
                    (1|StandardValues), 
-                 family = binomial(link = "probit"),
+                 family = binomial(link = "logit"),
                  data = Dataframe1,
-                 nAGQ = 0,
+                 nAGQ = 1,
                  glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model9 = predict(Model9, type = "response", newdata = Dataframe1)
   
+  print("Model10")
   Model10 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + Difference + ConditionOfInterest| ID) +
                     (1|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model10 = predict(Model10, type = "response", newdata = Dataframe1)
   
+  print("Model11")
   Model11 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference +
                     (1 + Difference |StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model11 = predict(Model11, type = "response", newdata = Dataframe1)
   
+  print("Model12")
   Model12 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1| ID) +
                     (1 + Difference |StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model12 = predict(Model12, type = "response", newdata = Dataframe1)
   
+  print("Model13")
   Model13 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + Difference| ID) +
                     (1 + Difference |StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model13 = predict(Model13, type = "response", newdata = Dataframe1)
   
+  print("Model14")
   Model14 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + ConditionOfInterest| ID) +
                     (1 + Difference |StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model14 = predict(Model14, type = "response", newdata = Dataframe1)
   
+  print("Model15")
   Model15 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + Difference + ConditionOfInterest| ID) +
                     (1 + Difference |StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model15 = predict(Model15, type = "response", newdata = Dataframe1)
   
+  print("Model16")
   Model16 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model16 = predict(Model16, type = "response", newdata = Dataframe1)
   
+  print("Model17")
   Model17 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1| ID) +
                     (1 + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model17 = predict(Model17, type = "response", newdata = Dataframe1)
   
+  print("Model18")
   Model18 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + Difference| ID) +
                     (1 + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model18 = predict(Model18, type = "response", newdata = Dataframe1)
   
+  print("Model19")
   Model19 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + ConditionOfInterest| ID) +
                     (1 + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model19 = predict(Model19, type = "response", newdata = Dataframe1)
   
+  print("Model20")
   Model20 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + Difference + ConditionOfInterest| ID) +
                     (1 + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model20 = predict(Model20, type = "response", newdata = Dataframe1)
   
+  print("Model21")
   Model21 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference +
                     (1 + Difference + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model21 = predict(Model21, type = "response", newdata = Dataframe1)
   
-  ranef(Model21)
-  
+  print("Model22")
   Model22 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1| ID) +
                     (1 + Difference + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model22 = predict(Model22, type = "response", newdata = Dataframe1)
   
+  print("Model23")
   Model23 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + Difference| ID) +
                     (1 + Difference + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model23 = predict(Model23, type = "response", newdata = Dataframe1)
   
+  print("Model24")
   Model24 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + ConditionOfInterest| ID) +
                     (1 + Difference + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model24 = predict(Model24, type = "response", newdata = Dataframe1)
   
+  print("Model25")
   Model25 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 
                     (1 + Difference + ConditionOfInterest| ID) +
                     (1 + Difference + ConditionOfInterest|StandardValues), 
-                  family = binomial(link = "probit"),
+                  family = binomial(link = "logit"),
                   data = Dataframe1,
-                  nAGQ = 0,
+                  nAGQ = 1,
                   glmerControl(optimizer = "nloptwrap"))
   Dataframe1$Prediction_Model25 = predict(Model25, type = "response", newdata = Dataframe1)
   
@@ -643,6 +683,7 @@ Dataframe2 = Dataframe2 %>%
   group_by(Condition_PSEJND) %>% 
   mutate(AIC_Norm = AIC-median(AIC[Model == "M25"]))
 
+write.csv(Dataframe2,"DifferentConfigurations.csv")
 
 #####MAIN PLOTS
 #model predictions 0.1 0.25
@@ -660,7 +701,7 @@ FigureSDsFromGLMM = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Dif
   ylab("SD Output of GLMM - Actual SD") +
   xlab("")
 FigureValuesFromGLMMs = plot_grid(FigurePSEsFromGLMM,FigureSDsFromGLMM, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg", w = 12, h = 10)
 #####
 
 ###SE
@@ -675,7 +716,7 @@ FigureSEsSDsFromGLMM = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_
   ylab("SE for SD estimate") +
   xlab("")
 FigureSEsFromGLMMs = plot_grid(FigureSEsPSEsFromGLMM,FigureSEsSDsFromGLMM, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
 
 
 #####
@@ -711,7 +752,7 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes
   xlab("") +
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
-ggsave(paste0("Figure AICs_0.1_0.25_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_0.1_0.25_Models.jpeg"), w = 12, h = 5)
 #####
 
 
@@ -735,7 +776,7 @@ FigureSDsFromGLMM_M0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == -0
   ylab("SD Output of GLMM - Actual SD") +
   xlab("")
 FigureValuesFromGLMMs_M0.1_M0.25 = plot_grid(FigurePSEsFromGLMM_M0.1_M0.25,FigureSDsFromGLMM_M0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 10)
 #####
 
 ###SE
@@ -750,7 +791,7 @@ FigureSEsSDsFromGLMM_M0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference ==
   ylab("SE for SD estimate") +
   xlab("")
 FigureSEsFromGLMMs_M0.1_M0.25 = plot_grid(FigureSEsPSEsFromGLMM_M0.1_M0.25,FigureSEsSDsFromGLMM_M0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 10)
 
 
 #####
@@ -776,7 +817,7 @@ FigurePvaluesFromGLMM_Interac_M0.1_M0.25 = ggplot(Dataframe3_M0.1_M0.25,aes(Mode
   geom_hline(yintercept = 0.05, linetype = 3) +
   geom_hline(yintercept = 0.9, linetype = 2)
 FigureValuesFromGLMMs_M0.1_M0.25 = plot_grid(FigurePvaluesFromGLMM_CoI_M0.1_M0.25,FigurePvaluesFromGLMM_Interac_M0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_-0.1_-0.25.jpeg"), w = 12, h = 10)
 #####
 
 #####
@@ -786,7 +827,7 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == -0.1 & JND_Difference == -0.25),a
   xlab("") +
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
-ggsave(paste0("Figure AICs_-0.1-0.25_Models.jpeg"), w = 12, h = 5)
+ggsave(paste0("Figures/Figure AICs_-0.1_-0.25_Models.jpeg"), w = 12, h = 5)
 #####
 
 
@@ -805,7 +846,7 @@ FigureSDsFromGLMM_0_0.25_ = ggplot(Dataframe2 %>% filter(PSE_Difference == 0 & J
   ylab("SD Output of GLMM - Actual SD") +
   xlab("")
 plot_grid(FigurePSEsFromGLMM_0_0.25_,FigureSDsFromGLMM_0_0.25_, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0_0.25.jpeg"), w = 12, h = 10)
 #####
 
 ###SE
@@ -820,7 +861,7 @@ FigureSEsSDsFromGLMM_0_0.25_ = ggplot(Dataframe2 %>% filter(PSE_Difference == 0 
   ylab("SE for SD estimate") +
   xlab("")
 FigureSEsFromGLMMs_0_0.25_ = plot_grid(FigureSEsPSEsFromGLMM_0_0.25_,FigureSEsSDsFromGLMM_0_0.25_, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0_0.25.jpeg"), w = 12, h = 10)
 
 #####
 #p values
@@ -845,7 +886,7 @@ FigurePvaluesFromGLMM_Interac_0_0.25_ = ggplot(Dataframe4,aes(Model,Power_Intera
   geom_hline(yintercept = 0.05, linetype = 3) +
   geom_hline(yintercept = 0.9, linetype = 2)
 plot_grid(FigurePvaluesFromGLMM_CoI_0_0.25_,FigurePvaluesFromGLMM_Interac_0_0.25_, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigurePValuesFromGLMMs_0-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0_0.25.jpeg"), w = 12, h = 10)
 #####
 
 #####
@@ -890,7 +931,7 @@ FigureSEsSDsFromGLMM_M0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 
   ylab("SE for SD estimate") +
   xlab("")
 FigureSEsFromGLMMs_M0.1_0.25 = plot_grid(FigureSEsPSEsFromGLMM_M0.1_0.25,FigureSEsSDsFromGLMM_M0.1_0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_-0.1_0.25.jpeg"), w = 12, h = 10)
 
 
 
@@ -961,7 +1002,7 @@ FigureSEsSDsFromGLMM_0.1_0 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 
   ylab("SE for SD estimate") +
   xlab("")
 FigureSEsFromGLMMs_0.1_0 = plot_grid(FigureSEsPSEsFromGLMM_0.1_0,FigureSEsSDsFromGLMM_0.1_0, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.jpeg"), w = 12, h = 10)
 
 
 #####
@@ -1032,7 +1073,7 @@ FigureSEsSDsFromGLMM_0.1_M0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 
   ylab("SE for SD estimate") +
   xlab("")
 FigureSEsFromGLMMs_0.1_M0.25 = plot_grid(FigureSEsPSEsFromGLMM_0.1_M0.25,FigureSEsSDsFromGLMM_0.1_M0.25, nrow = 2, labels = "AUTO")
-ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 10)
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_-0.25.jpeg"), w = 12, h = 10)
 
 
 #####
@@ -1069,4 +1110,76 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == -0.25),ae
   ylab("AIC - AIC(Model25)") +
   geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
 ggsave(paste0("Figures/Figure AICs_0.1_-0.25_Models.jpeg"), w = 12, h = 5)
+#####
+
+
+
+###################################################################################################################
+###################################PSE = 0.1, JND = 0.25##########################################################
+#_0.1_0.25
+FigurePSEsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes(Model,Mean_Modeled-Mean_Actual)) +
+  geom_boxplot() + 
+  ylab("PSE Output of GLMM - Actual PSE") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) + 
+  coord_cartesian(ylim = c(-3,3)) +
+  xlab("")
+FigureSDsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes(Model,SD_Modeled-SD_Actual)) +
+  geom_boxplot() + 
+  coord_cartesian(ylim = c(-1,2.5)) +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1) +
+  ylab("SD Output of GLMM - Actual SD") +
+  xlab("")
+plot_grid(FigurePSEsFromGLMM_0.1_0.25,FigureSDsFromGLMM_0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+#####
+
+###SE
+FigureSEsPSEsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),
+                                         aes(Model,SECoI)) +
+  geom_boxplot() + 
+  ylab("SE for PSE estimate") +
+  xlab("")
+FigureSEsSDsFromGLMM_0.1_0.25 = ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),
+                                        aes(Model,SEInterac)) +
+  geom_boxplot() + 
+  ylab("SE for SD estimate") +
+  xlab("")
+FigureSEsFromGLMMs_0.1_M0.25 = plot_grid(FigureSEsPSEsFromGLMM_0.1_0.25,FigureSEsSDsFromGLMM_0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigureSEsFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+
+
+#####
+#p values
+Dataframe8 = Dataframe2 %>%
+  filter(PSE_Difference == 0.1 & JND_Difference == 0.25) %>% 
+  group_by(Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+
+FigurePvaluesFromGLMM_CoI_0.1_0.25 = ggplot(Dataframe8,aes(Model,Power_CoI)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+FigurePvaluesFromGLMM_Interac_0.1_0.25 = ggplot(Dataframe8,aes(Model,Power_Interac)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2)
+plot_grid(FigurePvaluesFromGLMM_CoI_0.1_0.25,FigurePvaluesFromGLMM_Interac_0.1_0.25, nrow = 2, labels = "AUTO")
+ggsave(paste0("Figures/FigurePValuesFromGLMMs_0.1_0.25.jpeg"), w = 12, h = 10)
+#####
+
+#####
+#AICs
+ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == 0.25),aes(Model,AIC_Norm)) +
+  geom_boxplot() + 
+  xlab("") +
+  ylab("AIC - AIC(Model25)") +
+  geom_hline(aes(yintercept = 0), linetype = 2, size = 1)
+ggsave(paste0("Figures/Figure AICs_0.1_0.25_Models.jpeg"), w = 12, h = 5)
 #####

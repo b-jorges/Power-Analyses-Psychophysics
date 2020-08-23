@@ -6,6 +6,8 @@ require(quickpsy)
 ###Fitting psychometric functions and extracting means and standard deviations
 PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
 
+plot(PsychometricFunctions)
+
 Parameters = PsychometricFunctions$par
 Parameters2 = Parameters %>%
   filter(parn == "p1") %>%
