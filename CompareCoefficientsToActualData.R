@@ -1165,3 +1165,33 @@ ggplot(Dataframe2 %>% filter(PSE_Difference == 0.1 & JND_Difference == -0.25),ae
   ggtitle("AIC (PSE Difference = 0.1/JND Difference = -0.25)")
 ggsave(paste0("Figures/Figure AICs_0.1_-0.25_Models.jpeg"), w = 12, h = 3.6)
 #####
+
+
+####Power together
+Dataframe8 = Dataframe2 %>%
+  group_by(Condition_PSEJND,Model,Repetition) %>% 
+  slice(1) %>% 
+  group_by(Condition_PSEJND,Model) %>% 
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
+         Power_Interac = sum(PvaluesInterac < 0.05)/200,
+         Condition_PSEJND2 = 
+           case_when(Condition_PSEJND == "-0.25-0.1" ~ "PSE: -0.1, JND: -0.25",
+                     Condition_PSEJND == "-0.250.1" ~ "PSE: 0.1, JND: -0.25",
+                     Condition_PSEJND == "0.25-0.1" ~ "PSE: -0.1, JND: 0.25",
+                     Condition_PSEJND == "0.250" ~ "PSE: 0, JND: 0.25",
+                     Condition_PSEJND == "0.250.1" ~ "PSE: 0.1, JND: 0.25",
+                     Condition_PSEJND == "00.1" ~ "PSE: 0.1, JND: 0"))
+
+ggplot(Dataframe8,aes(Model,Power_Interac,color = Condition_PSEJND2, shape = Condition_PSEJND2)) +
+  geom_point(size = 5) + 
+  ylab("Power") +
+  xlab("") +
+  geom_hline(yintercept = 0.05, linetype = 3) +
+  geom_hline(yintercept = 0.9, linetype = 2) +
+  ggtitle("Power") +
+  scale_color_discrete(name = "") +
+  scale_shape_discrete(name = "") +
+  theme(legend.position = "bottom")
+ggsave(paste0("Figures/Power All.jpeg"), w = 12, h = 3.6)
+
+?scale_color_discrete
