@@ -31,33 +31,33 @@ for (j in 1:6){
   ID = paste0("s",1:nParticipants)
   
 if (j == 1){
-  PSE_Difference = -0.1
-  JND_Difference = 0.25
+  PSE_Difference = -0.05
+  JND_Difference = 0.125
 } 
   
 else if (j == 2){
   PSE_Difference = 0
-  JND_Difference = 0.25
+  JND_Difference = 0.125
 }
 
 else if (j == 3){
-  PSE_Difference = 0.1
+  PSE_Difference = 0.05
   JND_Difference = 0
 }
   
 else if (j == 4){
-  PSE_Difference = -0.1
-  JND_Difference = -0.25
+  PSE_Difference = -0.05
+  JND_Difference = -0.125
 }
   
 else if (j == 5){
-  PSE_Difference = 0.1
-  JND_Difference = -0.25
+  PSE_Difference = 0.05
+  JND_Difference = -0.125
 }
   
 else if (j == 6){
-    PSE_Difference = 0.1
-    JND_Difference = 0.25
+    PSE_Difference = 0.05
+    JND_Difference = 0.125
 }
 
 
