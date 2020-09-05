@@ -37,12 +37,11 @@ Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7')
 
 Dataframe_pvalues1 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethodsSmallEffectBigModel.csv")))
 Dataframe_pvalues1$Effect = "Small Effect"
-
-Dataframe_pvalues1 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethodsNoEffectBigModel.csv")))
-Dataframe_pvalues1$Effect = "No Effect"
-
+Dataframe_pvalues2 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethodsNoEffectBigModel.csv")))
+Dataframe_pvalues2$Effect = "No Effect"
 
 
+Dataframe_pvalues = rbind(Dataframe_pvalues1,Dataframe_pvalues2)
 
 
 Dataframe_pvalues = Dataframe_pvalues %>%
@@ -60,23 +59,18 @@ Dataframe_pvalues = Dataframe_pvalues %>%
     label == "JuliaLRT" ~ "Julia: LRT",
     label == "R: LRT" ~ "R: LRT")
   )%>%
-  group_by(n,reps,label,PSE_Difference,JND_Difference,Size) %>%
   mutate(nTrials = case_when(
     reps == 30 ~ "30 repetitions",
     reps == 40 ~ "40 repetitions",
     reps == 50 ~ "50 repetitions",
-    reps == 60 ~ "60 repetitions"),
-    Effect = case_when(
-      PSE_Difference == 0.025 ~ "Small Effect",
-      PSE_Difference == 0 ~ "No Effect")
-  )
+    reps == 60 ~ "60 repetitions"))
 
 Dataframe_pvalues = Dataframe_pvalues %>%         
-  group_by(reps,n,iteration,Effect,Size) %>% 
+  group_by(reps,n,iteration,Effect) %>% 
   mutate(AIC_Ratio = AIC/AIC[2],
          Duration_LRT_Julia = Duration[9] + Duration[12],
          Duration_LRT_R = Duration[5] + Duration[7]) %>% 
-  group_by(reps,n,Optimizer,Size) %>% 
+  group_by(reps,n,Optimizer,Effect) %>% 
   mutate(Median_AIC_Ratio = median(AIC_Ratio))
 
 Dataframe_pvalues$Duration[Dataframe_pvalues$label == "JuliaLRT"] = 
@@ -85,14 +79,13 @@ Dataframe_pvalues$Duration[Dataframe_pvalues$label == "R: LRT"] =
   Dataframe_pvalues$Duration_LRT_R[Dataframe_pvalues$label == "R: LRT"]
 
 Dataframe_pvalues = Dataframe_pvalues %>%         
-  group_by(reps,n,label,Effect,Size) %>% 
+  group_by(reps,n,label,Effect) %>% 
   mutate(MedianDuration = median(Duration),
          SEDuration = SE(Duration),
          SE_Duration_n_reps_label = SE(Duration))
 
 #######Timing
-TimingPlot1_Bigger = ggplot(Dataframe_pvalues %>% 
-                              filter(Size == "Bigger Model") ,
+TimingPlot1 = ggplot(Dataframe_pvalues,
                             aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
@@ -103,14 +96,13 @@ TimingPlot1_Bigger = ggplot(Dataframe_pvalues %>%
   ggtitle("A. All Configurations")
 
 
-TimingPlot2_Bigger = ggplot(Dataframe_pvalues %>% 
-                              filter(Optimizer  %in% c("Julia: BOBYQA, fast",
+TimingPlot2 = ggplot(Dataframe_pvalues %>% 
+                     filter(Optimizer  %in% c("Julia: BOBYQA, fast",
                                                        "R: nloptwrap, fast",
                                                        "Julia: LRT",
                                                        "R: LRT",
                                                        "R: nloptwrap, slow",
-                                                       "Julia: BOBYQA, slow") &
-                                       Size == "Bigger Model"),
+                                                       "Julia: BOBYQA, slow")),
                             aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
@@ -120,40 +112,8 @@ TimingPlot2_Bigger = ggplot(Dataframe_pvalues %>%
   scale_x_continuous(breaks = c(10,15,20)) +
   ggtitle("B. Fastest Configurations")
 
-plot_shared_legend(TimingPlot1_Bigger,TimingPlot2_Bigger)
-ggsave("Figures/Different Durations Bigger.jpg",w=12,h=6)
-
-TimingPlot1_Smaller = ggplot(Dataframe_pvalues %>% 
-                               filter(Size == "Smaller Model") ,
-                             aes(n,MedianDuration, color = Optimizer)) +
-  geom_point(size=2) +
-  geom_line(size=1) +
-  facet_grid(Effect~nTrials) +
-  ylab("Median Duration (s)") +
-  scale_color_manual(values = rainbow(12), name = "Method") +
-  scale_x_continuous(breaks = c(10,15,20)) +
-  ggtitle("A. All Configurations")
-
-
-TimingPlot2_Smaller = ggplot(Dataframe_pvalues %>% 
-                               filter(Optimizer  %in% c("Julia: BOBYQA, fast",
-                                                        "R: nloptwrap, fast",
-                                                        "Julia: LRT",
-                                                        "R: LRT",
-                                                        "R: nloptwrap, slow",
-                                                        "Julia: BOBYQA, slow") &
-                                        Size == "Smaller Model"),
-                             aes(n,MedianDuration, color = Optimizer)) +
-  geom_point(size=2) +
-  geom_line(size=1) +
-  facet_grid(Effect~nTrials) +
-  ylab("Median Duration (s)") +
-  scale_color_manual(values = rainbow(6), name = "Method") +
-  scale_x_continuous(breaks = c(10,15,20)) +
-  ggtitle("B. Fastest Configurations")
-
-plot_shared_legend(TimingPlot1_Smaller,TimingPlot2_Smaller)
-ggsave("Figures/Different Durations Smaller",w=12,h=6)
+plot_shared_legend(TimingPlot1,TimingPlot2)
+ggsave("Figures/Different Durations.jpg",w=12,h=6)
 
 
 #######False Positives
@@ -167,68 +127,27 @@ for (i in (1:length(Dataframe_pvalues$iteration))){
   
 }
 
+
+
+length(Dataframe_pvalues$Bin_Interaction[Dataframe_pvalues$Optimizer == "Julia: Nelder-Mead, slow" & 
+                                           Dataframe_pvalues$Bin_Interaction == sort(unique(Dataframe_pvalues$Bin_Interaction))[3] & 
+                                           Dataframe_pvalues$Effect == "No Effect"])/
+  length(Dataframe_pvalues$Bin_Interaction[Dataframe_pvalues$Optimizer == "Julia: Nelder-Mead, slow" & 
+                                             Dataframe_pvalues$Effect == "No Effect"])
+length(Dataframe_pvalues$Bin_Interaction[Dataframe_pvalues$Optimizer == "Julia: LRT" & 
+                                           Dataframe_pvalues$Bin_Interaction == Dataframe_pvalues$Bin_Interaction[40] & 
+                                           Dataframe_pvalues$Effect == "No Effect"])
+
 Dataframe_pvalues = Dataframe_pvalues %>%
-  group_by(Bin_Accuracy,Optimizer,PSE_Difference,Size) %>%
+  group_by(Bin_Accuracy,Optimizer,PSE_Difference) %>%
   mutate(BinCountAccuracy = length(Bin_Accuracy))%>%
-  group_by(Bin_Interaction,Optimizer,PSE_Difference,Size) %>%
+  group_by(Bin_Interaction,Optimizer,PSE_Difference) %>%
   mutate(BinCountInteraction = length(Bin_Interaction))
 
-PlotAccuracy_Bigger = ggplot(Dataframe_pvalues %>% 
+PlotAccuracy = ggplot(Dataframe_pvalues %>% 
                                filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
-                                        Effect == "No Effect" &
-                                        Size == "Bigger Model"),
+                                        Effect == "No Effect"),
                              aes(Bin_Accuracy-0.0125,Optimizer, fill = as.factor(BinCountAccuracy))) +
-  geom_tile() +
-  xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(27)) +
-  theme(legend.position = "") +
-  ylab("") +
-  ggtitle("A. Accuracy, No Effect")
-
-PlotInteraction_Bigger = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect" &
-                                                               Size == "Bigger Model"),
-                                aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
-  geom_tile() +
-  xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(32)) +
-  theme(legend.position = "") +
-  ylab("") +
-  ggtitle("B. Interaction, No Effect")
-
-
-PlotAccuracy2_Bigger = ggplot(Dataframe_pvalues %>% 
-                                filter(Effect == "Small Effect" &
-                                         Optimizer != "Julia: LRT" &
-                                         Optimizer != "R: LRT" &
-                                         Size == "Bigger Model"),
-                              aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
-  geom_tile() +
-  xlab("") +
-  ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(40)) +
-  theme(legend.position = "") +
-  ggtitle("C. Accuracy, Small Effect")
-
-PlotInteraction2_Bigger = ggplot(Dataframe_pvalues %>% 
-                                   filter(Effect == "Small Effect" &
-                                            Size == "Bigger Model"),
-                                 aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
-  geom_tile() +
-  xlab("") +
-  ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(41)) +
-  theme(legend.position = "") +
-  ggtitle("D. Interaction, Small Effect")
-plot_grid(PlotAccuracy_Bigger,PlotInteraction_Bigger,PlotAccuracy2_Bigger,PlotInteraction2_Bigger, nrow = 2)
-ggsave("Figures/False Positives Bigger Model.jpg",w=12,h=8)
-
-
-
-PlotAccuracy_Small = ggplot(Dataframe_pvalues %>% 
-                              filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
-                                       Effect == "No Effect" &
-                                       Size == "Smaller Model"),
-                            aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
   scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(25)) +
@@ -236,48 +155,44 @@ PlotAccuracy_Small = ggplot(Dataframe_pvalues %>%
   ylab("") +
   ggtitle("A. Accuracy, No Effect")
 
-PlotInteraction_Small = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect" &
-                                                              Size == "Smaller Model"),
-                               aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+PlotInteraction = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect"),
+                                aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(24)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(41)) +
   theme(legend.position = "") +
   ylab("") +
   ggtitle("B. Interaction, No Effect")
 
 
-PlotAccuracy2_Small = ggplot(Dataframe_pvalues %>% 
-                               filter(Effect == "Small Effect" &
-                                        Optimizer != "Julia: LRT" &
-                                        Optimizer != "R: LRT" &
-                                        Size == "Smaller Model"),
-                             aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
+PlotAccuracy2 = ggplot(Dataframe_pvalues %>% 
+                                filter(Effect == "Small Effect" &
+                                         Optimizer != "Julia: LRT" &
+                                         Optimizer != "R: LRT"),
+                              aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
   ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(16)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(36)) +
   theme(legend.position = "") +
   ggtitle("C. Accuracy, Small Effect")
 
-PlotInteraction2_Small = ggplot(Dataframe_pvalues %>% 
-                                  filter(Effect == "Small Effect" &
-                                           Size == "Smaller Model"),
-                                aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+PlotInteraction2 = ggplot(Dataframe_pvalues %>% 
+                                   filter(Effect == "Small Effect"),
+                                 aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
   ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(30)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(39)) +
   theme(legend.position = "") +
   ggtitle("D. Interaction, Small Effect")
-plot_grid(PlotAccuracy_Small,PlotInteraction_Small,PlotAccuracy2_Small,PlotInteraction2_Small, nrow = 2)
-ggsave("Figures/False Positives Smaller Model.jpg",w=12,h=8)
+plot_grid(PlotAccuracy,PlotInteraction,PlotAccuracy2,PlotInteraction2, nrow = 2)
+ggsave("Figures/False Positives.jpg",w=12,h=8)
 
 ############AICs
 ggplot(Dataframe_pvalues %>%
          filter(Optimizer != "Julia: LRT" & 
-                  Optimizer != "R: LRT" &
-                  Size == "Bigger Model"),
+                  Optimizer != "R: LRT"),
        aes(n,Median_AIC_Ratio, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
