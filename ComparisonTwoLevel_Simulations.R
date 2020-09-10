@@ -1,6 +1,7 @@
 require(lme4)
 require(quickpsy)
 require(lmerTest)
+require(purrr)
 Where_Am_I <- function(path=T){
   if (path == T){
     dirname(rstudioapi::getSourceEditorContext()$path)
