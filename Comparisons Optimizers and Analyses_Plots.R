@@ -30,19 +30,15 @@ source("Utilities/functions.r")
 source("Utilities/colourschemes.r")
 source("Utilities/PowerFunctions.r")
 
-#optimize for fitting of Bayesian Linear Mixed Models (packages "rstan", "bmrs")
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = TRUE)
-Sys.setenv(LOCAL_CPPFLAGS = '-march=corei7')
 
-Dataframe_pvalues1 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethodsSmallEffectBigModel.csv")))
+Dataframe_pvalues1 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethodsSmallEffect.csv")))
 Dataframe_pvalues1$Effect = "Small Effect"
-Dataframe_pvalues2 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethodsNoEffectBigModel.csv")))
+Dataframe_pvalues2 = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/ComparisonMethodsNoEffect.csv")))
 Dataframe_pvalues2$Effect = "No Effect"
-
+colnames(Dataframe_pvalues2)
+colnames(Dataframe_pvalues1)
 
 Dataframe_pvalues = rbind(Dataframe_pvalues1,Dataframe_pvalues2)
-
 
 Dataframe_pvalues = Dataframe_pvalues %>%
   mutate(Optimizer = case_when(
@@ -56,6 +52,8 @@ Dataframe_pvalues = Dataframe_pvalues %>%
     label == "Bobyqa_nAGQ1" ~ "R: BOBYQA, slow",
     label == "nloptwrap_nAGQ0" ~ "R: nloptwrap, fast",
     label == "nloptwrap_nAGQ1" ~ "R: nloptwrap, slow",
+    label == "JuliaLRT_Fast" ~ "Julia: LRT, fast",
+    label == "JuliaLRT_Slow" ~ "Julia: LRT, slow",
     label == "JuliaLRT" ~ "Julia: LRT",
     label == "R: LRT" ~ "R: LRT")
   )%>%
@@ -65,18 +63,30 @@ Dataframe_pvalues = Dataframe_pvalues %>%
     reps == 50 ~ "50 repetitions",
     reps == 60 ~ "60 repetitions"))
 
-Dataframe_pvalues = Dataframe_pvalues %>%         
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "Julia: BOBYQA, fast"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "Julia: LRT, fast"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "Julia: BOBYQA, slow"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "Julia: LRT, slow"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "R: nloptwrap, fast"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "R: LRT"]
+
+
+Dataframe_pvalues = Dataframe_pvalues %>%
+  #  filter(Effect == "No Effect") %>% 
   group_by(reps,n,iteration,Effect) %>% 
   mutate(AIC_Ratio = AIC/AIC[2],
-         Duration_LRT_Julia = Duration[9] + Duration[12],
-         Duration_LRT_R = Duration[5] + Duration[7]) %>% 
+         Duration_LRT_Julia_Fast = Duration[Optimizer == "Julia: BOBYQA, fast"] + Duration[Optimizer == "Julia: LRT, fast"],
+         Duration_LRT_Julia_Slow = Duration[Optimizer == "Julia: BOBYQA, slow"] + Duration[Optimizer == "Julia: LRT, slow"],
+         Duration_LRT_R = Duration[Optimizer == "R: nloptwrap, fast"] + Duration[Optimizer == "R: LRT"]) %>% 
   group_by(reps,n,Optimizer,Effect) %>% 
   mutate(Median_AIC_Ratio = median(AIC_Ratio))
 
-Dataframe_pvalues$Duration[Dataframe_pvalues$label == "JuliaLRT"] = 
-  Dataframe_pvalues$Duration_LRT_Julia[Dataframe_pvalues$label == "JuliaLRT"]
-Dataframe_pvalues$Duration[Dataframe_pvalues$label == "R: LRT"] = 
-  Dataframe_pvalues$Duration_LRT_R[Dataframe_pvalues$label == "R: LRT"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "Julia: LRT, fast"] = 
+  Dataframe_pvalues$Duration_LRT_Julia_Fast[Dataframe_pvalues$Optimizer == "Julia: LRT, fast"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "Julia: LRT, slow"] = 
+  Dataframe_pvalues$Duration_LRT_Julia_Slow[Dataframe_pvalues$Optimizer == "Julia: LRT, slow"]
+Dataframe_pvalues$Duration[Dataframe_pvalues$Optimizer == "R: LRT"] = 
+  Dataframe_pvalues$Duration_LRT_R[Dataframe_pvalues$Optimizer == "R: LRT"]
 
 Dataframe_pvalues = Dataframe_pvalues %>%         
   group_by(reps,n,label,Effect) %>% 
@@ -86,29 +96,31 @@ Dataframe_pvalues = Dataframe_pvalues %>%
 
 #######Timing
 TimingPlot1 = ggplot(Dataframe_pvalues,
-                            aes(n,MedianDuration, color = Optimizer)) +
+                     aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
   facet_grid(Effect~nTrials) +
   ylab("Median Duration (s)") +
-  scale_color_manual(values = rainbow(12), name = "Method") +
+  scale_color_manual(values = rainbow(13), name = "Method") +
   scale_x_continuous(breaks = c(10,15,20)) +
   ggtitle("A. All Configurations")
 
 
 TimingPlot2 = ggplot(Dataframe_pvalues %>% 
-                     filter(Optimizer  %in% c("Julia: BOBYQA, fast",
-                                                       "R: nloptwrap, fast",
-                                                       "Julia: LRT",
-                                                       "R: LRT",
-                                                       "R: nloptwrap, slow",
-                                                       "Julia: BOBYQA, slow")),
-                            aes(n,MedianDuration, color = Optimizer)) +
+                       filter(Optimizer  %in% c("Julia: BOBYQA, fast",
+                                                "R: nloptwrap, fast",
+                                                "Julia: LRT, slow",
+                                                "Julia: LRT, fast",
+                                                "R: LRT",
+                                                "R: nloptwrap, slow",
+                                                "Julia: BOBYQA, slow"),
+                              Effect == "No Effect"),
+                     aes(n,MedianDuration, color = Optimizer)) +
   geom_point(size=2) +
   geom_line(size=1) +
   facet_grid(Effect~nTrials) +
   ylab("Median Duration (s)") +
-  scale_color_manual(values = rainbow(6), name = "Method") +
+  scale_color_manual(values = rainbow(7), name = "Method") +
   scale_x_continuous(breaks = c(10,15,20)) +
   ggtitle("B. Fastest Configurations")
 
@@ -121,11 +133,11 @@ Dataframe_pvalues$Bin_Accuracy = 0
 Dataframe_pvalues$Bin_Interaction = 0
 for (i in (1:length(Dataframe_pvalues$iteration))){
   print(i)  
-  Bins = seq(0.025,0.975,0.025)
+  Bins = seq(0,0.975,0.025)
   Dataframe_pvalues$Bin_Accuracy[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Accuracy[i]))]+0.0125
   Dataframe_pvalues$Bin_Interaction[i] = Bins[which.min(abs(Bins-Dataframe_pvalues$Pvalues_Interaction[i]))]+0.0125
-  
 }
+
 
 
 
@@ -140,50 +152,132 @@ length(Dataframe_pvalues$Bin_Interaction[Dataframe_pvalues$Optimizer == "Julia: 
 
 Dataframe_pvalues = Dataframe_pvalues %>%
   group_by(Bin_Accuracy,Optimizer,PSE_Difference) %>%
-  mutate(BinCountAccuracy = length(Bin_Accuracy))%>%
+  mutate(BinCountAccuracy = length(Bin_Accuracy)) %>%
   group_by(Bin_Interaction,Optimizer,PSE_Difference) %>%
-  mutate(BinCountInteraction = length(Bin_Interaction))
+  mutate(BinCountInteraction = length(Bin_Interaction)) %>% 
+  group_by(Optimizer,PSE_Difference) %>% 
+  mutate(PercentageAccuracy = BinCountAccuracy/length(Bin_Accuracy),
+         PercentageInteraction = BinCountInteraction/length(Bin_Accuracy))
+
+
+FalsePositiveRate_Interaction = Dataframe_pvalues %>% 
+  filter(Bin_Interaction %in% c(Bins[1]+0.0125,Bins[2]+0.0125) & Effect == "No Effect") %>%
+  group_by(Optimizer,PSE_Difference, Effect,Bin_Interaction) %>% 
+  slice(1) %>% 
+  select(Optimizer,Effect,PSE_Difference,PercentageInteraction,BinCountInteraction,Bin_Interaction) %>% 
+  group_by(Optimizer) %>% 
+  mutate(FalsePositiveRate = sum(PercentageInteraction)) %>% 
+  slice(1) %>% 
+  arrange(desc(Optimizer))
+
+FalsePositiveRate_Accuracy = Dataframe_pvalues %>% 
+  filter(Bin_Accuracy %in% c(Bins[1]+0.0125,Bins[2]+0.0125) & Effect == "No Effect") %>%
+  group_by(Optimizer,PSE_Difference, Effect,Bin_Accuracy) %>% 
+  slice(1) %>% 
+  select(Optimizer,Effect,PSE_Difference,PercentageAccuracy,BinCountAccuracy,Bin_Accuracy) %>% 
+  filter(!(Optimizer %in% c("Julia: LRT","R: LRT"))) %>% 
+  group_by(Optimizer) %>% 
+  mutate(FalsePositiveRate = sum(PercentageAccuracy)) %>% 
+  slice(1) %>% 
+  arrange(desc(Optimizer))
+
+
+NumberBins_Accuracy1 = length(unique((Dataframe_pvalues %>% 
+                                        filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
+                                                 Effect == "No Effect"))$BinCountAccuracy))
 
 PlotAccuracy = ggplot(Dataframe_pvalues %>% 
-                               filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
-                                        Effect == "No Effect"),
-                             aes(Bin_Accuracy-0.0125,Optimizer, fill = as.factor(BinCountAccuracy))) +
+                        filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
+                                 Effect == "No Effect"),
+                      aes(Bin_Accuracy,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(25)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(NumberBins_Accuracy1)) +
   theme(legend.position = "") +
   ylab("") +
-  ggtitle("A. Accuracy, No Effect")
+  ggtitle("A. Accuracy, No Effect") +
+  annotate(geom = "text", x = 1.1, y = 10,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[1],2)) +
+  annotate(geom = "text", x = 1.1, y = 9,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[2],2)) +
+  annotate(geom = "text", x = 1.1, y = 8,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[3],2)) +
+  annotate(geom = "text", x = 1.1, y = 7,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[4],2)) +
+  annotate(geom = "text", x = 1.1, y = 6,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[5],2)) +
+  annotate(geom = "text", x = 1.1, y = 5,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[6],2)) +
+  annotate(geom = "text", x = 1.1, y = 4,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[7],2)) +
+  annotate(geom = "text", x = 1.1, y = 3,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[8],2)) +
+  annotate(geom = "text", x = 1.1, y = 2,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[9],2)) +
+  annotate(geom = "text", x = 1.1, y = 1,
+           label = round(FalsePositiveRate_Accuracy$FalsePositiveRate[10],2))
 
+NumberBins_Interaction1 = length(unique((Dataframe_pvalues %>% 
+                                           filter(Effect == "No Effect"))$BinCountInteraction))
 PlotInteraction = ggplot(Dataframe_pvalues %>% filter(Effect == "No Effect"),
-                                aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+                         aes(Bin_Interaction,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(41)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red, Yellow))(NumberBins_Interaction1)) +
   theme(legend.position = "") +
   ylab("") +
-  ggtitle("B. Interaction, No Effect")
+  ggtitle("B. Interaction, No Effect") +
+  annotate(geom = "text", x = 1.1, y = 12,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[1],2)) +
+  annotate(geom = "text", x = 1.1, y = 11,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[2],2)) +
+  annotate(geom = "text", x = 1.1, y = 10,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[3],2)) +
+  annotate(geom = "text", x = 1.1, y = 9,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[4],2)) +
+  annotate(geom = "text", x = 1.1, y = 8,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[5],2)) +
+  annotate(geom = "text", x = 1.1, y = 7,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[6],2)) +
+  annotate(geom = "text", x = 1.1, y = 6,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[7],2)) +
+  annotate(geom = "text", x = 1.1, y = 5,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[8],2)) +
+  annotate(geom = "text", x = 1.1, y = 4,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[9],2)) +
+  annotate(geom = "text", x = 1.1, y = 3,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[10],2)) +
+  annotate(geom = "text", x = 1.1, y = 2,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[11],2)) +
+  annotate(geom = "text", x = 1.1, y = 1,
+           label = round(FalsePositiveRate_Interaction$FalsePositiveRate[12],2))
 
 
+NumberBins_Accuracy2 = length(unique((Dataframe_pvalues %>% 
+                                        filter(Optimizer != "Julia: LRT" & Optimizer != "R: LRT" &
+                                                 Effect == "Small Effect"))$BinCountAccuracy))
 PlotAccuracy2 = ggplot(Dataframe_pvalues %>% 
-                                filter(Effect == "Small Effect" &
-                                         Optimizer != "Julia: LRT" &
-                                         Optimizer != "R: LRT"),
-                              aes(Bin_Accuracy-0.025,Optimizer, fill = as.factor(BinCountAccuracy))) +
+                         filter(Effect == "Small Effect" &
+                                  Optimizer != "Julia: LRT" &
+                                  Optimizer != "R: LRT"),
+                       aes(Bin_Accuracy,Optimizer, fill = as.factor(BinCountAccuracy))) +
   geom_tile() +
   xlab("") +
   ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(36)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(NumberBins_Accuracy2)) +
   theme(legend.position = "") +
   ggtitle("C. Accuracy, Small Effect")
 
+
+NumberBins_Interaction2 = length(unique((Dataframe_pvalues %>% 
+                                           filter(Effect == "Small Effect"))$BinCountInteraction))
 PlotInteraction2 = ggplot(Dataframe_pvalues %>% 
-                                   filter(Effect == "Small Effect"),
-                                 aes(Bin_Interaction-0.025,Optimizer, fill = as.factor(BinCountInteraction))) +
+                            filter(Effect == "Small Effect"),
+                          aes(Bin_Interaction,Optimizer, fill = as.factor(BinCountInteraction))) +
   geom_tile() +
   xlab("") +
   ylab("") +
-  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(39)) +
+  scale_fill_manual(values=colorRampPalette(c(BlauUB,Red,Yellow))(NumberBins_Interaction2)) +
   theme(legend.position = "") +
   ggtitle("D. Interaction, Small Effect")
 plot_grid(PlotAccuracy,PlotInteraction,PlotAccuracy2,PlotInteraction2, nrow = 2)

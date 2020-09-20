@@ -48,8 +48,8 @@ Dataframe3 = Dataframe2 %>%
   group_by(Model,Repetition) %>% 
   slice(1) %>% 
   group_by(Model) %>% 
-  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
-         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/length(PvaluesCoI),
+         Power_Interac = sum(PvaluesInterac < 0.05)/length(PvaluesInterac))
 
 FigurePvaluesFromGLMM_CoI = ggplot(Dataframe3,aes(Model,Power_CoI)) +
   geom_point(size = 5) + 
@@ -134,8 +134,8 @@ Dataframe3_M0.05_M0.125 = Dataframe2 %>%
   group_by(Model,Repetition) %>% 
   slice(1) %>% 
   group_by(Model) %>% 
-  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
-         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/length(PvaluesCoI),
+         Power_Interac = sum(PvaluesInterac < 0.05)/length(PvaluesInterac))
 
 FigurePvaluesFromGLMM_CoI_M0.05_M0.125 = ggplot(Dataframe3_M0.05_M0.125,aes(Model,Power_CoI)) +
   geom_point(size = 5) + 
@@ -214,8 +214,8 @@ Dataframe4 = Dataframe2 %>%
   group_by(Model,Repetition) %>% 
   slice(1) %>% 
   group_by(Model) %>% 
-  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
-         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/length(PvaluesCoI),
+         Power_Interac = sum(PvaluesInterac < 0.05)/length(PvaluesInterac))
 
 FigurePvaluesFromGLMM_CoI_0_0.125_ = ggplot(Dataframe4,aes(Model,Power_CoI)) +
   geom_point(size = 5) + 
@@ -297,8 +297,8 @@ Dataframe5 = Dataframe2 %>%
   group_by(Model,Repetition) %>% 
   slice(1) %>% 
   group_by(Model) %>% 
-  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
-         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/length(PvaluesCoI),
+         Power_Interac = sum(PvaluesInterac < 0.05)/length(PvaluesInterac))
 
 FigurePvaluesFromGLMM_CoI_M0.05_0.125 = ggplot(Dataframe5,aes(Model,Power_CoI)) +
   geom_point(size = 5) + 
@@ -378,8 +378,8 @@ Dataframe6 = Dataframe2 %>%
   group_by(Model,Repetition) %>% 
   slice(1) %>% 
   group_by(Model) %>% 
-  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
-         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/length(PvaluesCoI),
+         Power_Interac = sum(PvaluesInterac < 0.05)/length(PvaluesInterac))
 
 FigurePvaluesFromGLMM_CoI_0.05_0 = ggplot(Dataframe6,aes(Model,Power_CoI)) +
   geom_point(size = 5) + 
@@ -460,8 +460,8 @@ Dataframe7 = Dataframe2 %>%
   group_by(Model,Repetition) %>% 
   slice(1) %>% 
   group_by(Model) %>% 
-  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
-         Power_Interac = sum(PvaluesInterac < 0.05)/200)
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/length(PvaluesCoI),
+         Power_Interac = sum(PvaluesInterac < 0.05)/length(PvaluesInterac))
 
 FigurePvaluesFromGLMM_CoI_0.05_M0.125 = ggplot(Dataframe7,aes(Model,Power_CoI)) +
   geom_point(size = 5) + 
@@ -500,8 +500,8 @@ Dataframe8 = Dataframe2 %>%
   group_by(Condition_PSEJND,Model,Repetition) %>% 
   slice(1) %>% 
   group_by(Condition_PSEJND,Model) %>% 
-  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/200,
-         Power_Interac = sum(PvaluesInterac < 0.05)/200,
+  mutate(Power_CoI = sum(PvaluesCoI < 0.05)/length(PvaluesCoI),
+         Power_Interac = sum(PvaluesInterac < 0.05)/length(PvaluesInterac),
          Condition_PSEJND2 = 
            case_when(Condition_PSEJND == "-0.125-0.05" ~ "PSE: -0.05, JND: -0.125",
                      Condition_PSEJND == "-0.1250.05" ~ "PSE: 0.05, JND: -0.125",
