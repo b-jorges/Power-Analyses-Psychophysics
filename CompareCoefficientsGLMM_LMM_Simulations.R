@@ -1,4 +1,4 @@
-(dplyr)
+require(dplyr)
 require(tidyverse)
 require(lme4)
 require(purrr)
@@ -267,7 +267,7 @@ Dataframe2 = data.frame(Model = rep(c("M14","M15","M24","M25","M_LMM"),
                         JND_Difference = rep(Dataframe$SD_Difference, 5))
 Dataframe2$Condition_PSEJND = paste0(Dataframe2$JND_Difference,Dataframe2$PSE_Difference)
 
-Dataframe2 = Dataframe2 %>% 
+Dataframe3 = Dataframe2 %>% 
   mutate(ActualPSEs = case_when(
     ConditionOfInterest == 1 ~ -0.1*StandardValues,
     ConditionOfInterest == 0 ~ 0),
@@ -282,4 +282,4 @@ Dataframe2 = Dataframe2 %>%
   group_by(Condition_PSEJND) %>% 
   mutate(AIC_Norm = AIC-median(AIC[Model == "M25"]))
 
-write.csv(Dataframe2,"GLMMvsLMMCoefficients.csv")
+write.csv(Dataframe2,"DifferentConfigurationsLMMGLMM.csv")

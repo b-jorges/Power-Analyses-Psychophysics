@@ -13,7 +13,7 @@ FitCumGaussian = function(par,Mean,Difference,Prediction){
   (mean((pnorm(Difference,Mean,par)-Prediction)^2))
 }
 
-Repetitions = 200
+Repetitions = 1
 
 for (j in 1:6){
   
@@ -683,4 +683,5 @@ Dataframe2 = Dataframe2 %>%
   group_by(Condition_PSEJND) %>% 
   mutate(AIC_Norm = AIC-median(AIC[Model == "M25"]))
 
-write.csv(Dataframe2,"DifferentConfigurations.csv")
+write.csv(Dataframe2,"DifferentConfigurations25Models.csv")
+24000*200
