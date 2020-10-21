@@ -2,10 +2,10 @@ require(dplyr)
 require(tidyverse)
 require(lme4)
 require(purrr)
-require(ggplot2)
-require(cowplot)
 require(lmerTest)
-theme_set(theme_cowplot())
+require(quickpsy)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+source("SimulateDataFunction.r")
 
 set.seed(4)
 Dataframe = c()
@@ -14,25 +14,24 @@ FitCumGaussian = function(par,Mean,Difference,Prediction){
   (mean((pnorm(Difference,Mean,par)-Prediction)^2))
 }
 
-Repetitions = 1
+Repetitions = 100
 
-for (j in 1:1){
-  
-  nParticipants = 15
-  ConditionOfInterest = c(0,1)
-  StandardValues = c(5,6,7,8)
-  reps = 1:70
-  Multiplicator_PSE_Standard = 0
-  Multiplicator_SD_Standard = 0.15
-  Type_ResponseFunction = "Cauchy"
-  SD_ResponseFunction = 0.1
-  Mean_Variability_Between = 0.2
-  SD_Variability_Between = 0.2
-  
-  ID = paste0("s",1:nParticipants)
+nParticipants = 20
+ConditionOfInterest = c(0,1)
+StandardValues = c(5,6,7,8)
+reps = 1:70
+Multiplicator_PSE_Standard = 0
+Multiplicator_SD_Standard = 0.15
+Type_ResponseFunction = "Cauchy"
+SD_ResponseFunction = 0.1
+Mean_Variability_Between = 0.2
+SD_Variability_Between = 0.2
+ID = paste0("s",1:nParticipants)
+
+for (j in 1:6){
   
   if (j == 1){
-    PSE_Difference = -0.025
+    PSE_Difference = -0.0125
     JND_Difference = 0.08
   }
   
@@ -42,22 +41,22 @@ for (j in 1:1){
   }
   
   else if (j == 3){
-    PSE_Difference = 0.025
+    PSE_Difference = 0.0125
     JND_Difference = 0
   }
   
   else if (j == 4){
-    PSE_Difference = -0.025
+    PSE_Difference = -0.0125
     JND_Difference = -0.08
   }
   
   else if (j == 5){
-    PSE_Difference = 0.025
+    PSE_Difference = 0.0125
     JND_Difference = -0.08
   }
   
   else if (j == 6){
-    PSE_Difference = 0.025
+    PSE_Difference = 0.0125
     JND_Difference = 0.08
   }
   
@@ -70,44 +69,34 @@ for (j in 1:1){
     print(JND_Difference)
     
     Beginning = Sys.time()
-    Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = reps)
     
-    Psychometric = Psychometric %>%
-      group_by(ID) %>%#
-      mutate(PSE_Factor_ID = rnorm(1,1,Mean_Variability_Between),
-             SD_Factor_ID = rnorm(1,1,SD_Variability_Between))
-    
-    Psychometric = Psychometric %>%
-      mutate(
-        Mean_Standard = StandardValues+StandardValues*Multiplicator_PSE_Standard,
-        SD_Standard = StandardValues*Multiplicator_SD_Standard,
-        Mean = (Mean_Standard + (ConditionOfInterest==ConditionOfInterest[2])*StandardValues*PSE_Difference)*PSE_Factor_ID,
-        SD = abs((SD_Standard + (ConditionOfInterest==ConditionOfInterest[2])*SD_Standard*JND_Difference)*SD_Factor_ID),
-        staircase_factor = rcauchy(length(reps),1,SD_ResponseFunction), 
-        Presented_TestStimulusStrength = Mean*staircase_factor,
-        Difference = Presented_TestStimulusStrength - StandardValues,
-        AnswerProbability = pnorm(Presented_TestStimulusStrength,Mean,SD),
-        Answer = as.numeric(rbernoulli(length(AnswerProbability),AnswerProbability))
-      )
-    
-    Psychometric = Psychometric %>%
-      filter(abs(staircase_factor-1) < 0.75) %>%
-      group_by(ID,ConditionOfInterest,StandardValues,Difference) %>%
-      mutate(Yes = sum(Answer==1),
-             Total = length(ConditionOfInterest))
-    
-    
+
+    Psychometric = SimulatePsychometricData(nParticipants,
+                                            ConditionOfInterest,
+                                            StandardValues,
+                                            reps,
+                                            PSE_Difference,
+                                            JND_Difference,
+                                            Multiplicator_PSE_Standard,
+                                            Multiplicator_SD_Standard,
+                                            Type_ResponseFunction,
+                                            SD_ResponseFunction,
+                                            Mean_Variability_Between,
+                                            SD_Variability_Between)
+
+    ##########fit psychometric functions and get values    
     Parameters = quickpsy(Psychometric,Difference,Answer,
                           grouping = .(ID,ConditionOfInterest,StandardValues), 
                           bootstrap = "none")$par
+    
     Parameters2 = Parameters %>%
       filter(parn == "p1") %>%
       select(ID,ConditionOfInterest,Mean=par, StandardValues)
     Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
     FittedPsychometricFunctions = Parameters2
+    ##########/end
     
     Dataframe1 = Psychometric
-    
     
     print("Model14")
     Model14 = glmer(cbind(Yes, Total - Yes) ~ ConditionOfInterest*Difference + 

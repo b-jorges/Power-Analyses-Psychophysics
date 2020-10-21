@@ -1,19 +1,12 @@
+require(dplyr)
+require(tidyverse)
 require(lme4)
-require(quickpsy)
-require(lmerTest)
 require(purrr)
-Where_Am_I <- function(path=T){
-  if (path == T){
-    dirname(rstudioapi::getSourceEditorContext()$path)
-  }
-  else {
-    rstudioapi::getSourceEditorContext()$path
-  }
-}
-
-setwd(Where_Am_I())
-
+require(lmerTest)
+require(quickpsy)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 source("SimulateDataFunction.r")
+set.seed(4)
 
 SimulateDataframe_Twolevel = function(nParticipants,
                                     ConditionOfInterest,
@@ -27,9 +20,6 @@ SimulateDataframe_Twolevel = function(nParticipants,
                                     Mean_Variability_Between,
                                     SD_Variability_Between){
   
-
-  nParticipants = 30
-  reps = 150
   Psychometric = SimulatePsychometricData(nParticipants,
                                         ConditionOfInterest,
                                         StandardValues,
@@ -42,32 +32,34 @@ SimulateDataframe_Twolevel = function(nParticipants,
                                         SD_ResponseFunction,
                                         Mean_Variability_Between,
                                         SD_Variability_Between)
-   
+  
   (Parameters = quickpsy(Psychometric,Difference,Answer,
-                              grouping = .(ID,ConditionOfInterest,StandardValues), 
-                              bootstrap = "none")$par)
+                         grouping = .(ID,ConditionOfInterest,StandardValues), 
+                         bootstrap = "none")$par)
   Parameters2 = Parameters %>%
-  filter(parn == "p1") %>%
-  select(ID,ConditionOfInterest,Mean=par, StandardValues)
+    filter(parn == "p1") %>%
+    select(ID,ConditionOfInterest,Mean=par, StandardValues)
   Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
   FittedPsychometricFunctions = Parameters2
-
-  GLMM = glmer(Answer ~ Difference*ConditionOfInterest + (Difference + ConditionOfInterest |ID) + (Difference|StandardValues),
-             family = binomial(link = "logit"),
-             data = Psychometric,
-             nAGQ = 1,
-             glmerControl(optimizer = "nloptwrap"))
+  
+  GLMM = glmer(cbind(Yes, Total - Yes) ~ Difference*ConditionOfInterest + 
+                 (1 + Difference + ConditionOfInterest |ID) + 
+                 (1 + Difference + ConditionOfInterest |StandardValues),
+               family = binomial(link = "logit"),
+               data = Psychometric,
+               nAGQ = 1,
+               glmerControl(optimizer = "nloptwrap"))
   
   TwoLevelMean = lmer(Mean ~ ConditionOfInterest + (1|ID) + (1|StandardValues),
-                    data = FittedPsychometricFunctions)
-
+                      data = FittedPsychometricFunctions)
+  
   TwoLevelSD = lmer(SD ~ ConditionOfInterest + (1|ID) + (1|StandardValues),
                     data = FittedPsychometricFunctions)
-
+  
   c(summary(GLMM)$coef[15],
-  summary(GLMM)$coef[16],
-  summary(TwoLevelMean)$coef[10],
-  summary(TwoLevelSD)$coef[10])
+    summary(GLMM)$coef[16],
+    summary(TwoLevelMean)$coef[10],
+    summary(TwoLevelSD)$coef[10])
 }
 
 #######Comparison of Two Level approach and GLMM approach
