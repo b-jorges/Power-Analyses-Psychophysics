@@ -20,9 +20,8 @@ setwd(Where_Am_I())
 ########################################################################
 ##############compare power for GLMM and Two-Level approach#############
 ########################################################################
-Dataframe_wide_Big = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/Powers_BiggerModel_2020_09_10.csv"))) %>%
-  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,power_Accuracy_ANOVA,
-         power_Precision_ANOVA,n, PSE_Difference, JND_Difference, reps)
+Dataframe_wide_Big = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/PowerTwoLevelComparison.csv"))) %>%
+  select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
 Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference,4),
                                   JND_Difference = rep(Dataframe_wide_Big$JND_Difference,4),
                                   #                                  PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference,6),
@@ -37,10 +36,10 @@ Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Di
                                             Dataframe_wide_Big$power_Precision_Twolevel),
                                   #                                            Dataframe_wide_Big$power_Accuracy_ANOVA,
                                   #                                            Dataframe_wide_Big$power_Precision_ANOVA),
-                                  label = c(rep("Accuracy_GLMM",length(Dataframe_wide_Big$reps)),
-                                            rep("Precision_GLMM",length(Dataframe_wide_Big$reps)),
-                                            rep("Accuracy_Twolevel",length(Dataframe_wide_Big$reps)),
-                                            rep("Precision_Twolevel",length(Dataframe_wide_Big$reps))))
+                                  label = c(rep("Accuracy (GLMM)",length(Dataframe_wide_Big$reps)),
+                                            rep("Precision (GLMM)",length(Dataframe_wide_Big$reps)),
+                                            rep("Accuracy (Two level)",length(Dataframe_wide_Big$reps)),
+                                            rep("Precision (Two level)",length(Dataframe_wide_Big$reps))))
 #                                            rep("Accuracy_Twolevel_ANOVA",length(Dataframe_wide_Big$reps)),
 #                                            rep("Precision_Twolevel_ANOVA",length(Dataframe_wide_Big$reps))))
 

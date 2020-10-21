@@ -13,7 +13,7 @@ FitCumGaussian = function(par,Mean,Difference,Prediction){
   (mean((pnorm(Difference,Mean,par)-Prediction)^2))
 }
 
-Repetitions = 1
+Repetitions = 200
 
 for (j in 1:6){
   

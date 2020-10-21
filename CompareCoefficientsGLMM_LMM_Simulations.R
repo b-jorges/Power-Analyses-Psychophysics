@@ -4,6 +4,7 @@ require(lme4)
 require(purrr)
 require(ggplot2)
 require(cowplot)
+require(lmerTest)
 theme_set(theme_cowplot())
 
 set.seed(4)
@@ -13,14 +14,14 @@ FitCumGaussian = function(par,Mean,Difference,Prediction){
   (mean((pnorm(Difference,Mean,par)-Prediction)^2))
 }
 
-Repetitions = 200
+Repetitions = 1
 
-for (j in 1:6){
+for (j in 1:1){
   
-  nParticipants = 20
+  nParticipants = 15
   ConditionOfInterest = c(0,1)
   StandardValues = c(5,6,7,8)
-  reps = 1:100  
+  reps = 1:70
   Multiplicator_PSE_Standard = 0
   Multiplicator_SD_Standard = 0.15
   Type_ResponseFunction = "Cauchy"
@@ -267,7 +268,7 @@ Dataframe2 = data.frame(Model = rep(c("M14","M15","M24","M25","M_LMM"),
                         JND_Difference = rep(Dataframe$SD_Difference, 5))
 Dataframe2$Condition_PSEJND = paste0(Dataframe2$JND_Difference,Dataframe2$PSE_Difference)
 
-Dataframe3 = Dataframe2 %>% 
+Dataframe2 = Dataframe2 %>% 
   mutate(ActualPSEs = case_when(
     ConditionOfInterest == 1 ~ -0.1*StandardValues,
     ConditionOfInterest == 0 ~ 0),

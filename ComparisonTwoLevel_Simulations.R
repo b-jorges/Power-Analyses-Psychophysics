@@ -28,6 +28,8 @@ SimulateDataframe_Twolevel = function(nParticipants,
                                     SD_Variability_Between){
   
 
+  nParticipants = 30
+  reps = 150
   Psychometric = SimulatePsychometricData(nParticipants,
                                         ConditionOfInterest,
                                         StandardValues,
@@ -49,18 +51,13 @@ SimulateDataframe_Twolevel = function(nParticipants,
   select(ID,ConditionOfInterest,Mean=par, StandardValues)
   Parameters2$SD = Parameters$par[Parameters$parn == "p2"]
   FittedPsychometricFunctions = Parameters2
-   
-#  ANOVA_Mean = lm(Mean ~ as.factor(ConditionOfInterest)*as.factor(StandardValues),FittedPsychometricFunctions)
-#  Pvalue_Mean_ANOVA = summary(ANOVA_Mean)$coefficients[14]
-#  ANOVA_SD = lm(SD ~ as.factor(ConditionOfInterest)*as.factor(StandardValues),FittedPsychometricFunctions)
-#  Pvalue_SD_ANOVA = summary(ANOVA_SD)$coefficients[14]
 
   GLMM = glmer(Answer ~ Difference*ConditionOfInterest + (Difference + ConditionOfInterest |ID) + (Difference|StandardValues),
              family = binomial(link = "logit"),
              data = Psychometric,
              nAGQ = 1,
              glmerControl(optimizer = "nloptwrap"))
-
+  
   TwoLevelMean = lmer(Mean ~ ConditionOfInterest + (1|ID) + (1|StandardValues),
                     data = FittedPsychometricFunctions)
 
@@ -71,24 +68,24 @@ SimulateDataframe_Twolevel = function(nParticipants,
   summary(GLMM)$coef[16],
   summary(TwoLevelMean)$coef[10],
   summary(TwoLevelSD)$coef[10])
-  #Pvalue_Mean_ANOVA,
-  #Pvalue_SD_ANOVA)
 }
 
 #######Comparison of Two Level approach and GLMM approach
+Range_Participants = c(10,12,14,16,18,20)
 ConditionOfInterest = c(0,1)
-StandardValues = c(5,8)
-Range_reps = c(40)
-Range_PSE_Difference = c(0,0.025,0.05)
-Range_JND_Difference = c(-0.1,-0.05,0,0.05,0.1)
+StandardValues = c(5,6,7,8)
+Range_reps = c(40,70,100)
 Multiplicator_PSE_Standard = 0
-Multiplicator_SD_Standard = 0.108
+Multiplicator_SD_Standard = 0.15
+Type_ResponseFunction = "Cauchy"
 SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.2
 SD_Variability_Between = 0.2
+
+Range_PSE_Difference = c(-0.05,-0.025,0,0.025,0.05)
+Range_JND_Difference = c(-0.1,-0.05,0,0.05,0.1)
+
 nIterations = 100
-Range_Participants = c(10,12,14,16,18,20)
-Type_ResponseFunction = "normal"
 
 TotalNumber = length(Range_reps)*length(Range_PSE_Difference)*length(Range_JND_Difference)*length(Range_Participants)
 CurrentRunthrough = 0
@@ -125,8 +122,6 @@ for (reps in Range_reps){
                 Pvalues_Precision = c(Pvalues_Precision, Pvalues[2])
                 Pvalues_Accuracy_TwoLevel = c(Pvalues_Accuracy_TwoLevel, Pvalues[3])
                 Pvalues_Precision_TwoLevel = c(Pvalues_Precision_TwoLevel, Pvalues[4])
-                #Pvalues_Accuracy_ANOVA = c(Pvalues_Accuracy_ANOVA, Pvalues[5])
-                #Pvalues_Precision_ANOVA = c(Pvalues_Precision_ANOVA, Pvalues[6])
               }
               
           CurrentRunthrough = CurrentRunthrough + 1
@@ -147,12 +142,10 @@ for (reps in Range_reps){
                                           power_Precision = mean(Pvalues_Precision < 0.05),
                                           power_Accuracy_Twolevel = mean(Pvalues_Accuracy_TwoLevel < 0.05),  
                                           power_Precision_Twolevel = mean(Pvalues_Precision_TwoLevel < 0.05),
-                                          #power_Accuracy_ANOVA = mean(Pvalues_Accuracy_ANOVA < 0.05),  
-                                          #power_Precision_ANOVA = mean(Pvalues_Precision_ANOVA < 0.05),
                                           Duration = Sys.time() - TimeStartTrial)
-          #if (CurrentRunthrough == 0){
+          if (CurrentRunthrough == 0){
               
-            #write.table(PowerfulDataframe, file = "PowerTwoLevelComparison3.csv", sep = ",", row.names = FALSE)} 
+            write.table(PowerfulDataframe, file = "PowerTwoLevelComparison.csv", sep = ",", row.names = FALSE)} 
           
           if (CurrentRunthrough > 0){
             write.table(PowerfulDataframe, file = "PowerTwoLevelComparison.csv", 

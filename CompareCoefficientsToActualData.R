@@ -17,10 +17,10 @@ Repetitions = 200
 
 for (j in 1:6){
   
-  nParticipants = 20
+  nParticipants = 15
   ConditionOfInterest = c(0,1)
   StandardValues = c(5,6,7,8)
-  reps = 1:100  
+  reps = 1:70
   Multiplicator_PSE_Standard = 0
   Multiplicator_SD_Standard = 0.15
   Type_ResponseFunction = "Cauchy"
