@@ -74,7 +74,7 @@ SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.2
 SD_Variability_Between = 0.2
 
-Range_PSE_Difference = c(-0.05,-0.025,0,0.025,0.05)
+Range_PSE_Difference = c(-0.025,-0.0125,0,0.0125,0.025)
 Range_JND_Difference = c(-0.1,-0.05,0,0.05,0.1)
 
 nIterations = 100
