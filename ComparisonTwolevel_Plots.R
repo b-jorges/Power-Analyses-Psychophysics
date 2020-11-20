@@ -22,8 +22,8 @@ setwd(Where_Am_I())
 ########################################################################
 Dataframe_wide_Big = rbind(read.csv(header = T, file = paste0(Where_Am_I(),"/Data/PowerTwoLevelComparison.csv"))) %>%
   select(power_Accuracy,power_Precision,power_Accuracy_Twolevel,power_Precision_Twolevel,n, PSE_Difference, JND_Difference, reps)
-Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference,4),
-                                  JND_Difference = rep(Dataframe_wide_Big$JND_Difference,4),
+Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference),
+                                  JND_Difference = rep(Dataframe_wide_Big$JND_Difference),
                                   #                                  PSE_Difference = rep(Dataframe_wide_Big$PSE_Difference,6),
                                   #                                  JND_Difference = rep(Dataframe_wide_Big$JND_Difference,6),
                                   n = rep(Dataframe_wide_Big$n,4),
@@ -43,10 +43,28 @@ Dataframe_Powers_Big = data.frame(PSE_Difference = rep(Dataframe_wide_Big$PSE_Di
 #                                            rep("Accuracy_Twolevel_ANOVA",length(Dataframe_wide_Big$reps)),
 #                                            rep("Precision_Twolevel_ANOVA",length(Dataframe_wide_Big$reps))))
 
+PSE_Names <- c(
+  '-0.025'="PSE -2.5%",
+  "-0.0125"="PSE -1.25%",
+  "0"="PSE +0%",
+  "0.0125"="PSE +1.25%",
+  "0.025"="PSE +2.5%"
+)
+
+JND_Names <- c(
+  "-0.1"="JND -10%",
+  "-0.05"="JND -5%",
+  "0"="JND +0%",
+  "0.05"="JND +5%",
+  "0.1"="JND +10%"
+)
+
 
 Powers1 = ggplot(Dataframe_Powers_Big %>% filter(reps == 40), aes(n,power,color = label)) +
   geom_line(size = 2) +
-  facet_grid(JND_Difference~PSE_Difference) +
+  facet_grid(JND_Difference~PSE_Difference,
+             labeller = labeller(JND_Difference = as_labeller(JND_Names),
+                                 PSE_Difference = as_labeller(PSE_Names))) +
   xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
@@ -56,11 +74,13 @@ Powers1 = ggplot(Dataframe_Powers_Big %>% filter(reps == 40), aes(n,power,color 
   scale_y_continuous(breaks=c(0.25,0.75)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
                      name = "") +
-  ggtitle("A. 40 Repetitions")
+  ggtitle("A. 40 Trials per Staircase")
 
 Powers2 = ggplot(Dataframe_Powers_Big %>% filter(reps == 70), aes(n,power,color = label)) +
   geom_line(size = 2) +
-  facet_grid(JND_Difference~PSE_Difference) +
+  facet_grid(JND_Difference~PSE_Difference,
+             labeller = labeller(JND_Difference = as_labeller(JND_Names),
+                                 PSE_Difference = as_labeller(PSE_Names))) +
   xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
@@ -70,11 +90,13 @@ Powers2 = ggplot(Dataframe_Powers_Big %>% filter(reps == 70), aes(n,power,color 
   scale_y_continuous(breaks=c(0.25,0.75)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
                      name = "") +
-  ggtitle("A. 70 Repetitions")
+  ggtitle("B. 70 Trials per Staircase")
 
 Powers3 = ggplot(Dataframe_Powers_Big %>% filter(reps == 100), aes(n,power,color = label)) +
   geom_line(size = 2) +
-  facet_grid(JND_Difference~PSE_Difference) +
+  facet_grid(JND_Difference~PSE_Difference,
+             labeller = labeller(JND_Difference = as_labeller(JND_Names),
+                                 PSE_Difference = as_labeller(PSE_Names))) +
   xlab("N° of Participants") +
   ylab("Power") +
   geom_hline(linetype = 2, yintercept = 0.8) +
@@ -84,7 +106,7 @@ Powers3 = ggplot(Dataframe_Powers_Big %>% filter(reps == 100), aes(n,power,color
   scale_y_continuous(breaks=c(0.25,0.75)) +
   scale_color_manual(values = c(BlauUB,LightBlauUB,Red,LightRed), 
                      name = "") +
-  ggtitle("A. 100 Repetitions")
+  ggtitle("C. 100 Trials per Staircase")
 
 plot_shared_legend(Powers1,Powers2, Powers3)
-ggsave("Figures/PowersBigModel.jpg", w = 12, h = 8)
+ggsave("Figures/PowersBigModel.jpg", w = 18, h = 12)
