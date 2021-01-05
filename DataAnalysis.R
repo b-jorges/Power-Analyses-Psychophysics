@@ -1,12 +1,36 @@
+set.seed(101)
+
+Psychometric = SimulatePsychometricData(nParticipants = 5,
+                                        ConditionOfInterest = c(0,1),
+                                        StandardValues = c(5,8),
+                                        reps = 100,
+                                        PSE_Difference = 0.1,
+                                        JND_Difference = 0.25,
+                                        Multiplicator_PSE_Standard = 0,
+                                        Multiplicator_SD_Standard = 0.15,
+                                        Type_ResponseFunction = "Cauchy",
+                                        SD_ResponseFunction = 0.1,
+                                        Mean_Variability_Between = 0.2,
+                                        SD_Variability_Between = 0.2)
+
+
 ###########################################
-####Parameter-As-Outcome Model (PAOM)######
+####Two-Level approach######
 ###########################################
 require(quickpsy)
 
 ###Fitting psychometric functions and extracting means and standard deviations
 PsychometricFunctions = quickpsy(Psychometric,Difference,Answer,grouping = .(ConditionOfInterest,ID,StandardValues), bootstrap = "none")
 
-plot(PsychometricFunctions)
+plot(PsychometricFunctions) +
+  scale_color_manual(name = "",
+                     values = c(Red,BlauUB),
+                     labels = c("Control","Experimental")) +
+  xlab("Difference between Comparison and Test") +
+  ylab("Probability to choose Test") +
+  geom_vline(linetype = 2, xintercept = 0, color = "grey") +
+  geom_hline(linetype = 2, yintercept = 0.5, color = "grey")
+ggsave(paste0(dirname(rstudioapi::getSourceEditorContext()$path),"/Figures/PsychometricFunctions.jpg"), h = 5, w = 8)
 
 Parameters = PsychometricFunctions$par
 Parameters2 = Parameters %>%
@@ -21,19 +45,16 @@ require(lmerTest)
 
 ANOVA_Mean = lm(Mean ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
 ANOVA_SD = lm(SD ~ as.factor(ConditionOfInterest)*StandardValues,Parameters)
-LMM_Mean = lmer(Mean ~ as.factor(ConditionOfInterest)*StandardValues + (1 | ID),
-         data = Parameters)
-LMM_SD = lmer(SD ~ as.factor(ConditionOfInterest)*StandardValues + (1 | ID),
-                data = Parameters)
-
 summary(ANOVA_Mean)
 summary(ANOVA_SD)
+
+
+LMM_Mean = lmer(Mean ~ as.factor(ConditionOfInterest)*StandardValues + (1 | ID),
+                data = Parameters)
 summary(LMM_Mean)
+LMM_SD = lmer(SD ~ as.factor(ConditionOfInterest)*StandardValues + (1 | ID),
+              data = Parameters)
 summary(LMM_SD)
-ranef(LMM_Mean)
-
-
-
 
 Parameters$ConditionOfInterest[Parameters$ConditionOfInterest == 1] = "Condition of Interest"
 Parameters$ConditionOfInterest[Parameters$ConditionOfInterest == 0] = "Baseline"
@@ -55,6 +76,8 @@ Plot_LM_Mean = ggplot(Parameters,aes(StandardValues,Mean/StandardValues)) +
   ylab("Normalized Mean (m/s)")
 plot_grid(Plot_LM_Mean,Plot_LMM_Mean, labels = "AUTO")
 ggsave("(Figure 4) Means.jpg", w = 12, h = 5)
+
+
 
 LMM_SD = lmer(SD ~ ConditionOfInterest*StandardValues + (1 | ID),
            data = Parameters)

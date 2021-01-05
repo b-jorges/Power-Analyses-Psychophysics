@@ -20,7 +20,7 @@ SD_ResponseFunction = 0.1
 Mean_Variability_Between = 0.15
 SD_Variability_Between = 0.15
 
-for(i in 1:5){
+for(i in 1:1){
   
   start_time <- Sys.time()
 

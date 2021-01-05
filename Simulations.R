@@ -11,20 +11,13 @@ require(rstan)
 require(DHARMa)
 set.seed(1)
 
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-Where_Am_I <- function(path=T){
-  if (path == T){
-    dirname(rstudioapi::getSourceEditorContext()$path)
-  }
-  else {
-    rstudioapi::getSourceEditorContext()$path
-  }
-}
 
 binomial_smooth <- function(...) {
   geom_smooth(method = "glm", method.args = list(family = "binomial"), ...)}
 
-setwd(Where_Am_I())
+
 source("Utilities/parabolic.r")
 source("Utilities/functions.r")
 source("Utilities/colourschemes.r")

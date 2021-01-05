@@ -11,7 +11,6 @@ SimulatePsychometricData = function(nParticipants,
                                     Mean_Variability_Between,
                                     SD_Variability_Between){
   
-  
   ID = paste0("S0",1:nParticipants)
   
   Psychometric = expand.grid(ID=ID, ConditionOfInterest=ConditionOfInterest, StandardValues=StandardValues, reps = 1:reps)
